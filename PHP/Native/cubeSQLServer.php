@@ -40,7 +40,7 @@ class inhead {
 		$r .= $this->reserved2;
 		return $r;
 	}
-	public function inhead($packetsize, $nfields, $command, $selector,$timeout) {
+	public function __construct($packetsize, $nfields, $command, $selector,$timeout) {
 		$this->signature = 'SQLS';//pack('V',[ord('S'),ord('Q'),ord('L'),ord('S')]);
 		$this->packetSize = pack('N',$packetsize);
 		$this->command = pack('C',$command);
@@ -72,7 +72,7 @@ class outhead {
 	public $numFields; //unsigned int					// number of fields in the command (I could use 2 bytes instead of 4)
 	public $reserved1; //unsigned short					// unused in this version
 	public $reserved2; //unsigned short					// unused in this version
-	function outhead($bytes) {
+	function __construct($bytes) {
 		$this->signature = substr($bytes,0,4);
 		$this->packetSize = unpack("NpacketSize",substr($bytes,4,4))["packetSize"];
 		$this->errorCode = unpack("nerrorCode",substr($bytes,8,2))["errorCode"];
@@ -119,7 +119,7 @@ class csqldb {
 	
 	//void (*trace)  (const char*, void*);		// trace function
 	//void			*traceArgument;				// user argument to be passed to the trace function
-	public function csqldb($host, $port, $username, $password, $timeout) {
+	public function __construct($host, $port, $username, $password, $timeout) {
 		$this->host = $host;
 		$this->port = $port;
 		$this->username = $username;
