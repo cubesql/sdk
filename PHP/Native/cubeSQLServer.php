@@ -687,14 +687,24 @@ class cubeSQLServer
      * Uses current connection. Sets internal error indicators errorCode and errorMessage on error.
      *
      * @param string $sql Select query statement.
-     * @return array 2D associative array of results.
+     * @return array|null 2D associative array of results.
      */
     public function select($sql)
     {
+        $data = null;
         $this->_resetError();
-        $kCOMMAND_SELECT = 2;
-        $this->db->send_statement($kCOMMAND_SELECT, $sql);
-        $data = $this->db->read_cursor();
+        try {
+            $kCOMMAND_SELECT = 2;
+            $this->db->send_statement($kCOMMAND_SELECT, $sql);
+            $data = $this->db->read_cursor();
+        }
+        catch (Exception $e) {
+            $this->errorCode = $this->db->errorcode;
+            $this->errorMessage = $this->db->errormsg;
+            syslog(1, $e);
+            syslog(1, $this->errorCode);
+            syslog(1, $this->errorMessage);
+        }
         return $data;
     }
 
