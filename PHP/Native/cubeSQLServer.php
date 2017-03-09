@@ -646,7 +646,7 @@ class cubeSQLServer
         try {
             $this->db = new csqldb($host, $port, $username, $password, $timeout);
             $kCOMMAND_EXECUTE = 3;
-            $this->db->send_statement($kCOMMAND_EXECUTE, "USE DATABASE $database;");
+            $this->db->send_statement($kCOMMAND_EXECUTE, 'USE DATABASE "'.$database.'";');
             $this->db->netread(-1, -1);
             // Test if an error occured
         } catch (Exception $e) {
