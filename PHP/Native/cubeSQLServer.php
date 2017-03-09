@@ -117,14 +117,30 @@ class outhead
  */
 class csqldb
 {
-    public $timeout; // timeout used in the socket I/O operations
-    public $sockfd; // the socket
-    public $port; // port used for the connection
-    public $host; // hostname
-    public $username; // username
-    public $password; // password
-    public $errmsg; // last error message
-    public $errcode; // last error code
+    /** @var  int Timeout used in the socket I/O operations */
+    public $timeout;
+
+    /** @var  mixed The socket */
+    public $sockfd;
+
+    /** @var  int Port used for the connection */
+    public $port;
+
+    /** @var  string Hostname */
+    public $host;
+
+    /** @var  string Username */
+    public $username;
+
+    /** @var  string Password */
+    public $password;
+
+    /** @var string Last error message */
+    public $errormsg;
+
+    /** @var int Last error code */
+    public $errorcode;
+
 //	public $useOldProtocol;	// flag to set if you want to use the old REALSQLServer protocol
     public $verifyPeer; // flag to check if peer verification must be performed
 
@@ -138,8 +154,12 @@ class csqldb
     public $toread;
     public $inbuffer;
     public $insize;
-    public $request; //inhead // request header
-    public $reply; //outhead // response header
+
+    /** @var inhead object Request Header */
+    public $request;
+
+    /** @var  outhead object Response Header */
+    public $reply;
 
     //SSL_CTX			*ssl_ctx;
     //SSL				*ssl;
@@ -156,7 +176,7 @@ class csqldb
 
         //connect
         $addr = gethostbyname($this->host); //no way to specify a timeout
-        $this->socketfd = stream_socket_client("tcp://$addr:" . $this->port, $this->errcode, $this->errormsg, $this->timeout);
+        $this->socketfd = stream_socket_client("tcp://$addr:" . $this->port, $this->errorcode, $this->errormsg, $this->timeout);
 
         if ($this->socketfd === false) {
             $this->errorcode = -1;
@@ -598,8 +618,8 @@ class cubeSQLServer
         try {
             $this->db = new csqldb($host, $port, $username, $password, $timeout);
         } catch (Exception $e) {
-            $this->errorCode = $this->db->errcode;
-            $this->errorMessage = $this->db->errmsg;
+            $this->errorCode = $this->db->errorcode;
+            $this->errorMessage = $this->db->errormsg;
             syslog(1, $e);
         }
 
@@ -628,9 +648,10 @@ class cubeSQLServer
             $kCOMMAND_EXECUTE = 3;
             $this->db->send_statement($kCOMMAND_EXECUTE, "USE DATABASE $database;");
             $this->db->netread(-1, -1);
+            // Test if an error occured
         } catch (Exception $e) {
-            $this->errorCode = $this->db->errcode;
-            $this->errorMessage = $this->db->errmsg;
+            $this->errorCode = $this->db->errorcode;
+            $this->errorMessage = $this->db->errormsg;
             syslog(1, "Database connection error: " . $this->errorMessage);
             //echo $e;
         }
@@ -652,8 +673,8 @@ class cubeSQLServer
             $this->db->send_statement($kCOMMAND_EXECUTE, $sql);
             $this->db->netread(-1, -1);
         } catch (Exception $e) {
-            $this->errorCode = $this->db->errcode;
-            $this->errorMessage = $this->db->errmsg;
+            $this->errorCode = $this->db->errorcode;
+            $this->errorMessage = $this->db->errormsg;
             syslog(1, $e);
             syslog(1, $this->errorCode);
             syslog(1, $this->errorMessage);
@@ -689,8 +710,8 @@ class cubeSQLServer
         try {
             $this->db->disconnect();
         } catch (Exception $e) {
-            $this->errorCode = $this->db->errcode;
-            $this->errorMessage = $this->db->errmsg;
+            $this->errorCode = $this->db->errorcode;
+            $this->errorMessage = $this->db->errormsg;
             syslog(1, $e);
         }
     }
