@@ -81,31 +81,66 @@ class inhead
  */
 class outhead
 {
-    public $signature; //unsigned int					// PROTOCOL_SIGNATURE defined as 'SQLS'
-    public $packetSize; //unsigned int					// size of the entire packet (header excluded)
-    public $errorCode; //unsigned short					// 0 means no error
-    public $flag1; //unsigned char						// bit field
-    public $encryptedPacket; //unsigned char			// kEmptyField, kAESNONE, kAES128, kAES192, kAES256
-    public $expandedSize; //unsigned int				// if flag1 is COMPRESSED_PACKET this is the expanded size of the entire buffer
-    public $rows; //unsigned int						// number of rows in the cursor
-    public $cols; //unsigned int						// number of columns in the cursor (it could be 2 bytes instead of 4?)
-    public $numFields; //unsigned int					// number of fields in the command (I could use 2 bytes instead of 4)
-    public $reserved1; //unsigned short					// unused in this version
-    public $reserved2; //unsigned short					// unused in this version
+    /** @var  int (unsigned) PROTOCOL_SIGNATURE defined as 'SQLS' */
+    public $signature;
 
+    /** @var  int (unsigned) size of the entire packet (header excluded) */
+    public $packetSize;
+
+    /** @var  int (unsigned short) 0 means no error */
+    public $errorCode;
+
+    /** @var  string (unsigned char) bit field */
+    public $flag1;
+
+    /** @var  string (unsigned char) kEmptyField, kAESNONE, kAES128, kAES192, kAES256 */
+    public $encryptedPacket;
+
+    /** @var  int (unsigned) if flag1 is COMPRESSED_PACKET this is the expanded size of the entire buffer */
+    public $expandedSize;
+
+    /** @var  int (unsigned) number of rows in the cursor */
+    public $rows;
+
+    /** @var  int (unsigned) number of columns in the cursor (it could be 2 bytes instead of 4?) */
+    public $cols;
+
+    /** @var  int (unsigned) number of fields in the command (I could use 2 bytes instead of 4) */
+    public $numFields;
+
+    /** @var  int (unsigned short) unused in this version */
+    public $reserved1;
+
+    /** @var  int (unsigned short) unused in this version */
+    public $reserved2;
+
+    /**
+     * outhead constructor.
+     * @param string $bytes
+     */
     function __construct($bytes)
     {
+        // Unpack binary data
+        $unpackedData = unpack("NpacketSize", substr($bytes, 4, 4));
+        $unpackedData += unpack("nerrorCode", substr($bytes, 8, 2));
+        $unpackedData += unpack("NexpandedSize", substr($bytes, 12, 4));
+        $unpackedData += unpack("Nrows", substr($bytes, 16, 4));
+        $unpackedData += unpack("Ncols", substr($bytes, 20, 4));
+        $unpackedData += unpack("NnumFields", substr($bytes, 24, 4));
+        $unpackedData += unpack("nreserved1", substr($bytes, 28, 2));
+        $unpackedData += unpack("nreserved2", substr($bytes, 30, 2));
+            // Map data to properties
         $this->signature = substr($bytes, 0, 4);
-        $this->packetSize = unpack("NpacketSize", substr($bytes, 4, 4))["packetSize"];
-        $this->errorCode = unpack("nerrorCode", substr($bytes, 8, 2))["errorCode"];
+        $this->packetSize = $unpackedData["packetSize"];
+        $this->errorCode = $unpackedData["errorCode"];
         $this->flag1 = ord(substr($bytes, 10, 1));
         $this->encryptedPacket = ord(substr($bytes, 11, 1));
-        $this->expandedSize = unpack("NexpandedSize", substr($bytes, 12, 4))["expandedSize"];
-        $this->rows = unpack("Nrows", substr($bytes, 16, 4))["rows"];
-        $this->cols = unpack("Ncols", substr($bytes, 20, 4))["cols"];
-        $this->numFields = unpack("NnumFields", substr($bytes, 24, 4))["numFields"];
-        $this->reserved1 = unpack("nreserved1", substr($bytes, 28, 2))["reserved1"];
-        $this->reserved2 = unpack("nreserved2", substr($bytes, 30, 2))["reserved2"];
+        $this->expandedSize = $unpackedData["expandedSize"];
+        $this->rows = $unpackedData["rows"];
+        $this->cols = $unpackedData["cols"];
+        $this->numFields = $unpackedData["numFields"];
+        $this->reserved1 = $unpackedData["reserved1"];
+        $this->reserved2 = $unpackedData["reserved2"];
     }
 }
 
@@ -381,7 +416,8 @@ class csqldb
         if (count($server_types) == 0) {
             $server_sizes = $sizeof_int * $server_colcount;
             for ($j = 0; $j < $server_colcount; $j++) {
-                $type = unpack("Ntype", substr($this->inbuffer, $j * $sizeof_int, 4))["type"];
+                $type = unpack("Ntype", substr($this->inbuffer, $j * $sizeof_int, 4));
+                $type = $type["type"];
                 //echo "type $j: $type\n";
             }
             $server_names = $server_sizes + ($server_rowcount * $server_colcount * $sizeof_int);
@@ -393,7 +429,8 @@ class csqldb
                 $col_names[$j] = substr($this->inbuffer, $temp, $len - 1);
                 $data_seek += $len;
                 $temp += $len;
-                $server_types[$j] = unpack("Ntype", substr($this->inbuffer, $j * $sizeof_int, 4))["type"];
+                $server_types[$j] = unpack("Ntype", substr($this->inbuffer, $j * $sizeof_int, 4));
+                $server_types[$j] = $server_types[$j]["type"];
             }
             $table_names = array();
             if ($has_tables) {
@@ -420,7 +457,8 @@ class csqldb
             if ($pos + 4 >= strlen($this->inbuffer)) {
                 throw new UnexpectedValueException("Buffer from server too short.");
             }
-            $server_sizes[$j] = unpack("lsize", strrev(substr($this->inbuffer, $pos, 4)))["size"];
+            $server_sizes[$j] = unpack("lsize", strrev(substr($this->inbuffer, $pos, 4)));
+            $server_sizes[$j] = $server_sizes[$j]["size"];
             if ($server_sizes[$j] == -1) //if ($server_sizes[$j] == 4294967295)  //interesting side-effect of unpack not returning -1 for a value of FF FF FF FF.
             {
                 $server_sizes[$j] = -1;
@@ -646,7 +684,7 @@ class cubeSQLServer
         try {
             $this->db = new csqldb($host, $port, $username, $password, $timeout);
             $kCOMMAND_EXECUTE = 3;
-            $this->db->send_statement($kCOMMAND_EXECUTE, 'USE DATABASE "'.$database.'";');
+            $this->db->send_statement($kCOMMAND_EXECUTE, 'USE DATABASE "' . $database . '";');
             $this->db->netread(-1, -1);
             // Test if an error occured
         } catch (Exception $e) {
@@ -697,8 +735,7 @@ class cubeSQLServer
             $kCOMMAND_SELECT = 2;
             $this->db->send_statement($kCOMMAND_SELECT, $sql);
             $data = $this->db->read_cursor();
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             $this->errorCode = $this->db->errorcode;
             $this->errorMessage = $this->db->errormsg;
             syslog(1, $e);
