@@ -11,7 +11,7 @@ When set to 1 the following macros can be used to further customize how OpenSSL 
 
 
   * **CUBESQL_STATIC_SSL_LIBRARY** it means that OpenSSL is statically linked
-  * **CUBESQL_EXTERN_SSL_LIBRARY** it means that OpenSSL is available somewhere in the same build and extern declarations should be used
+  * **CUBESQL_EXTERN_SSL_LIBRARY** it means that OpenSSL is available somewhere in the same build and extern declarations should be used (a macro CUBESQL_EXTERN_SSL_DISABLE11 should be set to 1 in case of linking with an OpenSSL version older than 1.1)
   * **CUBESQL_DYNAMIC_SSL_LIBRARY** it means that the SDK will try to dynamically load OpenSSL library itself
 
 
