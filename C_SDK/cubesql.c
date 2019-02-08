@@ -828,7 +828,7 @@ void csql_libinit (void) {
 		sigaction(SIGABRT, &act, (struct sigaction *)NULL);
 		#endif
 		
-		ssl_loaded = csql_load_ssl();
+		csql_load_ssl();
 	}
 }
 
@@ -2282,8 +2282,9 @@ void cubesql_setpath (int type, char *path) {
 }
 
 const char *cubesql_sslversion (void) {
-	if (ssl_loaded == kFALSE) return NULL;
     #if CUBESQL_ENABLE_SSL_ENCRYPTION
+    csql_load_ssl();
+    if (ssl_loaded == kFALSE) return NULL;
     if (OpenSSL_version_loaded) return OpenSSL_version(OPENSSL_VERSION);
     if (SSLeay_version_loaded) return SSLeay_version(SSLEAY_VERSION);
     return "N/A";
@@ -2302,7 +2303,7 @@ void csql_init_ssl (void) {
     // printf("%s", cubesql_sslversion());
 }
 
-int csql_load_ssl (void) {
+void csql_load_ssl (void) {
     #if CUBESQL_DYNAMIC_SSL_LIBRARY
 	char *ssl_func_name[] = {"SSL_free", "SSL_accept", "SSL_connect", "SSL_read", "SSL_write", "SSL_get_error", "SSL_set_fd", "SSL_new", "SSL_CTX_new", "SSLv3_client_method", "SSL_library_init", "SSL_CTX_use_PrivateKey_file", "SSL_CTX_use_certificate_file", "SSL_CTX_set_default_passwd_cb", "SSL_CTX_free", "SSL_load_error_strings", "SSL_CTX_use_certificate_chain_file", "SSL_CTX_load_verify_locations", "SSL_CTX_set_default_verify_paths", "SSL_CTX_set_verify", "SSL_CTX_set_verify_depth", "SSL_shutdown", "SSL_load_client_CA_file", "SSL_CTX_set_client_CA_list", "SSL_get_peer_certificate", "SSL_get_verify_result", "SSL_CTX_set_cipher_list", "SSL_CTX_ctrl", "SSL_CTX_set_default_passwd_cb_userdata", "TLSv1_1_client_method", "TLSv1_2_client_method", "SSLv23_server_method", "SSL_get_version", "SSL_get_current_cipher", "SSL_CIPHER_get_name", "SSL_CIPHER_get_version", "SSL_CIPHER_get_bits", "DH_new", "DH_generate_parameters_ex", "DH_check", "DH_generate_key", "RAND_seed", "TLSv1_1_server_method", "TLSv1_2_server_method", "SSL_CTX_set_info_callback", "SSL_set_ex_data", "SSL_get_ex_data", "TLS_server_method", "OpenSSL_version", "TLS_client_method", NULL};
 	
@@ -2315,10 +2316,11 @@ int csql_load_ssl (void) {
 	void *crypto_handle = NULL;
 	#ifdef WIN32
 	WCHAR sslW[MAX_PATH];
+    WCHAR dllpath[MAX_PATH];
 	WCHAR cryptoW[MAX_PATH];
 	#endif
 	
-	if (ssl_loaded == kTRUE) return kTRUE;
+	if (ssl_loaded == kTRUE) return;
 	if (ssl_library == NULL) ssl_library = SSL_LIB;
 	if (crypto_library == NULL) crypto_library = CRYPTO_LIB;
 	
@@ -2329,6 +2331,7 @@ int csql_load_ssl (void) {
 	SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
 
 	MultiByteToWideChar(CP_UTF8, 0, crypto_library, -1, cryptoW, MAX_PATH);
+    MultiByteToWideChar(CP_UTF8, 0, crypto_library, -1, dllpath, MAX_PATH);
 	crypto_handle = LoadLibrary (cryptoW);
 	if (crypto_handle == NULL) goto abort_load_ssl;
 	#else
@@ -2374,11 +2377,24 @@ int csql_load_ssl (void) {
 	// THEN LINK SSL LIB (WHICH APPARENTLY REQUIRES CRYPTO LIB)
 	// try to open SSL shared library
 	#ifdef WIN32
+    // add crypto path to search path (required by SSL)
+    PathRemoveFileSpecA(dllpath);
+    SetDllDirectoryA(dllpath);
+    
 	MultiByteToWideChar(CP_UTF8, 0, ssl_library, -1, sslW, MAX_PATH);
 	ssl_handle = LoadLibrary (sslW);
 	if (ssl_handle == NULL) goto abort_load_ssl;
 	#else
+    char saved[2048];
+    char shlibpath[2048];
+    getcwd(saved, sizeof(saved));
+    
+    // copy crypto_library path to shlibpath
+    strncpy(shlibpath, crypto_library, sizeof(shlibpath));
+    char *dir = dirname(shlibpath);
+    if (dir) chdir(dir);
 	ssl_handle = dlopen (ssl_library, RTLD_LAZY);
+    chdir(saved);
 	if (ssl_handle == NULL) goto abort_load_ssl;
 	#endif
 	
@@ -2430,17 +2446,20 @@ int csql_load_ssl (void) {
 	}
 	
     csql_init_ssl();
-	return kTRUE;
-	
+	ssl_loaded = kTRUE;
+    return;
+    
 abort_load_ssl:
     #if CUBESQL_LOG_LOADSSL_ISSUES
 	if ((!crypto_handle) || (!ssl_handle)) printf("Load shared library error: %s\n", dlerror());
     #endif
 	
-	return kFALSE;
+	ssl_loaded = kFALSE;
+    return;
     #else
     csql_init_ssl();
-    return kTRUE;
+    ssl_loaded = kTRUE;
+    return;
     #endif
 }
 

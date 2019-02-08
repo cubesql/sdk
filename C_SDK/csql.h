@@ -58,6 +58,7 @@
 #include <pwd.h>
 #include <netdb.h>
 #include <dlfcn.h>
+#include <libgen.h>
 #endif
 
 #if defined(__cplusplus)
@@ -627,7 +628,7 @@ csqlc	*csql_cursor_alloc (csqldb *db);
 int		csql_cursor_reallocate (csqlc *c);
 int		csql_cursor_close (csqlc *c);
 int		csql_cursor_step (csqlc *c);
-int		csql_load_ssl (void);
+void	csql_load_ssl (void);
 const	char *ssl_error(void);
 int		encryption_is_ssl (int encryption);
 int		ssl_post_connection_check (csqldb *db);
