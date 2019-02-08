@@ -2382,7 +2382,7 @@ void csql_load_ssl (void) {
 	// try to open SSL shared library
 	#ifdef WIN32
     // add crypto path to search path (required by SSL)
-    PathRemoveFileSpecA(dllpath);
+    PathRemoveFileSpec(dllpath);
     SetDllDirectoryA(dllpath);
     
 	MultiByteToWideChar(CP_UTF8, 0, ssl_library, -1, sslW, MAX_PATH);
@@ -2435,6 +2435,17 @@ void csql_load_ssl (void) {
             if (strcmp(fname, "TLS_client_method") == 0) continue;
             
             if (strcmp(fname, "OpenSSL_version") == 0) continue;
+
+			if (strcmp(fname, "DH_new") == 0) continue;
+			if (strcmp(fname, "DH_generate_parameters_ex") == 0) continue;
+			if (strcmp(fname, "DH_check") == 0) continue;
+			if (strcmp(fname, "DH_generate_key") == 0) continue;
+			if (strcmp(fname, "RAND_seed") == 0) continue;
+			if (strcmp(fname, "TLSv1_1_server_method") == 0) continue;
+			if (strcmp(fname, "TLSv1_2_server_method") == 0) continue;
+			if (strcmp(fname, "SSL_CTX_set_info_callback") == 0) continue;
+			if (strcmp(fname, "SSL_set_ex_data") == 0) continue;
+			if (strcmp(fname, "SSL_get_ex_data") == 0) continue;
             
 			printf("Unable to load SSL function: %s\n", fname);
             #if CUBESQL_LOG_LOADSSL_ISSUES
@@ -2453,7 +2464,17 @@ void csql_load_ssl (void) {
     
 abort_load_ssl:
     #if CUBESQL_LOG_LOADSSL_ISSUES
-	if ((!crypto_handle) || (!ssl_handle)) printf("Load shared library error: %s\n", dlerror());
+	if ((!crypto_handle) || (!ssl_handle)) {
+		#ifdef WIN32
+		DWORD err = GetLastError();
+		LPCTSTR strErrorMessage = NULL; 
+		FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, err, 0, (LPWSTR)&strErrorMessage, 0, NULL); 
+		OutputDebugString(strErrorMessage);
+		#else
+		const char *error = dlerror();
+		printf("Load shared library error: %s\n", error);
+		#endif
+	}
     #endif
 	
 	ssl_loaded = kFALSE;
