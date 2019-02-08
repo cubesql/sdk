@@ -2318,6 +2318,10 @@ void csql_load_ssl (void) {
 	WCHAR sslW[MAX_PATH];
     WCHAR dllpath[MAX_PATH];
 	WCHAR cryptoW[MAX_PATH];
+    #else
+    char saved[2048];
+    char shlibpath[2048];
+    char *dir = NULL;
 	#endif
 	
 	if (ssl_loaded == kTRUE) return;
@@ -2385,13 +2389,11 @@ void csql_load_ssl (void) {
 	ssl_handle = LoadLibrary (sslW);
 	if (ssl_handle == NULL) goto abort_load_ssl;
 	#else
-    char saved[2048];
-    char shlibpath[2048];
     getcwd(saved, sizeof(saved));
     
     // copy crypto_library path to shlibpath
     strncpy(shlibpath, crypto_library, sizeof(shlibpath));
-    char *dir = dirname(shlibpath);
+    dir = dirname(shlibpath);
     if (dir) chdir(dir);
 	ssl_handle = dlopen (ssl_library, RTLD_LAZY);
     chdir(saved);
