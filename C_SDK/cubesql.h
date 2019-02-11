@@ -119,7 +119,7 @@ typedef void (*trace_function) (const char*, void*);
 CUBESQL_APIEXPORT const char *cubesql_version (void);
     
 CUBESQL_APIEXPORT int		cubesql_connect (csqldb **db, const char *host, int port, const char *username, const char *password, int timeout, int encryption);
-CUBESQL_APIEXPORT int		cubesql_connect_ssl (csqldb **db, const char *host, int port, const char *username, const char *password, int timeout, char *ssl_certificate_path);
+CUBESQL_APIEXPORT int		cubesql_connect_ssl (csqldb **db, const char *host, int port, const char *username, const char *password, int timeout, const char *ssl_certificate_path);
 CUBESQL_APIEXPORT void		cubesql_disconnect (csqldb *db, int gracefully);
 CUBESQL_APIEXPORT int		cubesql_execute (csqldb *db, const char *sql);
 CUBESQL_APIEXPORT csqlc		*cubesql_select (csqldb *db, const char *sql, int unused);
@@ -181,8 +181,10 @@ void	cubesql_settoken (csqldb *db, char *token);
 void	cubesql_sethostverification (csqldb *db, char *hostverification);
 char	*cubesql_gettoken (csqldb *db);
 void	cubesql_seterror (csqldb *db, int errcode, const char *errmsg);
+    
 const char *cubesql_sslversion (void);
-	
+unsigned long cubesql_sslversion_num (void);
+    
 #ifdef __cplusplus
 }  /* End of the 'extern "C"' block */
 #endif

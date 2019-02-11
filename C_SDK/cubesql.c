@@ -22,9 +22,12 @@ static int      TLSv1_1_client_method_loaded = kFALSE;
 static int      TLSv1_2_client_method_loaded = kFALSE;
 static int      TSL_client_method_loaded = kFALSE;
 static int      SSLv3_client_method_loaded = kFALSE;
+static int      SSL_library_init_loaded = kFALSE;
+// version
 static int      OpenSSL_version_loaded = kFALSE;
 static int      SSLeay_version_loaded = kFALSE;
-static int      SSL_library_init_loaded = kFALSE;
+static int      OpenSSL_version_num_loaded = kFALSE;
+static int      SSLeay_version_num_loaded = kFALSE;
 #else
 static int      ssl_loaded = kTRUE;
 #if CUBESQL_ENABLE_SSL_ENCRYPTION
@@ -32,9 +35,12 @@ static int      TLSv1_1_client_method_loaded = kTRUE;
 static int      TLSv1_2_client_method_loaded = kTRUE;
 static int      TSL_client_method_loaded = kTRUE;
 static int      SSLv3_client_method_loaded = kTRUE;
+static int      SSL_library_init_loaded = kTRUE;
+// version
 static int      OpenSSL_version_loaded = kTRUE;
 static int      SSLeay_version_loaded = kTRUE;
-static int      SSL_library_init_loaded = kTRUE;
+static int      OpenSSL_version_num_loaded = kTRUE;
+static int      SSLeay_version_num_loaded = kTRUE;
 #endif
 #endif
 
@@ -47,7 +53,7 @@ int cubesql_connect (csqldb **db, const char *host, int port, const char *userna
     return cubesql_connect_token(db, host, port, username, password, timeout, encryption, NULL, kFALSE, NULL, NULL, NULL, NULL);
 }
 
-int cubesql_connect_ssl (csqldb **db, const char *host, int port, const char *username, const char *password, int timeout, char *ssl_certificate_path) {
+int cubesql_connect_ssl (csqldb **db, const char *host, int port, const char *username, const char *password, int timeout, const char *ssl_certificate_path) {
     return cubesql_connect_token(db, host, port, username, password, timeout, CUBESQL_ENCRYPTION_SSL, NULL, kFALSE, ssl_certificate_path, NULL, NULL, NULL);
 }
 
@@ -879,9 +885,11 @@ csqldb *csql_dbinit (const char *host, int port, const char *username, const cha
 			// setup peer verification
 			db->verifyPeer = kTRUE;
 			if (SSL_CTX_load_verify_locations(db->ssl_ctx, root_certificate, NULL) != 1) {
+                ERR_print_errors_fp(stderr);
 				goto load_ssl_abort;
 			}
 			if (SSL_CTX_set_default_verify_paths(db->ssl_ctx) != 1) {
+                ERR_print_errors_fp(stderr);
 				goto load_ssl_abort;
 			}
 		}
@@ -889,9 +897,11 @@ csqldb *csql_dbinit (const char *host, int port, const char *username, const cha
 		// try to set up SSL certificate
 		if (ssl_certificate != NULL) {
 			if (SSL_CTX_use_certificate_file(db->ssl_ctx, ssl_certificate, SSL_FILETYPE_PEM) == 0) {
+                ERR_print_errors_fp(stderr);
 				goto load_ssl_abort;
 			}
 			else if (db->ssl_ctx != NULL && SSL_CTX_use_PrivateKey_file(db->ssl_ctx, ssl_certificate, SSL_FILETYPE_PEM) == 0) {
+                ERR_print_errors_fp(stderr);
 				goto load_ssl_abort;
 			}
 		}
@@ -2293,6 +2303,16 @@ const char *cubesql_sslversion (void) {
     #endif
 }
 
+unsigned long cubesql_sslversion_num (void) {
+    #if CUBESQL_ENABLE_SSL_ENCRYPTION
+    csql_load_ssl();
+    if (ssl_loaded == kFALSE) return 0;
+    if (OpenSSL_version_num_loaded) return OpenSSL_version_num();
+    if (SSLeay_version_num_loaded) return SSLeay();
+    #endif
+    return 0;
+}
+
 void csql_init_ssl (void) {
     // initialize SSL crap
     if (SSL_library_init_loaded) {
@@ -2300,14 +2320,24 @@ void csql_init_ssl (void) {
         SSL_load_error_strings();
         SSL_library_init_loaded = kFALSE;
     }
-    // printf("%s", cubesql_sslversion());
 }
 
+#if CUBESQL_DYNAMIC_SSL_LIBRARY
+void *load_function (void *handle, const char *name) {
+    #ifdef WIN32
+    void *p = (void (*)(void)) GetProcAddress ((HMODULE)handle, name);
+    #else
+    void *p = dlsym (handle, name);
+    #endif
+    return p;
+}
+#endif
+                     
 void csql_load_ssl (void) {
     #if CUBESQL_DYNAMIC_SSL_LIBRARY
-	char *ssl_func_name[] = {"SSL_free", "SSL_accept", "SSL_connect", "SSL_read", "SSL_write", "SSL_get_error", "SSL_set_fd", "SSL_new", "SSL_CTX_new", "SSLv3_client_method", "SSL_library_init", "SSL_CTX_use_PrivateKey_file", "SSL_CTX_use_certificate_file", "SSL_CTX_set_default_passwd_cb", "SSL_CTX_free", "SSL_load_error_strings", "SSL_CTX_use_certificate_chain_file", "SSL_CTX_load_verify_locations", "SSL_CTX_set_default_verify_paths", "SSL_CTX_set_verify", "SSL_CTX_set_verify_depth", "SSL_shutdown", "SSL_load_client_CA_file", "SSL_CTX_set_client_CA_list", "SSL_get_peer_certificate", "SSL_get_verify_result", "SSL_CTX_set_cipher_list", "SSL_CTX_ctrl", "SSL_CTX_set_default_passwd_cb_userdata", "TLSv1_1_client_method", "TLSv1_2_client_method", "SSLv23_server_method", "SSL_get_version", "SSL_get_current_cipher", "SSL_CIPHER_get_name", "SSL_CIPHER_get_version", "SSL_CIPHER_get_bits", "DH_new", "DH_generate_parameters_ex", "DH_check", "DH_generate_key", "RAND_seed", "TLSv1_1_server_method", "TLSv1_2_server_method", "SSL_CTX_set_info_callback", "SSL_set_ex_data", "SSL_get_ex_data", "TLS_server_method", "OpenSSL_version", "TLS_client_method", NULL};
+	char *ssl_func_name[] = {"SSL_free", "SSL_accept", "SSL_connect", "SSL_read", "SSL_write", "SSL_get_error", "SSL_set_fd", "SSL_new", "SSL_CTX_new", "SSLv3_client_method", "SSL_library_init", "SSL_CTX_use_PrivateKey_file", "SSL_CTX_use_certificate_file", "SSL_CTX_set_default_passwd_cb", "SSL_CTX_free", "SSL_load_error_strings", "SSL_CTX_use_certificate_chain_file", "SSL_CTX_load_verify_locations", "SSL_CTX_set_default_verify_paths", "SSL_CTX_set_verify", "SSL_CTX_set_verify_depth", "SSL_shutdown", "SSL_load_client_CA_file", "SSL_CTX_set_client_CA_list", "SSL_get_peer_certificate", "SSL_get_verify_result", "SSL_CTX_set_cipher_list", "SSL_CTX_ctrl", "SSL_CTX_set_default_passwd_cb_userdata", "TLSv1_1_client_method", "TLSv1_2_client_method", "SSLv23_server_method", "SSL_get_version", "SSL_get_current_cipher", "SSL_CIPHER_get_name", "SSL_CIPHER_get_version", "SSL_CIPHER_get_bits", "DH_new", "DH_generate_parameters_ex", "DH_check", "DH_generate_key", "RAND_seed", "TLSv1_1_server_method", "TLSv1_2_server_method", "SSL_CTX_set_info_callback", "SSL_set_ex_data", "SSL_get_ex_data", "TLS_server_method", "TLS_client_method", NULL};
 	
-	char *crypto_func_name[] = {"CRYPTO_num_locks",  "CRYPTO_set_locking_callback", "CRYPTO_set_id_callback", "ERR_get_error", "ERR_error_string", "ERR_print_errors_fp", "ERR_error_string_n", "ERR_free_strings", "ERR_lib_error_string", "ERR_func_error_string", "ERR_reason_error_string", "ERR_load_crypto_strings", "X509_get_subject_name", "X509_NAME_get_text_by_NID", "X509_free", "SSLeay_version", NULL};
+	char *crypto_func_name[] = {"CRYPTO_num_locks",  "CRYPTO_set_locking_callback", "CRYPTO_set_id_callback", "ERR_get_error", "ERR_error_string", "ERR_print_errors_fp", "ERR_error_string_n", "ERR_free_strings", "ERR_lib_error_string", "ERR_func_error_string", "ERR_reason_error_string", "ERR_load_crypto_strings", "X509_get_subject_name", "X509_NAME_get_text_by_NID", "X509_free", NULL};
 	
 	char *fname = NULL;
 	void *p = NULL;
@@ -2347,16 +2377,8 @@ void csql_load_ssl (void) {
 	for (idx=0;; idx++) {
 		fname = crypto_func_name[idx];
 		if (fname == NULL) break;
-		
-		#ifdef WIN32
-		p = (void (*)(void)) GetProcAddress ((HMODULE)crypto_handle, fname);
-		#else
-		p = dlsym (crypto_handle, fname);
-		#endif
         
-        if (p != NULL) {
-            if (strcmp(fname, "SSLeay_version") == 0) SSLeay_version_loaded = kTRUE;
-        }
+        p = load_function(crypto_handle, fname);
 		
 		if (p == NULL) {
             // OpenSSL 1.1
@@ -2365,7 +2387,6 @@ void csql_load_ssl (void) {
             if (strcmp(fname, "CRYPTO_set_id_callback") == 0) continue;
             if (strcmp(fname, "ERR_free_strings") == 0) continue;
             if (strcmp(fname, "ERR_load_crypto_strings") == 0) continue;
-            if (strcmp(fname, "SSLeay_version") == 0) continue;
             
             printf("Unable to load CRYPTO function: %s\n", fname);
             #if CUBESQL_LOG_LOADSSL_ISSUES
@@ -2405,11 +2426,7 @@ void csql_load_ssl (void) {
 		fname = ssl_func_name[idx];
 		if (fname == NULL) break;
 		
-		#ifdef WIN32
-		p = (void (*)(void)) GetProcAddress ((HMODULE)ssl_handle, fname);
-		#else
-		p = dlsym (ssl_handle, fname);
-		#endif
+        p = load_function(ssl_handle, fname);
         
         // special flags used in the CUBESQL_DYNAMIC_SSL_LIBRARY case
         if (p != NULL) {
@@ -2417,7 +2434,6 @@ void csql_load_ssl (void) {
             else if (strcmp(fname, "TLSv1_2_client_method") == 0) TLSv1_2_client_method_loaded = kTRUE;
             else if (strcmp(fname, "TSL_client_method") == 0) TSL_client_method_loaded = kTRUE;
             else if (strcmp(fname, "SSLv3_client_method") == 0) SSLv3_client_method_loaded = kTRUE;
-            else if (strcmp(fname, "OpenSSL_version") == 0) OpenSSL_version_loaded = kTRUE;
             else if (strcmp(fname, "SSL_library_init") == 0) SSL_library_init_loaded = kTRUE;
         }
 		
@@ -2433,8 +2449,6 @@ void csql_load_ssl (void) {
             if (strcmp(fname, "SSLv23_server_method") == 0) continue;
             if (strcmp(fname, "TLS_server_method") == 0) continue;
             if (strcmp(fname, "TLS_client_method") == 0) continue;
-            
-            if (strcmp(fname, "OpenSSL_version") == 0) continue;
 
 			if (strcmp(fname, "DH_new") == 0) continue;
 			if (strcmp(fname, "DH_generate_parameters_ex") == 0) continue;
@@ -2457,6 +2471,40 @@ void csql_load_ssl (void) {
 		
 		ssl_func[idx] = p;
 	}
+    
+    // separately load version functions (apparently on some Windows 64bit DLL libraries OpenSSL_version
+    // is in the crypto DLL and not in the SSL one)
+    // crypto first
+    p = load_function(crypto_handle, "SSLeay_version");
+    if (!p) p = load_function(crypto_handle, "OpenSSL_version");
+    if (p) {
+        SSLeay_version_loaded = kTRUE;
+        crypto_func[15] = p;
+    }
+    
+    p = load_function(crypto_handle, "SSLeay");
+    if (!p) p = load_function(crypto_handle, "OpenSSL_version_num");
+    if (p) {
+        SSLeay_version_num_loaded = kTRUE;
+        crypto_func[16] = p;
+    }
+    
+    // then ssl
+    if (SSLeay_version_loaded == kFALSE) {
+        p = load_function(ssl_handle, "OpenSSL_version");
+        if (p) {
+            OpenSSL_version_loaded = kTRUE;
+            ssl_func[49] = p;
+        }
+    }
+    
+    if (SSLeay_version_num_loaded == kFALSE) {
+        p = load_function(ssl_handle, "OpenSSL_version_num");
+        if (p) {
+            OpenSSL_version_num_loaded = kTRUE;
+            ssl_func[50] = p;
+        }
+    }
 	
     csql_init_ssl();
 	ssl_loaded = kTRUE;

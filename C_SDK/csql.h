@@ -343,18 +343,21 @@ extern X509_NAME_SSL *X509_get_subject_name(const X509_CERT_SSL *x);
 extern int X509_NAME_get_text_by_NID(X509_NAME_SSL *name, int nid, char *buf,int len);
 extern void X509_free(X509_CERT_SSL *a);
 extern const char *SSLeay_version(int t);
-
+extern unsigned long SSLeay(void);
+    
 #if CUBESQL_EXTERN_SSL_DISABLE11
 #define OpenSSL_version     SSLeay_version
+#define OpenSSL_version_num SSLeay
 #define TLS_client_method   SSLv3_client_method
 #else
 extern const SSL_METHOD *TLS_client_method(void);
 extern const char *OpenSSL_version(int t);
+extern unsigned long OpenSSL_version_num(void);
 #endif
 
 #else
-#define CRYPTO_NUM_FUNCS                    16
-#define SSL_NUM_FUNCS                       50
+#define CRYPTO_NUM_FUNCS                    17
+#define SSL_NUM_FUNCS                       51
 
 #define SSL_free (* (void (*)(SSL *)) ssl_func[0])
 #define SSL_accept (* (int (*)(SSL *)) ssl_func[1])
@@ -397,7 +400,7 @@ extern const char *OpenSSL_version(int t);
 #define SSL_CIPHER_get_version (* (char * (*) (SSL_CIPHER *)) ssl_func[35])
 #define SSL_CIPHER_get_bits (* (int (*) (SSL_CIPHER *, int *)) ssl_func[36])
 #define TLS_server_method (* (SSL_METHOD * (*)(void)) ssl_func[47])
-#define TLS_client_method (* (SSL_METHOD * (*)(void)) ssl_func[49])
+#define TLS_client_method (* (SSL_METHOD * (*)(void)) ssl_func[48])
 
 #define DH_new (* (DH * (*)(void)) settings.ssl_func[37])
 #define DH_generate_parameters_ex (* (int (*) (DH *, int, int, void *)) ssl_func[38])
@@ -432,7 +435,9 @@ extern const char *OpenSSL_version(int t);
 #define X509_free (* (void (*)(X509_CERT_SSL*)) crypto_func[14])
     
 #define SSLeay_version (* (const char * (*)(int)) crypto_func[15])
-#define OpenSSL_version (* (const char * (*)(int)) ssl_func[48])
+#define SSLeay (* (unsigned long (*)(void)) crypto_func[16])
+#define OpenSSL_version (* (const char * (*)(int)) ssl_func[49])
+#define OpenSSL_version_num (* (unsigned long (*)(void)) ssl_func[50])
 #endif
 #endif
     
