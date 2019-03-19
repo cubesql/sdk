@@ -66,8 +66,8 @@ extern "C"
 {
 #endif
 
-#include "aes.h"
-#include "sha1.h"
+#include "cubesql_aes.h"
+#include "cubesql_sha1.h"
 #include "pseudorandom.h"
 	
 #ifdef WIN32

@@ -134,7 +134,7 @@
 #if !defined( _AESOPT_H )
 #define _AESOPT_H
 
-#include "aes.h"
+#include "cubesql_aes.h"
 
 /*  CONFIGURATION - USE OF DEFINES
 
