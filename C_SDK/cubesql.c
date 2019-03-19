@@ -654,9 +654,12 @@ csqlc *cubesql_vmselect (csqlvm *vm) {
 }
 
 int cubesql_vmclose (csqlvm *vm) {
+
+	csqldb *db;
+
     if (!vm) return CUBESQL_NOERR;
     
-	csqldb *db = vm->db;
+	db = vm->db;
 	
 	csql_initrequest(db, 0, 0, kVM_CLOSE, kNO_SELECTOR);
 	csql_netwrite(db, NULL, 0, NULL, 0);
@@ -1036,7 +1039,25 @@ int csql_socketconnect (csqldb *db) {
     // ipv4/ipv6 specific variables
     struct sockaddr_storage serveraddr;
     struct addrinfo hints, *addr_list = NULL, *addr;
-	
+    
+    int rc = 0;
+	char port_string[256];
+    int sock_index = 0;
+    int sock_current = 0;
+    int sock_list[MAX_SOCK_LIST] = {0};
+    struct timeval tv;
+    int i = 0;
+    int socket_err = 0;
+    int sockfd = 0;
+    int len = 1;
+    unsigned long ioctl_blocking = 1; 
+    int connect_timeout = 0;
+    int nfds = 0;
+	time_t start = 0;
+    time_t now = 0;
+    fd_set write_fds;
+    fd_set except_fds;
+    
 	// ipv6 code from https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_72/rzab6/xip6client.htm
     memset(&hints, 0x00, sizeof(hints));
     hints.ai_flags    = AI_NUMERICSERV;
@@ -1046,7 +1067,7 @@ int csql_socketconnect (csqldb *db) {
     // check if we were provided the address of the server using
     // inet_pton() to convert the text form of the address to binary form.
     // If it is numeric then we want to prevent getaddrinfo() from doing any name resolution.
-    int rc = inet_pton(AF_INET, (const char *) db->host, &serveraddr);
+    rc = inet_pton(AF_INET, (const char *) db->host, &serveraddr);
     if (rc == 1) { /* valid IPv4 text address? */
         hints.ai_family = AF_INET;
         hints.ai_flags |= AI_NUMERICHOST;
@@ -1060,7 +1081,6 @@ int csql_socketconnect (csqldb *db) {
     }
     
     // get the address information for the server using getaddrinfo()
-    char port_string[256];
     snprintf(port_string, sizeof(port_string), "%d", db->port);
     rc = getaddrinfo((const char *) db->host, port_string, &hints, &addr_list);
     if (rc != 0 || addr_list == NULL) {
@@ -1068,9 +1088,6 @@ int csql_socketconnect (csqldb *db) {
         return -1;
     }
     
-    int sock_index = 0;
-    int sock_current = 0;
-    int sock_list[MAX_SOCK_LIST] = {0};
     for (addr = addr_list; addr != NULL; addr = addr->ai_next, ++sock_index) {
         if (sock_index >= MAX_SOCK_LIST) break;
         
@@ -1083,7 +1100,7 @@ int csql_socketconnect (csqldb *db) {
         if (sock_current < 0) continue;
         
         // set socket options
-        int len = 1;
+        len = 1;
         bsd_setsockopt(sock_current, SOL_SOCKET, SO_KEEPALIVE, (const char *) &len, sizeof(len));
         len = 1;
         bsd_setsockopt(sock_current, IPPROTO_TCP, TCP_NODELAY, (const char *) &len, sizeof(len));
@@ -1104,7 +1121,7 @@ int csql_socketconnect (csqldb *db) {
         }
         
         // turn on non-blocking
-        unsigned long ioctl_blocking = 1;    /* ~0; //TRUE; */
+        ioctl_blocking = 1;    /* ~0; //TRUE; */
         ioctl(sock_current, FIONBIO, &ioctl_blocking);
         
         // initiate non-blocking connect ignoring return code
@@ -1118,23 +1135,16 @@ int csql_socketconnect (csqldb *db) {
     freeaddrinfo(addr_list);
 	
 	// calculate the connection timeout and reset timers
-	int connect_timeout = (db->timeout > 0) ? db->timeout : CUBESQL_DEFAULT_TIMEOUT;
-	time_t start = time(NULL);
-    time_t now = start;
+	connect_timeout = (db->timeout > 0) ? db->timeout : CUBESQL_DEFAULT_TIMEOUT;
+	start = time(NULL);
+    now = start;
     rc = 0;
-    
-    int socket_err = 0;
-    int sockfd = 0;
-    fd_set write_fds;
-    fd_set except_fds;
-    struct timeval tv;
-    int i;
     
 	while (rc == 0 && ((now - start) < connect_timeout)) {
 		FD_ZERO(&write_fds);
         FD_ZERO(&except_fds);
         
-        int nfds = 0;
+        nfds = 0;
         for (i=0; i<MAX_SOCK_LIST; ++i) {
             if (sock_list[i]) {
                 FD_SET(sock_list[i], &write_fds);
@@ -1206,7 +1216,7 @@ int csql_socketconnect (csqldb *db) {
 	}
 	
 	// turn off non-blocking
-	int ioctl_blocking = 0;	/* ~0; //TRUE; */
+	ioctl_blocking = 0;	/* ~0; //TRUE; */
 	ioctl(sockfd, FIONBIO, &ioctl_blocking);
 	
 	// socket is connected now check for SSL
