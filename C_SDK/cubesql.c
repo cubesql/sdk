@@ -269,22 +269,22 @@ int cubesql_cursor_currentrow (csqlc *c) {
 	return c->current_row;
 }
 
-int cubesql_cursor_seek (csqlc *c, int index) {
+int cubesql_cursor_seek (csqlc *c, int Index) {
 	if (c->server_side == kTRUE) {
-		if (index != CUBESQL_SEEKNEXT) return kFALSE;
+		if (Index != CUBESQL_SEEKNEXT) return kFALSE;
 		if (c->eof == kTRUE) return kFALSE;
 		return (csql_cursor_step(c) == CUBESQL_NOERR) ? kTRUE : kFALSE;
 	}
 		
-	if (index == CUBESQL_SEEKNEXT) index = c->current_row + 1;
-	else if (index == CUBESQL_SEEKFIRST) index = 1;
-	else if (index == CUBESQL_SEEKPREV) index = c->current_row - 1;
-	else if (index == CUBESQL_SEEKLAST) index = c->nrows;
+	if (Index == CUBESQL_SEEKNEXT) Index = c->current_row + 1;
+	else if (Index == CUBESQL_SEEKFIRST) Index = 1;
+	else if (Index == CUBESQL_SEEKPREV) Index = c->current_row - 1;
+	else if (Index == CUBESQL_SEEKLAST) Index = c->nrows;
 	
-	if ((c->nrows != -1) && (index > c->nrows)) {c->eof = kTRUE; return kFALSE;}
-	if (index < 0) return kFALSE;
-	c->eof = (index == c->nrows + 1) ? kTRUE : kFALSE;
-	c->current_row = index;
+	if ((c->nrows != -1) && (Index > c->nrows)) {c->eof = kTRUE; return kFALSE;}
+	if (Index < 0) return kFALSE;
+	c->eof = (Index == c->nrows + 1) ? kTRUE : kFALSE;
+	c->current_row = Index;
 	
 	return kTRUE;
 }
@@ -294,22 +294,22 @@ int cubesql_cursor_iseof (csqlc *c) {
 	return c->eof;
 }
 
-int cubesql_cursor_columntype (csqlc *c, int index) {
-	if ((index <= 0) || (index > c->ncols)) return -1;
-	if (c->has_rowid) return c->types[index];
-	else return c->types[index-1];
+int cubesql_cursor_columntype (csqlc *c, int Index) {
+	if ((Index <= 0) || (Index > c->ncols)) return -1;
+	if (c->has_rowid) return c->types[Index];
+	else return c->types[Index-1];
 }
 
-int cubesql_cursor_columntypebind (csqlc *c, int index) {
+int cubesql_cursor_columntypebind (csqlc *c, int Index) {
 	//char *v = NULL;
 	//int  vlen = 0;
 	int  type;
-	if ((index <= 0) || (index > c->ncols)) return -1;
-	if (c->has_rowid) type = c->types[index];
-	else type = c->types[index-1];
+	if ((Index <= 0) || (Index > c->ncols)) return -1;
+	if (c->has_rowid) type = c->types[Index];
+	else type = c->types[Index-1];
 	
 	// check for special NULL value
-	//v = cubesql_cursor_field (c, CUBESQL_CURROW, index, &vlen);
+	//v = cubesql_cursor_field (c, CUBESQL_CURROW, Index, &vlen);
 	//if ((v == NULL) || (vlen == -1)) return kBIND_NULL;
 	
 	if (type == CUBESQL_Type_Integer) return CUBESQL_BIND_INTEGER;
@@ -370,7 +370,7 @@ char *cubesql_cursor_field (csqlc *c, int row, int column, int *len) {
 		return result;
 	}
 	
-	// first find out the right index buffer
+	// first find out the right Index buffer
 	if (c->nbuffer) {
 		// search in current buffer first (90% of the time it should be true)
 		if (c->current_buffer == 0) v1 = 0;
@@ -425,7 +425,7 @@ found_buffer:
 		}
 	}
 		
-	// compute index inside the cursor
+	// compute Index inside the cursor
 	if ((c->has_rowid) && (column != CUBESQL_ROWID)) n = ((row-1) * (c->ncols + 1)) + (column);
 	else n = ((row-1) * c->ncols) + (column-1);
 	
@@ -585,44 +585,44 @@ csqlvm *cubesql_vmprepare (csqldb *db, const char *sql) {
 	return vm;
 }
 
-int cubesql_vmbind_int (csqlvm *vm, int index, int intvalue) {
+int cubesql_vmbind_int (csqlvm *vm, int Index, int intvalue) {
 	char	value[256];
 	
 	// convert int to text
 	snprintf(value, sizeof(value), "%d", intvalue);
-	return csql_bind_value(vm->db, index, CUBESQL_BIND_INTEGER, value, -1);
+	return csql_bind_value(vm->db, Index, CUBESQL_BIND_INTEGER, value, -1);
 }
 
-int cubesql_vmbind_double (csqlvm *vm, int index, double dvalue) {
+int cubesql_vmbind_double (csqlvm *vm, int Index, double dvalue) {
 	char	value[256];
 	
 	// convert double to text
 	snprintf(value, sizeof(value), "%f", dvalue);
-	return csql_bind_value(vm->db, index, CUBESQL_BIND_DOUBLE, value, -1);
+	return csql_bind_value(vm->db, Index, CUBESQL_BIND_DOUBLE, value, -1);
 }
 
-int cubesql_vmbind_text (csqlvm *vm, int index, char *value, int len) {
-	return csql_bind_value(vm->db, index, CUBESQL_BIND_TEXT, value, -1);
+int cubesql_vmbind_text (csqlvm *vm, int Index, char *value, int len) {
+	return csql_bind_value(vm->db, Index, CUBESQL_BIND_TEXT, value, -1);
 }
 
-int cubesql_vmbind_blob (csqlvm *vm, int index, void *value, int len) {
-	return csql_bind_value(vm->db, index, CUBESQL_BIND_BLOB, (char *)value, len);
+int cubesql_vmbind_blob (csqlvm *vm, int Index, void *value, int len) {
+	return csql_bind_value(vm->db, Index, CUBESQL_BIND_BLOB, (char *)value, len);
 }
 
-int cubesql_vmbind_null (csqlvm *vm, int index) {
-	return csql_bind_value(vm->db, index, CUBESQL_BIND_NULL, NULL, 0);
+int cubesql_vmbind_null (csqlvm *vm, int Index) {
+	return csql_bind_value(vm->db, Index, CUBESQL_BIND_NULL, NULL, 0);
 }
 
-int cubesql_vmbind_int64 (csqlvm *vm, int index, int64 int64value) {
+int cubesql_vmbind_int64 (csqlvm *vm, int Index, int64 int64value) {
 	char	value[256];
 	
 	// convert int to text
 	snprintf(value, sizeof(value), "%lld", int64value);
-	return csql_bind_value(vm->db, index, CUBESQL_BIND_INT64, value, -1);
+	return csql_bind_value(vm->db, Index, CUBESQL_BIND_INT64, value, -1);
 }
 
-int cubesql_vmbind_zeroblob (csqlvm *vm, int index, int len) {
-	return csql_bind_value(vm->db, index, CUBESQL_BIND_ZEROBLOB, NULL, len);
+int cubesql_vmbind_zeroblob (csqlvm *vm, int Index, int len) {
+	return csql_bind_value(vm->db, Index, CUBESQL_BIND_ZEROBLOB, NULL, len);
 }
 
 int cubesql_vmexecute (csqlvm *vm) {
@@ -767,14 +767,14 @@ abort:
 }
 
 int cubesql_cursor_addrow (csqlc *cursor, char **row, int *len) {
-	int i, j, index, rlen;
+	int i, j, Index, rlen;
 	
 	// row can be added to a custom created cursor only
 	if (cursor->cursor_id != -1) return kFALSE;
 	
 	// check if there is enough space for the new row
-	index = cursor->nrows * cursor->ncols;
-	if (cursor->nalloc < index + cursor->ncols) {
+	Index = cursor->nrows * cursor->ncols;
+	if (cursor->nalloc < Index + cursor->ncols) {
 		int newsize = cursor->nalloc + (kDEFAULT_ALLOC_ROWS * 2);
 		
 		cursor->buffer = (char**) realloc(cursor->data, sizeof(char*) * cursor->ncols * newsize);
@@ -787,7 +787,7 @@ int cubesql_cursor_addrow (csqlc *cursor, char **row, int *len) {
 	}
 	
 	// append new row to the cursor
-	for (j=0, i=index; j < cursor->ncols; j++, i++) {
+	for (j=0, i=Index; j < cursor->ncols; j++, i++) {
 		rlen = len[j];
 		if (rlen < 0) rlen = 0;
 		
@@ -1244,7 +1244,7 @@ int csql_socketconnect (csqldb *db) {
 	return sockfd;
 }
 
-int csql_bind_value (csqldb *db, int index, int bindtype, char *value, int len) {
+int csql_bind_value (csqldb *db, int Index, int bindtype, char *value, int len) {
 	int field_size[1];
 	int nfields = 0, nsizedim = 0, packet_size = 0, datasize = 0;
 	
@@ -1264,7 +1264,7 @@ int csql_bind_value (csqldb *db, int index, int bindtype, char *value, int len) 
 	// prepare BIND command
 	csql_initrequest(db, packet_size, nfields, kVM_BIND, kNO_SELECTOR);
 	db->request.flag3 = (unsigned char) bindtype;
-	db->request.reserved1 = htons(index);
+	db->request.reserved1 = htons(Index);
 	if (bindtype == CUBESQL_BIND_ZEROBLOB) db->request.expandedSize = htonl(len);
 	
 	// send request
@@ -1335,7 +1335,7 @@ int csql_send_statement (csqldb *db, int command_type, const char *sql, int is_p
 
 csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 	csqlc	*c = NULL;
-	int		index, gdone = kFALSE, is_partial = kFALSE;
+	int		Index, gdone = kFALSE, is_partial = kFALSE;
 	int		has_tables, has_rowid, server_rowcount, server_colcount, cursor_colcount;
 	char	*buffer;
 	int		i, nrows, ncols, count, data_seek = 0, end_chuck;
@@ -1344,11 +1344,11 @@ csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 	
 	// allocate basic cursor struct
 	if (existing_c == NULL) {
-		index = 0;
+		Index = 0;
 		c = csql_cursor_alloc(db);
 	}
 	else {
-		index = 1;
+		Index = 1;
 		c = existing_c;
 	}
 			
@@ -1399,7 +1399,7 @@ csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 		
 		// set buffers
 		server_tables = NULL;
-		if (index == 0) {
+		if (Index == 0) {
 			char	*temp;
 			int		len;
 			
@@ -1454,7 +1454,7 @@ csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 		}
 		
 		// adjust others counters/pointers
-		if (index == 0) {
+		if (Index == 0) {
 			c->types = server_types;
 			c->size = server_sizes;
 			c->names = server_names;
@@ -1468,9 +1468,9 @@ csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 		}
 		
 		// adjust pointers for server side cursors
-		if ((c->server_side) && (index > 0)) {
-			c->index++;
-			if ((c->index > 1) && (c->p0 != (char *)c->size)) free(c->size);
+		if ((c->server_side) && (Index > 0)) {
+			c->Index++;
+			if ((c->Index > 1) && (c->p0 != (char *)c->size)) free(c->size);
 			c->types = (int *) c->p0;
 			c->names = (char *) (c->p0 + (sizeof(int) * server_colcount));
 			c->size = server_sizes;
@@ -1482,7 +1482,7 @@ csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 			c->size0 = c->size;
 		}
 		 
-		//if (db->protocol == k2009PROTOCOL) c->cursor_id = ntohs(db->reply.index);
+		//if (db->protocol == k2009PROTOCOL) c->cursor_id = ntohs(db->reply.Index);
 		c->has_rowid = has_rowid;
 		c->nrows += nrows;
 		c->ncols = ncols;
@@ -1504,7 +1504,7 @@ csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 		// send ACK only in case of chunk cursor
 		if ((is_partial == kTRUE) && (c->server_side == kFALSE)) csql_ack(db, kCHUNK_OK);
 		else gdone = kTRUE;
-		index++;
+		Index++;
 	}
 	while (gdone != kTRUE);
 	return c;
@@ -2626,7 +2626,7 @@ void random_hash_field (unsigned char hval[], const char *randpoll, const char *
 
 int encrypt_buffer (char *buffer, int dim, char random[], aes_encrypt_ctx ctx[1]) {
 	char    dbuf[2 * BLOCK_LEN];
-	int		i, len, index=0;
+	int		i, len, Index=0;
 	char	*b1, *b2;
 	
 	memcpy(dbuf, random, BLOCK_LEN);
@@ -2663,15 +2663,15 @@ int encrypt_buffer (char *buffer, int dim, char random[], aes_encrypt_ctx ctx[1]
 		
 		len -= BLOCK_LEN;
 		
-		if (index == 0)
+		if (Index == 0)
 			memcpy(buffer, b1, BLOCK_LEN);
 		
 		// advance the buffer pointers
 		if (len >= BLOCK_LEN) {
-        	b2 = buffer + (index * BLOCK_LEN);
+        	b2 = buffer + (Index * BLOCK_LEN);
         	b1 = b2 + BLOCK_LEN;
         }
-        index++;
+        Index++;
 	}
 	while (len >= BLOCK_LEN);
 	
@@ -2679,7 +2679,7 @@ int encrypt_buffer (char *buffer, int dim, char random[], aes_encrypt_ctx ctx[1]
 		char b3[BLOCK_LEN];
 		char back[BLOCK_LEN];
 		
-		memcpy(b3, buffer + (index * BLOCK_LEN), len);
+		memcpy(b3, buffer + (Index * BLOCK_LEN), len);
 		
 		// xor ciphertext into last block
         for(i = 0; i < len; ++i)
@@ -2706,7 +2706,7 @@ int encrypt_buffer (char *buffer, int dim, char random[], aes_encrypt_ctx ctx[1]
 }
 
 int decrypt_buffer (char *buffer, int dim, aes_decrypt_ctx ctx[1]) {
-	int 	len, nextlen, i, index=0;
+	int 	len, nextlen, i, Index=0;
 	char	*b1, *b2;
 	char	buf[BLOCK_LEN], b3[BLOCK_LEN];
 	
@@ -2740,9 +2740,9 @@ int decrypt_buffer (char *buffer, int dim, aes_decrypt_ctx ctx[1]) {
         	for(i = 0; i < BLOCK_LEN; ++i)
         		buf[i] ^= b1[i];
         	
-        	memcpy(buffer + index*BLOCK_LEN, buf, BLOCK_LEN);
+        	memcpy(buffer + Index*BLOCK_LEN, buf, BLOCK_LEN);
 			
-			index++;
+			Index++;
 			len -= BLOCK_LEN;
 			if (len == 0) return 0;
 			
@@ -2775,9 +2775,9 @@ int decrypt_buffer (char *buffer, int dim, aes_decrypt_ctx ctx[1]) {
             for(i = 0; i < BLOCK_LEN; ++i)
                 b3[i] ^= b1[i];
             
-            memcpy(buffer + index*BLOCK_LEN, b3, BLOCK_LEN);
-            index++;
-            memcpy(buffer + index*BLOCK_LEN, buf, nextlen);
+            memcpy(buffer + Index*BLOCK_LEN, b3, BLOCK_LEN);
+            Index++;
+            memcpy(buffer + Index*BLOCK_LEN, buf, nextlen);
             
             return 0;
 		}
