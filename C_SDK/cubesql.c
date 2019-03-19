@@ -1469,8 +1469,8 @@ csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 		
 		// adjust pointers for server side cursors
 		if ((c->server_side) && (Index > 0)) {
-			c->Index++;
-			if ((c->Index > 1) && (c->p0 != (char *)c->size)) free(c->size);
+			c->index++;
+			if ((c->index > 1) && (c->p0 != (char *)c->size)) free(c->size);
 			c->types = (int *) c->p0;
 			c->names = (char *) (c->p0 + (sizeof(int) * server_colcount));
 			c->size = server_sizes;
@@ -2624,18 +2624,18 @@ void random_hash_field (unsigned char hval[], const char *randpoll, const char *
 	sha1((unsigned char *)hval, (const unsigned char *)buffer, kRANDPOOLSIZE+SHA1_DIGEST_SIZE);
 }
 
-int encrypt_buffer (char *buffer, int dim, char random[], aes_encrypt_ctx ctx[1]) {
+int encrypt_buffer (char *buffer, int dim, char Random[], aes_encrypt_ctx ctx[1]) {
 	char    dbuf[2 * BLOCK_LEN];
 	int		i, len, Index=0;
 	char	*b1, *b2;
 	
-	memcpy(dbuf, random, BLOCK_LEN);
+	memcpy(dbuf, Random, BLOCK_LEN);
 	
 	if (dim < BLOCK_LEN) {
 		// if the buffer is less than one block
 		memcpy(dbuf + BLOCK_LEN, buffer, dim);
 		
-		// xor the file bytes with the random pool
+		// xor the file bytes with the Random pool
 		for(i = 0; i < dim; ++i)
 			dbuf[i + BLOCK_LEN] ^= dbuf[i];
         
@@ -2643,7 +2643,7 @@ int encrypt_buffer (char *buffer, int dim, char random[], aes_encrypt_ctx ctx[1]
         aes_encrypt((const unsigned char*) (dbuf + dim), (unsigned char*)(dbuf + dim), ctx);
         
         // copy back encrypted data
-        memcpy(random, dbuf, BLOCK_LEN);
+        memcpy(Random, dbuf, BLOCK_LEN);
         memcpy(buffer, dbuf + BLOCK_LEN, dim);
         
         return (dim+BLOCK_LEN);
