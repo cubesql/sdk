@@ -226,6 +226,11 @@ typedef int SOCKET;
 #include <openssl/err.h>
 #define X509_CERT_SSL       X509
 #define X509_NAME_SSL       X509_NAME
+
+#ifndef SSL_CTRL_OPTIONS
+#define SSL_CTRL_OPTIONS                    32
+#endif
+
 #else
 // common part between CUBESQL_EXTERN_SSL_LIBRARY and CUBESQL_DYNAMIC_SSL_LIBRARY
     
