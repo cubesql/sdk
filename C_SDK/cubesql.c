@@ -1128,13 +1128,14 @@ int csql_socketconnect (csqldb *db) {
     fd_set write_fds;
     fd_set except_fds;
     struct timeval tv;
+    int i;
     
 	while (rc == 0 && ((now - start) < connect_timeout)) {
 		FD_ZERO(&write_fds);
         FD_ZERO(&except_fds);
         
         int nfds = 0;
-        for (int i=0; i<MAX_SOCK_LIST; ++i) {
+        for (i=0; i<MAX_SOCK_LIST; ++i) {
             if (sock_list[i]) {
                 FD_SET(sock_list[i], &write_fds);
                 FD_SET(sock_list[i], &except_fds);
@@ -1154,7 +1155,7 @@ int csql_socketconnect (csqldb *db) {
         }
         
         // check for error first
-        for (int i=0; i<MAX_SOCK_LIST; ++i) {
+        for (i=0; i<MAX_SOCK_LIST; ++i) {
             if (sock_list[i] > 0) {
                 if (FD_ISSET(sock_list[i], &except_fds)) {
                     closesocket(sock_list[i]);
@@ -1164,7 +1165,7 @@ int csql_socketconnect (csqldb *db) {
         }
         
         // check which file descriptor is ready (need to check for socket error also)
-        for (int i=0; i<MAX_SOCK_LIST; ++i) {
+        for (i=0; i<MAX_SOCK_LIST; ++i) {
             if (sock_list[i] > 0) {
                 if (FD_ISSET(sock_list[i], &write_fds)) {
                     int err = csql_socketerror(sock_list[i]);
@@ -1187,7 +1188,7 @@ int csql_socketconnect (csqldb *db) {
 	}
     
     // close still opened sockets
-    for (int i=0; i<MAX_SOCK_LIST; ++i) {
+    for (i=0; i<MAX_SOCK_LIST; ++i) {
         if ((sock_list[i] > 0) && (sock_list[i] != sockfd)) closesocket(sock_list[i]);
     }
     
@@ -1335,7 +1336,7 @@ int csql_send_statement (csqldb *db, int command_type, const char *sql, int is_p
 csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 	csqlc	*c = NULL;
 	int		index, gdone = kFALSE, is_partial = kFALSE;
-	int		has_tables, has_rowid, nfields, server_rowcount, server_colcount, cursor_colcount;
+	int		has_tables, has_rowid, server_rowcount, server_colcount, cursor_colcount;
 	char	*buffer;
 	int		i, nrows, ncols, count, data_seek = 0, end_chuck;
 	int		*server_types, *server_sizes, *server_sum;
@@ -1376,7 +1377,7 @@ csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 		if (TESTBIT(db->reply.flag1, SERVER_SERVER_SIDE)) c->server_side = kTRUE;
 		if (c->server_side) is_partial = kFALSE;
 		
-		nfields = ntohl(db->reply.numFields);
+	//	nfields = ntohl(db->reply.numFields);
 		server_rowcount = ntohl(db->reply.rows);
 		server_colcount = ntohl(db->reply.cols);
 		cursor_colcount = (has_rowid ? server_colcount-1 : server_colcount);
@@ -2082,11 +2083,11 @@ void csql_seterror(csqldb *db, int errcode, const char *errmsg) {
 }
 
 int csql_socketerror (int fd) {
-	int			err, sockerr, err2;
+	int			err, sockerr;
 	socklen_t	errlen = sizeof(err);
 	
 	sockerr = bsd_getsockopt(fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen);
-	err2 = errno;
+//	err2 = errno;
 	
 	if (sockerr < 0)
 		return -1;
