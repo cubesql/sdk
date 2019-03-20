@@ -1,0 +1,966 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>CubeSQL: C API reference</title>
+    <link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+<body>
+
+<div class="docheader">
+    <b><em>CubeSQL C SDK API</em></b>
+    <span style="float: right"><a href="mailto:marco@sqlabs.com">Feedback</a></span>
+</div>
+
+<div><a name="top"></a></div>
+<div class="content" style="height:540px;">
+		
+		<div class="listleft">
+			<strong><var>Database API</var></strong><br />
+			<h3><a href="#1">cubesql_connect</a></h3>
+			<h3><a href="#1a">cubesql_connect_ssl</a></h3>
+			<h3><a href="#2">cubesql_disconnect</a></h3>
+			<h3><a href="#3">cubesql_execute</a></h3>
+			<h3><a href="#4">cubesql_select</a></h3>
+			<h3><a href="#5">cubesql_bind</a></h3>
+			<h3><a href="#6">cubesql_commit</a></h3>
+			<h3><a href="#7">cubesql_rollback</a></h3>
+			<h3><a href="#8">cubesql_ping</a></h3>
+			<h3><a href="#9">cubesql_errcode</a></h3>
+			<h3><a href="#10">cubesql_errmsg</a></h3>
+		</div>
+		
+		<div class="listright">
+			<strong><var>Cursor API</var></strong><br />
+			<h3><a href="#11">cubesql_cursor_numrows</a></h3>
+			<h3><a href="#12">cubesql_cursor_numcolumns</a></h3>
+			<h3><a href="#13">cubesql_cursor_currentrow</a></h3>
+			<h3><a href="#14">cubesql_cursor_seek</a></h3>
+			<h3><a href="#15">cubesql_cursor_iseof</a></h3>
+			<h3><a href="#16">cubesql_cursor_columntype</a></h3>
+			<h3><a href="#17">cubesql_cursor_field</a></h3>
+			<h3><a href="#18">cubesql_cursor_rowid</a></h3>
+			<h3><a href="#19">cubesql_cursor_int</a></h3>
+			<h3><a href="#20">cubesql_cursor_double</a></h3>
+			<h3><a href="#21">cubesql_cursor_cstring</a></h3>
+			<h3><a href="#22">cubesql_cursor_cstring_static</a></h3>
+			<h3><a href="#23">cubesql_cursor_free</a></h3>
+		</div>
+</div>
+
+<div class="content" style="height:540px;">
+	<div class="listleft">
+		<strong><var>Prepared statements API</var></strong><br />
+		<h3><a href="#40">cubesql_vmprepare</a></h3>
+		<h3><a href="#41">cubesql_vmbind_int</a></h3>
+		<h3><a href="#42">cubesql_vmbind_double</a></h3>
+		<h3><a href="#43">cubesql_vmbind_text</a></h3>
+		<h3><a href="#44">cubesql_vmbind_blob</a></h3>
+		<h3><a href="#45">cubesql_vmbind_null</a></h3>
+		<h3><a href="#46">cubesql_vmbind_int64</a></h3>
+		<h3><a href="#47">cubesql_vmbind_zeroblob</a></h3>
+		<h3><a href="#48">cubesql_vmexecute</a></h3>
+		<h3><a href="#49">cubesql_vmselect</a></h3>
+		<h3><a href="#50">cubesql_vmclose</a></h3>
+	</div>
+	
+	<div class="listright">
+	</div>
+</div>
+
+<div><a name="1"></a></div>
+<div class="content">
+	<p class="pagenumber">Database API <a href="#1">1</a> of 11</p>
+	
+    <p><b>Connect to a CubeSQL server</b></p>
+	<p><lcite>int</lcite> <em>cubesql_connect</em> (<lcite>csqldb **</lcite>db, <lcite>const char *</lcite>host, <lcite>int</lcite> port, <lcite>const char *</lcite>username, <lcite>const char *</lcite>password, <lcite>int</lcite> timeout, <lcite>int </lcite>encryption);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>db:</strong> opaque datatype to the connection (on output) 
+<strong>host:</strong> hostname c-string
+<strong>port:</strong> connection port
+<strong>username:</strong> username used in this connection
+<strong>password:</strong> password used in this connection
+<strong>timeout:</strong> timeout value (in seconds) for this connection
+<strong>encryption:</strong> encryption used in this connection
+
+Note:
+port can be kDEFAULT_PORT
+timeout can be kDEFAULT_TIMEOUT
+encryption can be kAESNONE, kAES128, kAES192, kAES256
+	</div>
+<p></p>
+<div class="filename">Example</div>
+	<div class="example">
+csqldb *db = NULL;
+int ret = 0;
+
+ret = cubesql_connect(db, "localhost", kDEFAULT_PORT, "admin", "admin",
+kDEFAULT_TIMEOUT, kAESNONE);
+	</div>
+
+	<p><strong>Return values:</strong><br />
+Upon successful connection kNOERR is returned otherwise returned values are kERR, kPARAMETER_ERROR, kMEMORY_ERROR.
+db is NOT NULL in case of kERR and the proper error can be retrieved with <a href="#9">cubesql_errcode</a> and <a href="#10">cubesql_errmsg</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="1a"></a></div>
+<div class="content">
+	<p class="pagenumber">Database API <a href="#1a">2</a> of 11</p>
+	
+    <p><b>Connect to a CubeSQL server with SSL encryption</b></p>
+	<p><lcite>int</lcite> <em>cubesql_connect_ssl</em> (<lcite>csqldb **</lcite>db, <lcite>const char *</lcite>host, <lcite>int</lcite> port, <lcite>const char *</lcite>username, <lcite>const char *</lcite>password, <lcite>int</lcite> timeout, <lcite>char *</lcite>ssl_certificate_path);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>db:</strong> opaque datatype to the connection (on output) 
+<strong>host:</strong> hostname c-string
+<strong>port:</strong> connection port
+<strong>username:</strong> username used in this connection
+<strong>password:</strong> password used in this connection
+<strong>timeout:</strong> timeout value (in seconds) for this connection
+<strong>ssl_certificate_path:</strong> full path to certificate file
+
+Note:
+port can be kDEFAULT_PORT
+timeout can be kDEFAULT_TIMEOUT
+	</div>
+<p></p>
+<div class="filename">Example</div>
+	<div class="example">
+csqldb *db = NULL;
+int ret = 0;
+
+ret = cubesql_connect_ssl(db, "localhost", kDEFAULT_PORT, "admin", "admin",
+kDEFAULT_TIMEOUT, "/Users/marco/Desktop/SSL/localhost.pem");
+	</div>
+
+	<p><strong>Return values:</strong><br />
+Upon successful connection kNOERR is returned otherwise returned values are kERR, kPARAMETER_ERROR, kMEMORY_ERROR.
+db is NOT NULL in case of kERR and the proper error can be retrieved with <a href="#9">cubesql_errcode</a> and <a href="#10">cubesql_errmsg</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="2"></a></div>
+<div class="content">
+	<p class="pagenumber">Database API <a href="#2">3</a> of 11</p>
+	
+    <p><b>Disconnect from a CubeSQL Server</b></p>
+	<p><lcite>void</lcite> cubesql_disconnect (<lcite>csqldb *</lcite>db, <lcite>int</lcite> gracefully);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>db:</strong> a valid connection reference obtained by <a href="#1">cubesql_connect</a>
+<strong>gracefully:</strong>  if kTRUE than a proper Close message is sent to the server,
+otherwise (kFALSE) socket is closed without any interaction with the server
+	</div>
+<p></p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="3"></a></div>
+<div class="content">
+	<p class="pagenumber">Database API <a href="#3">4</a> of 11</p>
+	
+    <p><b>Execute a SQL statement on the server</b></p>
+	<p><lcite>int</lcite> <em>cubesql_execute</em> (<lcite>csqldb *</lcite>db, <lcite>const char *</lcite>sql);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>db:</strong> a valid connection reference obtained by <a href="#1">cubesql_connect</a>
+<strong>sql:</strong> c-string with a valid sql statement (INSERT, UPDATE, REPLACE, DELETE,
+NO SELECT statement must be used with this function)
+	</div>
+<p></p>
+<div class="filename">Example</div>
+	<div class="example">
+csqldb *db = NULL;
+int ret = 0;
+
+ret = cubesql_connect(db, "INSERT INTO foo (col1) VALUES ('bar');");
+	</div>
+
+	<p><strong>Return values:</strong><br />
+Upon successful connection kNOERR is returned otherwise kERR and the proper error can be retrieved with <a href="#9">cubesql_errcode</a> and <a href="#10">cubesql_errmsg</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="4"></a></div>
+<div class="content">
+	<p class="pagenumber">Database API <a href="#4">5</a> of 11</p>
+	
+    <p><b>Perform a SQL query on the server</b></p>
+	<p><lcite>csqlc *</lcite> <em>cubesql_select</em> (<lcite>csqldb *</lcite>db, <lcite>const char *</lcite>sql, <lcite>int</lcite> server_side);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>db:</strong> a valid connection reference obtained by <a href="#1">cubesql_connect</a>
+<strong>sql:</strong> c-string with a valid SELECT sql statement
+<strong>server_side:</strong> if kTRUE than a server side cursor is created,
+otherwise (kFALSE) the entire cursor is transferred in client's private cache
+	</div>
+<p></p>
+<div class="filename">Example</div>
+	<div class="example">
+csqldb *db = NULL;
+csqlc c = NULL;
+
+c = cubesql_select(db, "SELECT * FROM foo;", kFALSE);
+	</div>
+
+	<p><strong>Return values:</strong><br />
+Upon successful execution the opaque cursor pointer csqlc, otherwise NULL and the proper error can be retrieved with <a href="#9">cubesql_errcode</a> and <a href="#10">cubesql_errmsg</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="5"></a></div>
+<div class="content">
+	<p class="pagenumber">Database API <a href="#5">6</a> of 11</p>
+	
+    <p><b>Execute an INSERT or UPDATE operation using bindings</b></p>
+	<p><lcite>int</lcite> <em>cubesql_bind</em> (<lcite>csqldb *</lcite>db, <lcite>const char *</lcite>sql, <lcite>char **</lcite>colvalue, <lcite>int *</lcite>colsize, <lcite>int *</lcite>coltype, <lcite>int</lcite> ncols);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>db:</strong> a valid connection reference obtained by <a href="#1">cubesql_connect</a>
+<strong>sql:</strong> c-string with a valid sql INSERT/UPDATE statement
+<strong>colvalue:</strong> array of char* to raw data to insert/update
+<strong>colsize:</strong> array of int that contains data size of each entry
+<strong>coltype:</strong> array of int that contains data type of each entry
+<strong>ncols:</strong> number of entries in the arrays
+
+Note:
+sql must have proper escaped sql parameters
+coltype can be kBIND_INTEGER, kBIND_DOUBLE, kBIND_TEXT, kBIND_BLOB, kBIND_NULL
+	</div>
+<p></p>
+<div class="filename">Example</div>
+	<div class="example">
+int ret, len, ncols = 5
+int coltype[5];
+int colsize[5]:
+char *colvalue[5];
+char *sql, *p;
+
+// set up column data for a simple string
+colvalue[0] = "This is a simple TEXT message";
+colsize[0] = strlen(colvalue[0]);
+coltype[0] = kBIND_TEXT;
+
+// set up column data for BLOB image
+p = my_load_image("/user/marco/mypicture.jpg", &len);
+colvalue[1] = p;
+colsize[1] = len;
+coltype[1] = kBIND_BLOB;
+
+// set up column data for a double number
+colvalue[2] = "3.1415";
+colsize[2] = strlen(colvalue[2]);
+coltype[2] = kBIND_DOUBLE;
+
+// set up column data for an integer number
+colvalue[3] = "534765";
+colsize[3] = strlen(colvalue[3]);
+coltype[3] = kBIND_INTEGER;
+
+// set up column data for NULL
+colvalue[4] = "";
+colsize[4] = strlen(colvalue[4]);
+coltype[4] = kBIND_NULL;
+
+// build proper SQL statement with parameters
+sql = "INSERT INTO myTable (comment, image, doublevalue, intvalue, nullvalue)
+VALUES (?1, ?2, ?3, ?4, ?5);"
+
+ret = cubesql_bind(db, sql, colvalue, colsize, coltype, ncols);
+	</div>
+
+	<p><strong>Return values:</strong><br />
+Upon successful execution kNOERR is returned, otherwise kERR and the proper error can be retrieved with <a href="#9">cubesql_errcode</a> and <a href="#10">cubesql_errmsg</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="6"></a></div>
+<div class="content">
+	<p class="pagenumber">Database API <a href="#6">7</a> of 11</p>
+	
+    <p><b>Commit current transaction</b></p>
+	<p><lcite>int</lcite> <em>cubesql_commit</em> (<lcite>csqldb *</lcite>db);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>db:</strong> a valid connection reference obtained by <a href="#1">cubesql_connect</a>
+	</div>
+<p></p>
+
+	<p><strong>Return values:</strong><br />
+Upon successful execution kNOERR is returned, otherwise kERR and the proper error can be retrieved with <a href="#9">cubesql_errcode</a> and <a href="#10">cubesql_errmsg</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+
+<div><a name="7"></a></div>
+<div class="content">
+	<p class="pagenumber">Database API <a href="#7">8</a> of 11</p>
+	
+    <p><b>Rollback current transaction</b></p>
+	<p><lcite>int</lcite> <em>cubesql_rollback</em> (<lcite>csqldb *</lcite>db);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>db:</strong> a valid connection reference obtained by <a href="#1">cubesql_connect</a>
+	</div>
+<p></p>
+
+	<p><strong>Return values:</strong><br />
+Upon successful execution kNOERR is returned, otherwise kERR and the proper error can be retrieved with <a href="#9">cubesql_errcode</a> and <a href="#10">cubesql_errmsg</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="8"></a></div>
+<div class="content">
+	<p class="pagenumber">API <a href="#8">9</a> of 11</p>
+	
+    <p><b>Send a PING command to the server</b> (just to keep current connection alive, otherwise clients are disconnected after a certainly amount of inactivity)</p>
+	<p><lcite>int</lcite> <em>cubesql_ping</em> (<lcite>csqldb *</lcite>db);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>db:</strong> a valid connection reference obtained by <a href="#1">cubesql_connect</a>
+	</div>
+<p></p>
+
+	<p><strong>Return values:</strong><br />
+Upon successful execution kNOERR is returned, otherwise kERR and the proper error can be retrieved with <a href="#9">cubesql_errcode</a> and <a href="#10">cubesql_errmsg</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="9"></a></div>
+<div class="content">
+	<p class="pagenumber">Database API <a href="#9">10</a> of 11</p>
+	
+    <p><b>Retrieve latest error code from current db connection</b></p>
+	<p><lcite>int</lcite> <em>cubesql_errcode</em> (<lcite>csqldb *</lcite>db);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>db:</strong> a valid connection reference obtained by <a href="#1">cubesql_connect</a>
+	</div>
+<p></p>
+
+	<p><strong>Return values:</strong><br />
+Current error code (or kNOERR)</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="10"></a></div>
+<div class="content">
+	<p class="pagenumber">Database API <a href="#10">11</a> of 11</p>
+	
+    <p><b>Retrieve latest error message from current db connection</b></p>
+	<p><lcite>char *</lcite> <em>cubesql_errmsg</em> (<lcite>csqldb *</lcite>db);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>db:</strong> a valid connection reference obtained by <a href="#1">cubesql_connect</a>
+	</div>
+<p></p>
+
+	<p><strong>Return values:</strong><br />
+Current error message (or empty string)</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="11"></a></div>
+<div class="content">
+	<p class="pagenumber">Cursor API <a href="#11">1</a> of 13</p>
+	
+    <p><b>Return the number of rows in the result set</b></p>
+	<p><lcite>int</lcite> <em>cubesql_cursor_numrows</em> (<lcite>csqlc *</lcite>c);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>c:</strong> a valid cursor opaque datatype obtained from <a href="#4">cubesql_select</a>
+	</div>
+<p></p>
+
+	<p><strong>Return values:</strong><br />
+	Number of rows in the result set or -1 if the cursor is server side
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="12"></a></div>
+<div class="content">
+	<p class="pagenumber">Cursor API <a href="#12">2</a> of 13</p>
+	
+    <p><b>Return the number of columns in the result set</b></p>
+	<p><lcite>int</lcite> <em>cubesql_cursor_numcolumns</em> (<lcite>csqlc *</lcite>c);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>c:</strong> a valid cursor opaque datatype obtained from <a href="#4">cubesql_select</a>
+	</div>
+<p></p>
+
+	<p><strong>Return values:</strong><br />
+	Number of columns in the result set
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="13"></a></div>
+<div class="content">
+	<p class="pagenumber">Cursor API <a href="#13">3</a> of 13</p>
+	
+    <p><b>Return current row index inside the result set</b></p>
+	<p><lcite>int</lcite> <em>cubesql_cursor_currentrow</em> (<lcite>csqlc *</lcite>c);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>c:</strong> a valid cursor opaque datatype obtained from <a href="#4">cubesql_select</a>
+	</div>
+<p></p>
+
+	<p><strong>Return values:</strong><br />
+	Row index inside the result set or -1 if the cursor is server side
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="14"></a></div>
+<div class="content">
+	<p class="pagenumber">Cursor API <a href="#14">4</a> of 13</p>
+	
+    <p><b>Seek current row inside the result set</b></p>
+	<p><lcite>int</lcite> <em>cubesql_cursor_seek</em> (<lcite>csqlc *</lcite>c, <lcite>int</lcite> index);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>c:</strong> a valid cursor opaque datatype obtained from <a href="#4">cubesql_select</a>
+<strong>index:</strong> index where to set current row
+
+Note:
+index can also be kCUBESQL_SEEKNEXT, kCUBESQL_SEEKFIRST,
+kCUBESQL_SEEKPREV, kCUBESQL_SEEKLAST
+in case of server side cursor only kCUBESQL_SEEKNEXT is allowed
+	</div>
+<p></p>
+
+	<p><strong>Return values:</strong><br />
+	Upon successful execution kTRUE is returned, otherwise kFALSE
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="15"></a></div>
+<div class="content">
+	<p class="pagenumber">Cursor API <a href="#15">5</a> of 13</p>
+	
+    <p><b>Check if EOF is reached inside the result set</b></p>
+	<p><lcite>int</lcite> <em>cubesql_cursor_iseof</em> (<lcite>csqlc *</lcite>c);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>c:</strong> a valid cursor opaque datatype obtained from <a href="#4">cubesql_select</a>
+	</div>
+<p></p>
+
+	<p><strong>Return values:</strong><br />
+	kTRUE if EOF is reached otherwise kFALSE
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="16"></a></div>
+<div class="content">
+	<p class="pagenumber">Cursor API <a href="#16">6</a> of 13</p>
+	
+    <p><b>Retrieve current column type</b></p>
+	<p><lcite>int</lcite> <em>cubesql_cursor_columntype</em> (<lcite>csqlc *</lcite>c, <lcite>int</lcite> colindex);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>c:</strong> a valid cursor opaque datatype obtained from <a href="#4">cubesql_select</a>
+<strong>colindex:</strong> a valid column index (1 based)
+	</div>
+<p></p>
+
+	<p><strong>Return values:</strong><br />
+	TYPE_None, TYPE_Integer, TYPE_Float, TYPE_Text, TYPE_Blob, TYPE_Boolean, TYPE_Date, TYPE_Time, TYPE_Timestamp, TYPE_Currency
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="17"></a></div>
+<div class="content">
+	<p class="pagenumber">Cursor API <a href="#17">7</a> of 13</p>
+	
+    <p><b>Retrieve field value</b></p>
+	<p><lcite>char *</lcite> <em>cubesql_cursor_field</em> (<lcite>csqlc *</lcite>c, <lcite>int</lcite> row, <lcite>int</lcite> column, <lcite>int *</lcite> len);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>c:</strong> a valid cursor opaque datatype obtained from <a href="#4">cubesql_select</a>
+<strong>row:</strong> a valid row index inside the result set (1 based)
+<strong>column:</strong> a valid column index inside the result set (1 based)
+<strong>len:</strong> on output size of the returned buffer
+
+Note:
+row can be:
+kCUBESQL_CURROW to get values from the current row
+kCUBESQL_ROWID to get current rowid (or 0 if it cannot be retrieved)
+kCUBESQL_COLNAME to get current column name
+kCUBESQL_COLTABLE to get column's table
+	</div>
+<p></p>
+
+	<p><strong>Return values:</strong><br />
+	a pointer to the current field
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="18"></a></div>
+<div class="content">
+	<p class="pagenumber">Cursor API <a href="#18">8</a> of 13</p>
+	
+    <p><b>Retrieve rowid for specified rowindex</b></p>
+	<p><lcite>int64</lcite> <em>cubesql_cursor_rowid</em> (<lcite>csqlc *</lcite>c, <lcite>int</lcite> rowindex);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>c:</strong> a valid cursor opaque datatype obtained from <a href="#4">cubesql_select</a>
+<strong>rowindex:</strong> a valid row index inside the result set (or kCUBESQL_CURROW)
+	</div>
+<p></p>
+
+	<p><strong>Return values:</strong><br />
+	rowid for specified rowindex or 0 if rowid cannot be computer
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="19"></a></div>
+<div class="content">
+	<p class="pagenumber">Cursor API <a href="#19">9</a> of 13</p>
+	
+    <p><b>Retrieve column int value</b></p>
+	<p><lcite>int</lcite> <em>cubesql_cursor_int</em> (<lcite>csqlc *</lcite>c, <lcite>int</lcite> column, <lcite>int </lcite> default_value);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>c:</strong> a valid cursor opaque datatype obtained from <a href="#4">cubesql_select</a>
+<strong>column:</strong> a valid column index inside the result set (1 based)
+<strong>default_value:</strong> value to return in case specified column cannot be retrieved
+	</div>
+<p></p>
+
+	<p><strong>Return values:</strong><br />
+	column int value or default_value
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="20"></a></div>
+<div class="content">
+	<p class="pagenumber">Cursor API <a href="#20">10</a> of 13</p>
+	
+    <p><b>Retrieve column double value</b></p>
+	<p><lcite>double</lcite> <em>cubesql_cursor_int</em> (<lcite>csqlc *</lcite>c, <lcite>int</lcite> column, <lcite>double </lcite> default_value);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>c:</strong> a valid cursor opaque datatype obtained from <a href="#4">cubesql_select</a>
+<strong>column:</strong> a valid column index inside the result set (1 based)
+<strong>default_value:</strong> value to return in case specified column cannot be retrieved
+	</div>
+<p></p>
+
+	<p><strong>Return values:</strong><br />
+	column double value or default_value
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="21"></a></div>
+<div class="content">
+	<p class="pagenumber">Cursor API <a href="#21">11</a> of 13</p>
+	
+    <p><b>Retrieve field pointer</b></p>
+	<p><lcite>char *</lcite> <em>cubesql_cursor_cstring</em> (<lcite>csqlc *</lcite>c, <lcite>int</lcite> row, <lcite>int</lcite> column);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>c:</strong> a valid cursor opaque datatype obtained from <a href="#4">cubesql_select</a>
+<strong>row:</strong> a valid row index inside the result set (1 based)
+<strong>column:</strong> a valid column index inside the result set (1 based)
+	</div>
+<p></p>
+
+	<p><strong>Return values:</strong><br />
+	cstring for specified row and column or NULL if field cannot be retried. Please note that is your responsability to free the pointer returned by this function.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="22"></a></div>
+<div class="content">
+	<p class="pagenumber">Cursor API <a href="#22">12</a> of 13</p>
+	
+    <p><b>Retrieve field pointer</b> storing its value inside a preallocated buffer</p>
+	<p><lcite>char *</lcite> <em>cubesql_cursor_cstring_static</em> (<lcite>csqlc *</lcite>c, <lcite>int</lcite> row, <lcite>int</lcite> column, <lcite>char *</lcite>static_buffer, <lcite>int</lcite> bufferlen);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>c:</strong> a valid cursor opaque datatype obtained from <a href="#4">cubesql_select</a>
+<strong>row:</strong> a valid row index inside the result set (1 based)
+<strong>column:</strong> a valid column index inside the result set (1 based)
+<strong>static_buffer:</strong> static_buffer to use for storing value to return
+<strong>bufferlen:</strong> length of the static_buffer
+	</div>
+<p></p>
+
+	<p><strong>Return values:</strong><br />
+	a pointer to static_buffer with the stored value
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="23"></a></div>
+<div class="content">
+	<p class="pagenumber">Cursor API <a href="#23">13</a> of 13</p>
+	
+    <p><b>Free memory allocated for the result set</b></p>
+	<p><lcite>void</lcite> <em>cubesql_cursor_free</em> (<lcite>csqlc *</lcite>c);</p>
+	
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>c:</strong> a valid cursor opaque datatype obtained from <a href="#4">cubesql_select</a>
+	</div>
+<p></p>
+
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="40"></a></div>
+<div class="content">
+	<p class="pagenumber">Prepared Statement API <a href="#40">1</a> of 11</p>
+	
+    <p><b>Create a prepared sql statement</b></p>
+	<p><lcite>csqlvm *</lcite> <em>cubesql_vmprepare</em> (<lcite>csqldb *</lcite>db, <lcite>const char *</lcite>sql);</p>
+		
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>db:</strong> a valid connection reference obtained by <a href="#1">cubesql_connect</a>
+<strong>sql:</strong> c-string with a valid sql statement
+	</div>
+<p></p>
+<div class="filename">Example</div>
+	<div class="example">
+csqlvm *vm1 = NULL;
+csqlvm *vm2 = NULL;
+csqlc *c = NULL;
+int ret;
+
+// bind to an insert statement
+vm1 = cubesql_vmprepare(db, "INSERT INTO myTable (col1, col2, col3, col4)
+VALUES (?1, ?2, ?3, ?4);");
+ret = cubesql_vmbind_int(vm1, 1, 33);
+ret = cubesql_vmbind_double(vm1, 2, 3.1415);
+ret = cubesql_vmbind_text(vm1, 3, "This is a test", -1);
+ret = cubesql_vmbind_null(vm1, 4);
+ret = cubesql_vmexecute(vm1);
+ret = cubesql_vmclose(vm1);
+
+// bind to a select query
+vm2 = cubesql_vmprepare(db, "SELECT * FROM customers WHERE email=?1");
+ret = cubesql_vmbind_text(vm2, 1, "marco@sqlabs.com", -1);
+c = cubesql_vmselect(vm2);
+ret = cubesql_vmclose(vm2);
+	</div>
+
+	<p><strong>Return values:</strong><br />
+Upon successful compilation a valid opaque csqlvm datatype is returned otherwise NULL and the proper error can be retrieved with <a href="#9">cubesql_errcode</a> and <a href="#10">cubesql_errmsg</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="41"></a></div>
+<div class="content">
+	<p class="pagenumber">Prepared Statement API <a href="#41">2</a> of 11</p>
+	
+    <p><b>Bind an Integer value to a prepared sql statement</b></p>
+	<p><lcite>int</lcite> <em>cubesql_vmbind_int</em> (<lcite>csqlvm *</lcite>vm, <lcite>int</lcite> index, <lcite>int</lcite> value);</p>
+		
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>vm:</strong> a valid prepared statement reference obtained by <a href="#40">cubesql_vmprepare</a>
+<strong>index:</strong> index of the SQL parameter to be set, the leftmost SQL parameter has
+an index of 1.
+<strong>value:</strong> value to be set
+	</div>
+<p></p>
+<div class="filename">See <a href="#40">cubesql_vmprepare</a> example.</div>
+
+	<p><strong>Return values:</strong><br />
+Upon successful execution kNOERR is returned, otherwise kERR and the proper error can be retrieved with <a href="#9">cubesql_errcode</a> and <a href="#10">cubesql_errmsg</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="42"></a></div>
+<div class="content">
+	<p class="pagenumber">Prepared Statement API <a href="#42">3</a> of 11</p>
+	
+    <p><b>Bind a Double value to a prepared sql statement</b></p>
+	<p><lcite>int</lcite> <em>cubesql_vmbind_double</em> (<lcite>csqlvm *</lcite>vm, <lcite>int</lcite> index, <lcite>double</lcite> value);</p>
+		
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>vm:</strong> a valid prepared statement reference obtained by <a href="#40">cubesql_vmprepare</a>
+<strong>index:</strong> index of the SQL parameter to be set, the leftmost SQL parameter has
+an index of 1.
+<strong>value:</strong> value to be set
+	</div>
+<p></p>
+<div class="filename">See <a href="#40">cubesql_vmprepare</a> example.</div>
+
+	<p><strong>Return values:</strong><br />
+Upon successful execution kNOERR is returned, otherwise kERR and the proper error can be retrieved with <a href="#9">cubesql_errcode</a> and <a href="#10">cubesql_errmsg</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="43"></a></div>
+<div class="content">
+	<p class="pagenumber">Prepared Statement API <a href="#43">4</a> of 11</p>
+	
+    <p><b>Bind an Text value to a prepared sql statement</b></p>
+	<p><lcite>int</lcite> <em>cubesql_vmbind_text</em> (<lcite>csqlvm *</lcite>vm, <lcite>int</lcite> index, <lcite>char *</lcite> value, <lcite>int</lcite> len);</p>
+		
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>vm:</strong> a valid prepared statement reference obtained by <a href="#40">cubesql_vmprepare</a>
+<strong>index:</strong> index of the SQL parameter to be set, the leftmost SQL parameter has
+an index of 1.
+<strong>value:</strong> value to be set
+<strong>len:</strong> just pass -1 for c-strings
+	</div>
+<p></p>
+<div class="filename">See <a href="#40">cubesql_vmprepare</a> example.</div>
+
+	<p><strong>Return values:</strong><br />
+Upon successful execution kNOERR is returned, otherwise kERR and the proper error can be retrieved with <a href="#9">cubesql_errcode</a> and <a href="#10">cubesql_errmsg</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="44"></a></div>
+<div class="content">
+	<p class="pagenumber">Prepared Statement API <a href="#44">5</a> of 11</p>
+	
+    <p><b>Bind a Blob value to a prepared sql statement</b></p>
+	<p><lcite>int</lcite> <em>cubesql_vmbind_blob</em> (<lcite>csqlvm *</lcite>vm, <lcite>int</lcite> index, <lcite>void *</lcite> value, <lcite>int</lcite> len);</p>
+		
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>vm:</strong> a valid prepared statement reference obtained by <a href="#40">cubesql_vmprepare</a>
+<strong>index:</strong> index of the SQL parameter to be set, the leftmost SQL parameter has
+an index of 1.
+<strong>value:</strong> value to be set
+<strong>len:</strong> length of the blob value
+	</div>
+<p></p>
+<div class="filename">See <a href="#40">cubesql_vmprepare</a> example.</div>
+
+	<p><strong>Return values:</strong><br />
+Upon successful execution kNOERR is returned, otherwise kERR and the proper error can be retrieved with <a href="#9">cubesql_errcode</a> and <a href="#10">cubesql_errmsg</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="45"></a></div>
+<div class="content">
+	<p class="pagenumber">Prepared Statement API <a href="#45">6</a> of 11</p>
+	
+    <p><b>Bind a NULL value to a prepared sql statement</b></p>
+	<p><lcite>int</lcite> <em>cubesql_vmbind_null</em> (<lcite>csqlvm *</lcite>vm, <lcite>int</lcite> index);</p>
+		
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>vm:</strong> a valid prepared statement reference obtained by <a href="#40">cubesql_vmprepare</a>
+<strong>index:</strong> index of the SQL parameter to be set, the leftmost SQL parameter has
+an index of 1.
+	</div>
+<p></p>
+<div class="filename">See <a href="#40">cubesql_vmprepare</a> example.</div>
+
+	<p><strong>Return values:</strong><br />
+Upon successful execution kNOERR is returned, otherwise kERR and the proper error can be retrieved with <a href="#9">cubesql_errcode</a> and <a href="#10">cubesql_errmsg</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="46"></a></div>
+<div class="content">
+	<p class="pagenumber">Prepared Statement API <a href="#46">7</a> of 11</p>
+	
+    <p><b>Bind an Int64 value to a prepared sql statement</b></p>
+	<p><lcite>int</lcite> <em>cubesql_vmbind_int64</em> (<lcite>csqlvm *</lcite>vm, <lcite>int</lcite> index, <lcite>int64</lcite> value);</p>
+		
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>vm:</strong> a valid prepared statement reference obtained by <a href="#40">cubesql_vmprepare</a>
+<strong>index:</strong> index of the SQL parameter to be set, the leftmost SQL parameter has
+an index of 1.
+<strong>value:</strong> value to be set
+	</div>
+<p></p>
+<div class="filename">See <a href="#40">cubesql_vmprepare</a> example.</div>
+
+	<p><strong>Return values:</strong><br />
+Upon successful execution kNOERR is returned, otherwise kERR and the proper error can be retrieved with <a href="#9">cubesql_errcode</a> and <a href="#10">cubesql_errmsg</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="47"></a></div>
+<div class="content">
+	<p class="pagenumber">Prepared Statement API <a href="#47">8</a> of 11</p>
+	
+    <p><b>Bind a Zero Blob value to a prepared sql statement</b></p>
+	<p><lcite>int</lcite> <em>cubesql_vmbind_zeroblob</em> (<lcite>csqlvm *</lcite>vm, <lcite>int</lcite> index, <lcite>int</lcite> len);</p>
+		
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>vm:</strong> a valid prepared statement reference obtained by <a href="#40">cubesql_vmprepare</a>
+<strong>index:</strong> index of the SQL parameter to be set, the leftmost SQL parameter has
+an index of 1.
+<strong>len:</strong> length of the zero blob value to set
+	</div>
+<p></p>
+<div class="filename">See <a href="#40">cubesql_vmprepare</a> example.</div>
+
+	<p><strong>Return values:</strong><br />
+Upon successful execution kNOERR is returned, otherwise kERR and the proper error can be retrieved with <a href="#9">cubesql_errcode</a> and <a href="#10">cubesql_errmsg</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="48"></a></div>
+<div class="content">
+	<p class="pagenumber">Prepared Statement API <a href="#48">9</a> of 11</p>
+	
+    <p><b>Execute a prepared SQL statement on the server</b></p>
+	<p><lcite>int</lcite> <em>cubesql_vmexecute</em> (<lcite>csqlvm *</lcite>vm);</p>
+		
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>vm:</strong> a valid prepared statement reference obtained by <a href="#40">cubesql_vmprepare</a>
+	</div>
+<p></p>
+<div class="filename">See <a href="#40">cubesql_vmprepare</a> example.</div>
+
+	<p><strong>Return values:</strong><br />
+Upon successful execution kNOERR is returned, otherwise kERR and the proper error can be retrieved with <a href="#9">cubesql_errcode</a> and <a href="#10">cubesql_errmsg</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="49"></a></div>
+<div class="content">
+	<p class="pagenumber">Prepared Statement API <a href="#49">10</a> of 11</p>
+	
+    <p><b>Perform a prepared SQL query on the server</b></p>
+	<p><lcite>csqlc *</lcite> <em>cubesql_vmselect</em> (<lcite>csqlvm *</lcite>vm);</p>
+		
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>vm:</strong> a valid prepared statement reference obtained by <a href="#40">cubesql_vmprepare</a>
+	</div>
+<p></p>
+<div class="filename">See <a href="#40">cubesql_vmprepare</a> example.</div>
+
+	<p><strong>Return values:</strong><br />
+Upon successful execution the opaque cursor pointer csqlc, otherwise NULL and the proper error can be retrieved with <a href="#9">cubesql_errcode</a> and <a href="#10">cubesql_errmsg</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<div><a name="50"></a></div>
+<div class="content">
+	<p class="pagenumber">Prepared Statement API <a href="#50">11</a> of 11</p>
+	
+    <p><b>Free memory allocated by a prepared sql statement</b></p>
+	<p><lcite>int</lcite> <em>cubesql_vmclose</em> (<lcite>csqlvm *</lcite>vm);</p>
+		
+	<div class="filename">Parameters</div>
+	<div class="example">
+<strong>vm:</strong> a valid prepared statement reference obtained by <a href="#40">cubesql_vmprepare</a>
+	</div>
+<p></p>
+<div class="filename">See <a href="#40">cubesql_vmprepare</a> example.</div>
+
+	<p><strong>Return values:</strong><br />
+Upon successful execution kNOERR is returned, otherwise kERR and the proper error can be retrieved with <a href="#9">cubesql_errcode</a> and <a href="#10">cubesql_errmsg</a>.
+</p>
+	
+	<p class="pagenumber"><a href="#top">top</a></p>
+</div>
+
+<br />
+<p class="footer"><a href="http://www.sqlabs.com">&copy; 2012 SQLabs s.r.l.</a> - All rights reserved.</p>
+
+</div>
+
+
+</body>
+</html>

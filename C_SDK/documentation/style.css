@@ -1,0 +1,267 @@
+
+body {
+	font-family: "Trebuchet MS", Trebuchet, Tahoma, sans-serif;
+	font-size: 13px;
+	background-color: #454545;
+	color: white;
+	margin: 0px;
+}
+
+h3 {
+	font-weight: bold; color: #e24628; font-size: 1em;
+}
+
+h4 {
+	font-weight: bold; color: #e24628; font-size: 1em;
+}
+
+a {
+	text-decoration: none;
+}
+
+cite { font-style: normal; color: #067e2a; font-weight: bold; }
+var { font-style: normal; color: #0a4aa7; font-weight: bold; }
+
+lcite { font-style: normal; color: #067e2a; font-weight: normal; }
+lvar { font-style: normal; color: #0a4aa7; font-weight: normal; }
+
+
+.example cite { font-weight: normal; }
+.example var { font-weight: normal; }
+
+.content {
+
+	background-color: white;
+	/* color: #3e3e3e */
+	color: #4e4e4e;
+	width: 580px;
+	/*padding: 30px 50px; */
+	padding: 10px 50px 10px 50px;
+	margin-top: 20px;
+	margin-left: auto;
+	margin-right: auto;
+
+
+	line-height: 24px;
+}
+
+
+.notice {
+
+	background-color: #efefef;
+	color: #4e4e4e;
+	width: 630px;
+	/*padding: 30px 50px; */
+	padding: 10px 25px 10px 25px;
+	margin-top: 20px;
+	margin-left: auto;
+	margin-right: auto;
+	
+	font-style: italic;
+
+
+	line-height: 24px;
+}
+
+.docheader
+{
+
+	width: 650px;
+	padding: 15px;
+	margin-left: auto;
+	margin-right: auto;
+	
+	background-color: #373737;
+
+
+	font-family: "Trebuchet MS", Trebuchet, Tahoma, sans-serif;
+	font-size: 13px;
+	text-align: left;
+}
+
+.docheader	a:link		{color: white; text-decoration: none; }
+.docheader	a:visited	{color: white; text-decoration: none; }
+.docheader	a:hover		{color: white; text-decoration: none; border-bottom: 1px dotted white; }
+
+em {font-weight: bold; font-style: normal; color: #e24628}
+.example em {font-weight: normal;}
+
+.clearfloat
+{
+	clear: both;
+}
+
+
+strong {font-weight: normal; color: #161616}
+
+.listbox .title
+{
+	border: 1px solid gray;
+	text-align: center;
+	font-weight: bold;
+	padding: 0px 10px;
+}
+
+.listbox .body
+{
+	border-top: 3px solid #e3e3e3;
+	background-color: #f7f7f7;
+	padding: 5px 10px;
+}
+
+.listbox
+{
+	font-size: 12px;
+}
+
+.listbox em
+{
+	font-weight: normal;
+}
+
+.listleft
+{
+	margin-right: 30px;
+	float: left;
+}
+
+.listright
+{
+	margin-left: 30px;
+	float: right;
+}
+
+.furtherreading
+{
+	font-family:		"Lucida Grande", Helvetica, sans-serif;
+	line-height:		15px;
+	font-size:			11px;
+}
+
+.furtherreading td.icon
+{
+	width: 15px;
+}
+
+
+.furtherreading a:link		{color: #4e4e4e; text-decoration: none; border-bottom: 1px dotted gray;}
+.furtherreading a:visited	{color: #4e4e4e; text-decoration: none; border-bottom: 1px dotted gray;}
+.furtherreading a:hover		{color: #4e4e4e; color: #e24628}
+
+
+.example
+{
+	display: block;
+	background-color: #f7f7f7;
+	padding: 5px 10px;
+	line-height: 16px;
+	margin-left: 22px;
+	border-right: 1px solid gray;
+	border-bottom: 1px solid gray;
+	border-top: 1px solid #e8e8e8;
+	border-left: 1px solid #d3d3d3;
+	font-family: Monaco, monospace;
+	font-size: 11px;
+	white-space: pre;
+}
+
+.filename
+{
+	display: block;
+	background-color: #e8e8e8;
+	padding: 5px 10px;
+	line-height: 12px;
+	margin-left: 22px;
+	border-top: 1px solid #d3d3d3;
+	border-left: 1px solid #d3d3d3;
+	border-right: 1px solid gray;
+	border-bottom: 1px solid #a6a6a6;
+	font-family: "Trebuchet MS", Trebuchet, Tahoma, sans-serif;
+	font-size: 12px;
+	color: #383838;
+}
+
+.unixbox
+{
+	width: 400px;
+	height: 122px;
+	padding: 40px 39px 30px 25px;
+	background-image: url("/images/global/terminal-bg.png");
+	background-repeat: no-repeat;
+	font-family: Monaco, monospace;
+	font-size: 10px;
+	color: black;
+	line-height: 14px;
+	white-space: pre;
+	
+	margin-left: auto;
+	margin-right: auto;
+}
+
+
+a:link		{color: #e24628}
+a:visited	{color: #e24628}
+a:hover		{color: #4e4e4e}
+
+.listoflinks	{ line-height: 22px; }
+.listoflinks	a:link		{color: #4e4e4e}
+.listoflinks	a:visited	{color: #4e4e4e}
+.listoflinks	a:hover		{color: #4e4e4e; color: #e24628}
+.listoflinks	th			{ text-align: left; padding: 0.75em; }
+
+
+tr.icon			{ background-color: #f7f7f7; }
+tr.icon th		{ font-weight: normal;}
+td.cell1		{ background-color: #f0f0f0; }
+td.cell2		{ background-color: #e6e6e6; }
+.codecell		{ font-family: Monaco, monospace; font-size: 11px; line-height: 20px;}
+.codecell cite	{ font-weight: normal; }
+
+.content img.title { margin-bottom: 68px; margin-top: 50px; }
+
+.header
+{
+    font-weight: bold;
+}
+.pagenumber
+{
+    font-style: italic;
+    text-align: right;
+    font-size: 12px;
+}
+
+
+
+
+
+
+
+
+
+
+
+.footer 
+{
+    background-color: #f7f7f7;
+    border-top: 1px dashed gray;
+    margin-top: 65px;
+    margin-bottom: 0px;
+}
+
+
+.extranote
+{
+    font-style: italic;
+    font-size: 12px;
+    margin-top: 25px;
+    margin-left: 22px;
+}
+
+
+
+
+
+
+
+
+
