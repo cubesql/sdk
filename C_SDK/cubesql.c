@@ -2314,12 +2314,14 @@ unsigned long cubesql_sslversion_num (void) {
 }
 
 void csql_init_ssl (void) {
+    #if CUBESQL_ENABLE_SSL_ENCRYPTION
     // initialize SSL crap
     if (SSL_library_init_loaded) {
         SSL_library_init();
         SSL_load_error_strings();
         SSL_library_init_loaded = kFALSE;
     }
+    #endif
 }
 
 #if CUBESQL_DYNAMIC_SSL_LIBRARY
