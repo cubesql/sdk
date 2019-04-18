@@ -73,9 +73,9 @@
 #if !defined( _AESTAB_H )
 #define _AESTAB_H
 
-#define t_dec(m,n) t_##m##n
-#define t_set(m,n) t_##m##n
-#define t_use(m,n) t_##m##n
+#define t_dec(m,n) csql_t_##m##n
+#define t_set(m,n) csql_t_##m##n
+#define t_use(m,n) csql_t_##m##n
 
 #if defined(FIXED_TABLES)
 #define Const const

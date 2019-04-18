@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="SDK">
+      <UniqueIdentifier>{89dd392f-0ceb-4711-9a78-e5b7c9554bfb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\zlib">
+      <UniqueIdentifier>{e178b711-14d2-41a4-ab20-a43a8b782b3f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\crypt">
+      <UniqueIdentifier>{8e02f009-cf10-488d-b285-6e7dc229c73a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\sdk\csql.h">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\sdk\cubesql.h">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\sdk\zlib\zconf.h">
+      <Filter>SDK\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\sdk\zlib\zlib.h">
+      <Filter>SDK\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\sdk\crypt\aes.h">
+      <Filter>SDK\crypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\sdk\crypt\aesopt.h">
+      <Filter>SDK\crypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\sdk\crypt\aestab.h">
+      <Filter>SDK\crypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\sdk\crypt\base64.h">
+      <Filter>SDK\crypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\sdk\crypt\pseudorandom.h">
+      <Filter>SDK\crypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\sdk\crypt\sha1.h">
+      <Filter>SDK\crypt</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\sdk\cubesql.c">
+      <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\sdk\zlib\zlib.c">
+      <Filter>SDK\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\sdk\crypt\aescrypt.c">
+      <Filter>SDK\crypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\sdk\crypt\aeskey.c">
+      <Filter>SDK\crypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\sdk\crypt\aestab.c">
+      <Filter>SDK\crypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\sdk\crypt\base64.c">
+      <Filter>SDK\crypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\sdk\crypt\pseudorandom.c">
+      <Filter>SDK\crypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\sdk\crypt\sha1.c">
+      <Filter>SDK\crypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\testapp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

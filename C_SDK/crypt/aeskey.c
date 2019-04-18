@@ -94,7 +94,7 @@ extern "C"
 
 #if defined(AES_128) || defined(AES_VAR)
 
-aes_rval aes_encrypt_key128(const unsigned char *key, aes_encrypt_ctx cx[1])
+aes_rval csql_aes_encrypt_key128(const unsigned char *key, csql_aes_encrypt_ctx cx[1])
 {   aes_32t    ss[4];
 
     cx->ks[0] = ss[0] = word_in(key, 0);
@@ -126,7 +126,7 @@ aes_rval aes_encrypt_key128(const unsigned char *key, aes_encrypt_ctx cx[1])
 
 #if defined(AES_192) || defined(AES_VAR)
 
-aes_rval aes_encrypt_key192(const unsigned char *key, aes_encrypt_ctx cx[1])
+aes_rval csql_aes_encrypt_key192(const unsigned char *key, csql_aes_encrypt_ctx cx[1])
 {   aes_32t    ss[6];
 
     cx->ks[0] = ss[0] = word_in(key, 0);
@@ -159,7 +159,7 @@ aes_rval aes_encrypt_key192(const unsigned char *key, aes_encrypt_ctx cx[1])
 
 #if defined(AES_256) || defined(AES_VAR)
 
-aes_rval aes_encrypt_key256(const unsigned char *key, aes_encrypt_ctx cx[1])
+aes_rval csql_aes_encrypt_key256(const unsigned char *key, csql_aes_encrypt_ctx cx[1])
 {   aes_32t    ss[8];
 
     cx->ks[0] = ss[0] = word_in(key, 0);
@@ -193,19 +193,19 @@ aes_rval aes_encrypt_key256(const unsigned char *key, aes_encrypt_ctx cx[1])
 
 #if defined(AES_VAR)
 
-aes_rval aes_encrypt_key(const unsigned char *key, int key_len, aes_encrypt_ctx cx[1])
+aes_rval csql_aes_encrypt_key(const unsigned char *key, int key_len, csql_aes_encrypt_ctx cx[1])
 {
     switch(key_len)
     {
 #if defined( AES_ERR_CHK )
-    case 16: case 128: return aes_encrypt_key128(key, cx);
-    case 24: case 192: return aes_encrypt_key192(key, cx);
-    case 32: case 256: return aes_encrypt_key256(key, cx);
+    case 16: case 128: return csql_aes_encrypt_key128(key, cx);
+    case 24: case 192: return csql_aes_encrypt_key192(key, cx);
+    case 32: case 256: return csql_aes_encrypt_key256(key, cx);
     default: return aes_error;
 #else
-    case 16: case 128: aes_encrypt_key128(key, cx); return;
-    case 24: case 192: aes_encrypt_key192(key, cx); return;
-    case 32: case 256: aes_encrypt_key256(key, cx); return;
+    case 16: case 128: csql_aes_encrypt_key128(key, cx); return;
+    case 24: case 192: csql_aes_encrypt_key192(key, cx); return;
+    case 32: case 256: csql_aes_encrypt_key256(key, cx); return;
 #endif
     }
 }
@@ -304,7 +304,7 @@ aes_rval aes_encrypt_key(const unsigned char *key, int key_len, aes_encrypt_ctx 
 
 #if defined(AES_128) || defined(AES_VAR)
 
-aes_rval aes_decrypt_key128(const unsigned char *key, aes_decrypt_ctx cx[1])
+aes_rval csql_aes_decrypt_key128(const unsigned char *key, csql_aes_decrypt_ctx cx[1])
 {   aes_32t    ss[5];
 #if defined( d_vars )
         d_vars;
@@ -342,7 +342,7 @@ aes_rval aes_decrypt_key128(const unsigned char *key, aes_decrypt_ctx cx[1])
 
 #if defined(AES_192) || defined(AES_VAR)
 
-aes_rval aes_decrypt_key192(const unsigned char *key, aes_decrypt_ctx cx[1])
+aes_rval csql_aes_decrypt_key192(const unsigned char *key, csql_aes_decrypt_ctx cx[1])
 {   aes_32t    ss[7];
 #if defined( d_vars )
         d_vars;
@@ -383,7 +383,7 @@ aes_rval aes_decrypt_key192(const unsigned char *key, aes_decrypt_ctx cx[1])
 
 #if defined(AES_256) || defined(AES_VAR)
 
-aes_rval aes_decrypt_key256(const unsigned char *key, aes_decrypt_ctx cx[1])
+aes_rval csql_aes_decrypt_key256(const unsigned char *key, csql_aes_decrypt_ctx cx[1])
 {   aes_32t    ss[8];
 #if defined( d_vars )
         d_vars;
@@ -429,19 +429,19 @@ aes_rval aes_decrypt_key256(const unsigned char *key, aes_decrypt_ctx cx[1])
 
 #if defined(AES_VAR)
 
-aes_rval aes_decrypt_key(const unsigned char *key, int key_len, aes_decrypt_ctx cx[1])
+aes_rval csql_aes_decrypt_key(const unsigned char *key, int key_len, csql_aes_decrypt_ctx cx[1])
 {
     switch(key_len)
     {
 #if defined( AES_ERR_CHK )
-    case 16: case 128: return aes_decrypt_key128(key, cx);
-    case 24: case 192: return aes_decrypt_key192(key, cx);
-    case 32: case 256: return aes_decrypt_key256(key, cx);
+    case 16: case 128: return csql_aes_decrypt_key128(key, cx);
+    case 24: case 192: return csql_aes_decrypt_key192(key, cx);
+    case 32: case 256: return csql_aes_decrypt_key256(key, cx);
     default: return aes_error;
 #else
-    case 16: case 128: aes_decrypt_key128(key, cx); return;
-    case 24: case 192: aes_decrypt_key192(key, cx); return;
-    case 32: case 256: aes_decrypt_key256(key, cx); return;
+    case 16: case 128: csql_aes_decrypt_key128(key, cx); return;
+    case 24: case 192: csql_aes_decrypt_key192(key, cx); return;
+    case 32: case 256: csql_aes_decrypt_key256(key, cx); return;
 #endif
     }
 }

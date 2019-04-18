@@ -79,7 +79,7 @@ typedef char*				caddr_t;
 #define bcopy(from, to, len) memcpy ((to), (from), (len))
 #endif
 
-struct sha1_ctxt {
+struct csql_sha1_ctxt {
 	union {
 		u_int8_t	b8[20];
 		u_int32_t	b32[5];
@@ -95,17 +95,17 @@ struct sha1_ctxt {
 	u_int8_t	count;
 };
 
-void sha1_init (struct sha1_ctxt *);
-void sha1_pad (struct sha1_ctxt *);
-void sha1_loop (struct sha1_ctxt *, const caddr_t, size_t);
-void sha1_result (struct sha1_ctxt *, caddr_t);
+void csql_sha1_init (struct csql_sha1_ctxt *);
+void csql_sha1_pad (struct csql_sha1_ctxt *);
+void csql_sha1_loop (struct csql_sha1_ctxt *, const caddr_t, size_t);
+void csql_sha1_result (struct csql_sha1_ctxt *, caddr_t);
 
-typedef struct sha1_ctxt SHA1_CTX;
-#define SHA1Init(x)		sha1_init((x))
-#define SHA1Update(x, y, z)	sha1_loop((x), (y), (z))
-#define SHA1Final(x, y)		sha1_result((y), (x))
+typedef struct csql_sha1_ctxt SHA1_CTX;
+#define CSQL_SHA1Init(x)		    csql_sha1_init((x))
+#define CSQL_SHA1Update(x, y, z)	csql_sha1_loop((x), (y), (z))
+#define CSQL_SHA1Final(x, y)		csql_sha1_result((y), (x))
 
-void sha1(unsigned char hval[], const unsigned char data[], unsigned int len);
+void csql_sha1(unsigned char hval[], const unsigned char data[], unsigned int len);
 
 #if defined(__cplusplus)
 }

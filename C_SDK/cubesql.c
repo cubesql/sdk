@@ -254,6 +254,24 @@ int64 cubesql_last_inserted_rowID (csqldb *db) {
     return value;
 }
 
+// MARK: - Binary Data -
+
+int cubesql_send_data (csqldb *db, const char *buffer, int len) {
+    int err = csql_sendchunk(db, (char *)buffer, len, 0, kFALSE);
+    if (err != CUBESQL_NOERR) return err;
+    return csql_netread(db, -1, -1, kTRUE, NULL, NO_TIMEOUT);
+}
+
+int cubesql_send_enddata (csqldb *db) {
+    return csql_ack(db, kCOMMAND_ENDCHUNK);
+}
+
+char *cubesql_receive_data (csqldb *db, int *len, int *is_end_chunk) {
+    char *data = csql_receivechunk (db, len, is_end_chunk);
+    csql_ack(db, 0);
+    return data;
+}
+
 // MARK: - Cursor -
 
 int cubesql_cursor_numrows (csqlc *c) {
@@ -820,8 +838,8 @@ void csql_libinit (void) {
 	
 	if (lib_inited == kFALSE) {
 		lib_inited = kTRUE;
-		static_randinit();
-		gen_tabs();
+		csql_static_randinit();
+		csql_gen_tabs();
 		
 		#ifdef WIN32
 		WSAStartup(MAKEWORD(2,2), &wsaData);
@@ -1526,8 +1544,8 @@ int csql_connect_encrypted (csqldb *db) {
 	int				encryption = db->encryption;
 	int				len2 = 0, is_token = kFALSE;
 	char			*token = NULL, *enc_token = NULL;
-	aes_encrypt_ctx ctx[1];
-	aes_decrypt_ctx ctxd[1];
+	csql_aes_encrypt_ctx ctx[1];
+	csql_aes_decrypt_ctx ctxd[1];
 	
 	// reset encryption
 	// because session key hasn't yet been computed
@@ -1542,7 +1560,7 @@ int csql_connect_encrypted (csqldb *db) {
 	// AND AESCBC(X;H(X),H(H(P))) WHERE X is a 20-byte random number
 	
 	// Generate the 20-byte random number X
-	rand_fill((char *)rand1);
+	csql_rand_fill((char *)rand1);
 	
 	// Compute H(X)
 	hash_field ((unsigned char*) hash1, (const char *)rand1, kRANDPOOLSIZE, 1);
@@ -1551,14 +1569,14 @@ int csql_connect_encrypted (csqldb *db) {
 	hash_field ((unsigned char*) hash2, (const char *)db->password, (int)strlen(db->password), 2);
 	
 	// Prepare the 128 bit encryption key
-	aes_encrypt_key ((unsigned char*) hash2, 16, ctx);
+	csql_aes_encrypt_key ((unsigned char*) hash2, 16, ctx);
 	
 	// Prepare X;H(X)
 	memcpy (buffer1, rand1, kRANDPOOLSIZE);
 	memcpy (buffer1+kRANDPOOLSIZE, hash1, SHA1_DIGEST_SIZE);
 	
 	// Generate AESCBC(X;H(X),H(H(P)))
-	rand_fill((char *)rand2);
+	csql_rand_fill((char *)rand2);
 	len = encrypt_buffer (buffer1, SHA1_DIGEST_SIZE+kRANDPOOLSIZE, (char *)rand2, ctx);
 	
 	// PHASE 1: SEND DATA
@@ -1606,7 +1624,7 @@ int csql_connect_encrypted (csqldb *db) {
 	
 	// Decrypt message using H(H(P))
 	// Prepare the 128 bit decryption key
-	aes_decrypt_key ((unsigned char*) hash2, 16, ctxd);
+	csql_aes_decrypt_key ((unsigned char*) hash2, 16, ctxd);
 	decrypt_buffer(db->inbuffer, db->insize, ctxd);
 	
 	// Now inbuffer is Y;H(Y)
@@ -1622,12 +1640,12 @@ int csql_connect_encrypted (csqldb *db) {
 	
 	// Compute H(P)
 	hash_field ((unsigned char*) hash2, (const char *)db->password, (int)strlen(db->password), 1);
-	rand_fill ((char *)rand2);
+	csql_rand_fill ((char *)rand2);
 	len = encrypt_buffer ((char *)hash2, SHA1_DIGEST_SIZE, (char *)rand2, db->encryptkey);
 	
 	if (is_token) {
 		int tlen = 0;
-		rand_fill ((char *)rand3);
+		csql_rand_fill ((char *)rand3);
 		tlen = (int)strlen(token)+1;
 		enc_token = (char *) malloc(tlen + kRANDPOOLSIZE);
 		if (enc_token == NULL) goto abort_connect;
@@ -1851,7 +1869,7 @@ int csql_netwrite (csqldb *db, char *size_array, int nsize_array, char *buffer, 
 	if (buffer == NULL) return CUBESQL_NOERR;
 	
 	// generate random pool and encrypt buffer
-	rand_fill(rand1);
+	csql_rand_fill(rand1);
 	encbuffer = (char *) malloc (nbuffer+1);
 	if (encbuffer == NULL) {
 		csql_seterror(db, CUBESQL_MEMORY_ERROR, "Unable to allocate encbuffer");
@@ -2556,17 +2574,17 @@ int encryption_is_ssl (int encryption) {
 
 void hash_field (unsigned char hval[], const char *field, int len, int times) {
 	// SHA1(P)
-	sha1((unsigned char *)hval, (const unsigned char*)field, len);
+	csql_sha1((unsigned char *)hval, (const unsigned char*)field, len);
 	
 	// SHA1(SHA1(P))
 	if (times == 2)
-		sha1((unsigned char *)hval, (const unsigned char *)hval, SHA1_DIGEST_SIZE);
+		csql_sha1((unsigned char *)hval, (const unsigned char *)hval, SHA1_DIGEST_SIZE);
 }
 
 void hex_hash_field (char result[], const char *field, int len) {
 	unsigned char hval[SHA1_DIGEST_SIZE];
 	
-	sha1(hval, (const unsigned char *)field, len);
+	csql_sha1(hval, (const unsigned char *)field, len);
 	
 	// convert result
 	// result must be SHA1_DIGEST_SIZE*2+2 long
@@ -2594,7 +2612,7 @@ void hex_hash_field2 (char result[], const char *field, unsigned char *randpoll)
 	len = snprintf(buffer, sizeof(buffer), "%s%s", field, randhex);
 	
 	// compute hash
-	sha1(hval, (const unsigned char *)buffer, len);
+	csql_sha1(hval, (const unsigned char *)buffer, len);
 	
 	// convert result
 	// result must be SHA1_DIGEST_SIZE*2+2 long
@@ -2611,19 +2629,19 @@ void random_hash_field (unsigned char hval[], const char *randpoll, const char *
 	char hval2[SHA1_DIGEST_SIZE];
 	
 	// SHA1(P)
-	sha1((unsigned char *)hval1, (const unsigned char*)field, (int)strlen(field));
+	csql_sha1((unsigned char *)hval1, (const unsigned char*)field, (int)strlen(field));
 	
 	// SHA1(SHA1(P))
-	sha1((unsigned char *)hval2, (const unsigned char *)hval1, SHA1_DIGEST_SIZE);
+	csql_sha1((unsigned char *)hval2, (const unsigned char *)hval1, SHA1_DIGEST_SIZE);
 	
 	memcpy(buffer, randpoll, kRANDPOOLSIZE);
 	memcpy(buffer + kRANDPOOLSIZE, hval2, SHA1_DIGEST_SIZE);
 	
 	// SHA1(R;SHA1(SHA1(P)))
-	sha1((unsigned char *)hval, (const unsigned char *)buffer, kRANDPOOLSIZE+SHA1_DIGEST_SIZE);
+	csql_sha1((unsigned char *)hval, (const unsigned char *)buffer, kRANDPOOLSIZE+SHA1_DIGEST_SIZE);
 }
 
-int encrypt_buffer (char *buffer, int dim, char random[], aes_encrypt_ctx ctx[1]) {
+int encrypt_buffer (char *buffer, int dim, char random[], csql_aes_encrypt_ctx ctx[1]) {
 	char    dbuf[2 * BLOCK_LEN];
 	int		i, len, index=0;
 	char	*b1, *b2;
@@ -2639,7 +2657,7 @@ int encrypt_buffer (char *buffer, int dim, char random[], aes_encrypt_ctx ctx[1]
 			dbuf[i + BLOCK_LEN] ^= dbuf[i];
         
         // encrypt the top 16 bytes of the buffer
-        aes_encrypt((const unsigned char*) (dbuf + dim), (unsigned char*)(dbuf + dim), ctx);
+        csql_aes_encrypt((const unsigned char*) (dbuf + dim), (unsigned char*)(dbuf + dim), ctx);
         
         // copy back encrypted data
         memcpy(random, dbuf, BLOCK_LEN);
@@ -2658,7 +2676,7 @@ int encrypt_buffer (char *buffer, int dim, char random[], aes_encrypt_ctx ctx[1]
         	b1[i] ^= b2[i];
         
         // encrypt the block (now in b1)
-        aes_encrypt((const unsigned char*)b1, (unsigned char*)b1, ctx);
+        csql_aes_encrypt((const unsigned char*)b1, (unsigned char*)b1, ctx);
 		
 		len -= BLOCK_LEN;
 		
@@ -2689,7 +2707,7 @@ int encrypt_buffer (char *buffer, int dim, char random[], aes_encrypt_ctx ctx[1]
         	b3[i] = b1[i];
 		
 		// encrypt this block
-       	aes_encrypt((const unsigned char*) b3, (unsigned char*) b3, ctx);
+       	csql_aes_encrypt((const unsigned char*) b3, (unsigned char*) b3, ctx);
 		
 		// save b1
 		memcpy(back, b1, BLOCK_LEN);
@@ -2704,7 +2722,7 @@ int encrypt_buffer (char *buffer, int dim, char random[], aes_encrypt_ctx ctx[1]
 	return (dim + BLOCK_LEN);
 }
 
-int decrypt_buffer (char *buffer, int dim, aes_decrypt_ctx ctx[1]) {
+int decrypt_buffer (char *buffer, int dim, csql_aes_decrypt_ctx ctx[1]) {
 	int 	len, nextlen, i, index=0;
 	char	*b1, *b2;
 	char	buf[BLOCK_LEN], b3[BLOCK_LEN];
@@ -2713,7 +2731,7 @@ int decrypt_buffer (char *buffer, int dim, aes_decrypt_ctx ctx[1]) {
 		len = dim - BLOCK_LEN;
 		
 		// decrypt from position len to position len + BLOCK_LEN
-        aes_decrypt((const unsigned char*) (buffer + len), (unsigned char*) (buffer + len), ctx);
+        csql_aes_decrypt((const unsigned char*) (buffer + len), (unsigned char*) (buffer + len), ctx);
 		
 		// undo the CBC chaining
         for(i = 0; i < len; ++i)
@@ -2731,7 +2749,7 @@ int decrypt_buffer (char *buffer, int dim, aes_decrypt_ctx ctx[1]) {
 		if (nextlen > BLOCK_LEN) nextlen = BLOCK_LEN;
 		
 		// decrypt the b2 block
-		aes_decrypt((const unsigned char*) b2, (unsigned char*) buf, ctx);
+		csql_aes_decrypt((const unsigned char*) b2, (unsigned char*) buf, ctx);
 		
 		if(nextlen == 0 || nextlen == BLOCK_LEN) {
 			// no ciphertext stealing
@@ -2767,7 +2785,7 @@ int decrypt_buffer (char *buffer, int dim, aes_decrypt_ctx ctx[1]) {
                 b3[i] = buf[i];
 			
             // decrypt the C[N-1] block in b3
-            aes_decrypt((const unsigned char*) b3, (unsigned char*) b3, ctx);
+            csql_aes_decrypt((const unsigned char*) b3, (unsigned char*) b3, ctx);
 			
             // produce the last but one plaintext block by xoring with
             // the last but two ciphertext block
@@ -2836,8 +2854,8 @@ int generate_session_key (csqldb *db, int encryption, char *password, char *rand
 	}
 	
 	// generate enc/dec keys
-	aes_encrypt_key ((unsigned char*) session_key, keyLen, db->encryptkey);
-	aes_decrypt_key ((unsigned char*) session_key, keyLen, db->decryptkey);
+	csql_aes_encrypt_key ((unsigned char*) session_key, keyLen, db->encryptkey);
+	csql_aes_decrypt_key ((unsigned char*) session_key, keyLen, db->decryptkey);
 	
 	return keyLen;
 }

@@ -197,7 +197,7 @@ extern "C"
 
 /* implemented in case of wrong call for fixed tables */
 
-void gen_tabs(void)
+void csql_gen_tabs(void)
 {
 }
 
@@ -263,7 +263,7 @@ static aes_08t fi(const aes_08t x)
 
 static int init = 0;
 
-void gen_tabs(void)
+void csql_gen_tabs(void)
 {   aes_32t  i, w;
 
 #if defined(FF_TABLES)

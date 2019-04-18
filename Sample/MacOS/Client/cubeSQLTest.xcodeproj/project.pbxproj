@@ -1,0 +1,420 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A9292BF22268981700CA9D69 /* cubesql.c in Sources */ = {isa = PBXBuildFile; fileRef = A9292BDA2268981700CA9D69 /* cubesql.c */; };
+		A9292BF52268981700CA9D69 /* aeskey.c in Sources */ = {isa = PBXBuildFile; fileRef = A9292BDF2268981700CA9D69 /* aeskey.c */; };
+		A9292BF62268981700CA9D69 /* aescrypt.c in Sources */ = {isa = PBXBuildFile; fileRef = A9292BE32268981700CA9D69 /* aescrypt.c */; };
+		A9292BF72268981700CA9D69 /* sha1.c in Sources */ = {isa = PBXBuildFile; fileRef = A9292BE52268981700CA9D69 /* sha1.c */; };
+		A9292BF82268981700CA9D69 /* pseudorandom.c in Sources */ = {isa = PBXBuildFile; fileRef = A9292BE62268981700CA9D69 /* pseudorandom.c */; };
+		A9292BF92268981700CA9D69 /* base64.c in Sources */ = {isa = PBXBuildFile; fileRef = A9292BE82268981700CA9D69 /* base64.c */; };
+		A9292BFA2268981700CA9D69 /* aestab.c in Sources */ = {isa = PBXBuildFile; fileRef = A9292BE92268981700CA9D69 /* aestab.c */; };
+		A9292C00226898C100CA9D69 /* CubeSQLObjc.m in Sources */ = {isa = PBXBuildFile; fileRef = A9292BFF226898C100CA9D69 /* CubeSQLObjc.m */; };
+		A978F155213ED60800F7A699 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A978F154213ED60800F7A699 /* AppDelegate.m */; };
+		A978F190213ED6DB00F7A699 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A978F18A213ED6DA00F7A699 /* Assets.xcassets */; };
+		A978F191213ED6DB00F7A699 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = A978F18C213ED6DA00F7A699 /* MainMenu.xib */; };
+		A978F192213ED6DB00F7A699 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = A978F18E213ED6DB00F7A699 /* main.m */; };
+		A978F198213F140B00F7A699 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = A978F197213F140B00F7A699 /* libz.tbd */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A9292BDA2268981700CA9D69 /* cubesql.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cubesql.c; sourceTree = "<group>"; };
+		A9292BDF2268981700CA9D69 /* aeskey.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = aeskey.c; sourceTree = "<group>"; };
+		A9292BE02268981700CA9D69 /* pseudorandom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pseudorandom.h; sourceTree = "<group>"; };
+		A9292BE12268981700CA9D69 /* aestab.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aestab.h; sourceTree = "<group>"; };
+		A9292BE22268981700CA9D69 /* base64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base64.h; sourceTree = "<group>"; };
+		A9292BE32268981700CA9D69 /* aescrypt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = aescrypt.c; sourceTree = "<group>"; };
+		A9292BE42268981700CA9D69 /* aesopt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aesopt.h; sourceTree = "<group>"; };
+		A9292BE52268981700CA9D69 /* sha1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sha1.c; sourceTree = "<group>"; };
+		A9292BE62268981700CA9D69 /* pseudorandom.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pseudorandom.c; sourceTree = "<group>"; };
+		A9292BE72268981700CA9D69 /* aes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aes.h; sourceTree = "<group>"; };
+		A9292BE82268981700CA9D69 /* base64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = base64.c; sourceTree = "<group>"; };
+		A9292BE92268981700CA9D69 /* aestab.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = aestab.c; sourceTree = "<group>"; };
+		A9292BEA2268981700CA9D69 /* sha1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sha1.h; sourceTree = "<group>"; };
+		A9292BEB2268981700CA9D69 /* csql.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = csql.h; sourceTree = "<group>"; };
+		A9292BF12268981700CA9D69 /* cubesql.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cubesql.h; sourceTree = "<group>"; };
+		A9292BFE226898C100CA9D69 /* CubeSQLObjC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CubeSQLObjC.h; sourceTree = "<group>"; };
+		A9292BFF226898C100CA9D69 /* CubeSQLObjc.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CubeSQLObjc.m; sourceTree = "<group>"; };
+		A978F150213ED60800F7A699 /* cubeSQLTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = cubeSQLTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A978F153213ED60800F7A699 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		A978F154213ED60800F7A699 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		A978F189213ED6DA00F7A699 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = cubeSQLTest/Info.plist; sourceTree = SOURCE_ROOT; };
+		A978F18A213ED6DA00F7A699 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = cubeSQLTest/Assets.xcassets; sourceTree = SOURCE_ROOT; };
+		A978F18D213ED6DA00F7A699 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = MainMenu.xib; sourceTree = "<group>"; };
+		A978F18E213ED6DB00F7A699 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = cubeSQLTest/main.m; sourceTree = SOURCE_ROOT; };
+		A978F197213F140B00F7A699 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A978F14D213ED60800F7A699 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A978F198213F140B00F7A699 /* libz.tbd in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A9292BD92268981700CA9D69 /* C_SDK */ = {
+			isa = PBXGroup;
+			children = (
+				A9292BDE2268981700CA9D69 /* crypt */,
+				A9292BEB2268981700CA9D69 /* csql.h */,
+				A9292BDA2268981700CA9D69 /* cubesql.c */,
+				A9292BF12268981700CA9D69 /* cubesql.h */,
+			);
+			name = C_SDK;
+			path = ../../../../C_SDK;
+			sourceTree = "<group>";
+		};
+		A9292BDE2268981700CA9D69 /* crypt */ = {
+			isa = PBXGroup;
+			children = (
+				A9292BDF2268981700CA9D69 /* aeskey.c */,
+				A9292BE02268981700CA9D69 /* pseudorandom.h */,
+				A9292BE12268981700CA9D69 /* aestab.h */,
+				A9292BE22268981700CA9D69 /* base64.h */,
+				A9292BE32268981700CA9D69 /* aescrypt.c */,
+				A9292BE42268981700CA9D69 /* aesopt.h */,
+				A9292BE52268981700CA9D69 /* sha1.c */,
+				A9292BE62268981700CA9D69 /* pseudorandom.c */,
+				A9292BE72268981700CA9D69 /* aes.h */,
+				A9292BE82268981700CA9D69 /* base64.c */,
+				A9292BE92268981700CA9D69 /* aestab.c */,
+				A9292BEA2268981700CA9D69 /* sha1.h */,
+			);
+			path = crypt;
+			sourceTree = "<group>";
+		};
+		A9292BFD226898C100CA9D69 /* ObjC */ = {
+			isa = PBXGroup;
+			children = (
+				A9292BFE226898C100CA9D69 /* CubeSQLObjC.h */,
+				A9292BFF226898C100CA9D69 /* CubeSQLObjc.m */,
+			);
+			name = ObjC;
+			path = ../../../../ObjC;
+			sourceTree = "<group>";
+		};
+		A978F147213ED60800F7A699 = {
+			isa = PBXGroup;
+			children = (
+				A978F152213ED60800F7A699 /* cubeSQLTest */,
+				A978F196213F140B00F7A699 /* Frameworks */,
+				A978F151213ED60800F7A699 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A978F151213ED60800F7A699 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A978F150213ED60800F7A699 /* cubeSQLTest.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A978F152213ED60800F7A699 /* cubeSQLTest */ = {
+			isa = PBXGroup;
+			children = (
+				A978F18E213ED6DB00F7A699 /* main.m */,
+				A978F153213ED60800F7A699 /* AppDelegate.h */,
+				A978F154213ED60800F7A699 /* AppDelegate.m */,
+				A978F18A213ED6DA00F7A699 /* Assets.xcassets */,
+				A9292BFD226898C100CA9D69 /* ObjC */,
+				A9292BD92268981700CA9D69 /* C_SDK */,
+				A978F18B213ED6DA00F7A699 /* Base.lproj */,
+				A978F189213ED6DA00F7A699 /* Info.plist */,
+			);
+			path = cubeSQLTest;
+			sourceTree = "<group>";
+		};
+		A978F18B213ED6DA00F7A699 /* Base.lproj */ = {
+			isa = PBXGroup;
+			children = (
+				A978F18C213ED6DA00F7A699 /* MainMenu.xib */,
+			);
+			name = Base.lproj;
+			path = cubeSQLTest/Base.lproj;
+			sourceTree = SOURCE_ROOT;
+		};
+		A978F196213F140B00F7A699 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A978F197213F140B00F7A699 /* libz.tbd */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A978F14F213ED60800F7A699 /* cubeSQLTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A978F161213ED60900F7A699 /* Build configuration list for PBXNativeTarget "cubeSQLTest" */;
+			buildPhases = (
+				A978F14C213ED60800F7A699 /* Sources */,
+				A978F14D213ED60800F7A699 /* Frameworks */,
+				A978F14E213ED60800F7A699 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = cubeSQLTest;
+			productName = cubeSQLTest;
+			productReference = A978F150213ED60800F7A699 /* cubeSQLTest.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A978F148213ED60800F7A699 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0940;
+				ORGANIZATIONNAME = SQLabs;
+				TargetAttributes = {
+					A978F14F213ED60800F7A699 = {
+						CreatedOnToolsVersion = 9.4.1;
+					};
+				};
+			};
+			buildConfigurationList = A978F14B213ED60800F7A699 /* Build configuration list for PBXProject "cubeSQLTest" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A978F147213ED60800F7A699;
+			productRefGroup = A978F151213ED60800F7A699 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A978F14F213ED60800F7A699 /* cubeSQLTest */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A978F14E213ED60800F7A699 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A978F190213ED6DB00F7A699 /* Assets.xcassets in Resources */,
+				A978F191213ED6DB00F7A699 /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A978F14C213ED60800F7A699 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A9292BF72268981700CA9D69 /* sha1.c in Sources */,
+				A9292BF22268981700CA9D69 /* cubesql.c in Sources */,
+				A9292BF82268981700CA9D69 /* pseudorandom.c in Sources */,
+				A978F192213ED6DB00F7A699 /* main.m in Sources */,
+				A9292BFA2268981700CA9D69 /* aestab.c in Sources */,
+				A9292C00226898C100CA9D69 /* CubeSQLObjc.m in Sources */,
+				A978F155213ED60800F7A699 /* AppDelegate.m in Sources */,
+				A9292BF62268981700CA9D69 /* aescrypt.c in Sources */,
+				A9292BF92268981700CA9D69 /* base64.c in Sources */,
+				A9292BF52268981700CA9D69 /* aeskey.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		A978F18C213ED6DA00F7A699 /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				A978F18D213ED6DA00F7A699 /* Base */,
+			);
+			name = MainMenu.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		A978F15F213ED60900F7A699 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		A978F160213ED60900F7A699 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		A978F162213ED60900F7A699 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 3ZH6236ET5;
+				INFOPLIST_FILE = cubeSQLTest/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sqlabs.cubeSQLTest;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		A978F163213ED60900F7A699 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 3ZH6236ET5;
+				INFOPLIST_FILE = cubeSQLTest/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sqlabs.cubeSQLTest;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A978F14B213ED60800F7A699 /* Build configuration list for PBXProject "cubeSQLTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A978F15F213ED60900F7A699 /* Debug */,
+				A978F160213ED60900F7A699 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A978F161213ED60900F7A699 /* Build configuration list for PBXNativeTarget "cubeSQLTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A978F162213ED60900F7A699 /* Debug */,
+				A978F163213ED60900F7A699 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A978F148213ED60800F7A699 /* Project object */;
+}

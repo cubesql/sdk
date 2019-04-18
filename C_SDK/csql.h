@@ -540,8 +540,8 @@ struct csqldb
 	char			*hostverification;			// optional host verification name to use in SSL peer verification
 	void			*userptr;					// optional pointer saved by the user
 	int				encryption;					// CUBESQL_ENCRYPTION_NONE - CUBESQL_ENCRYPTION_AES128 - CUBESQL_ENCRYPTION_AES192 - CUBESQL_ENCRYPTION_AES256
-	aes_encrypt_ctx	encryptkey[1];				// session key used to encrypt data
-	aes_decrypt_ctx decryptkey[1];				// session key used to decrypt data
+	csql_aes_encrypt_ctx    encryptkey[1];				// session key used to encrypt data
+	csql_aes_decrypt_ctx    decryptkey[1];				// session key used to decrypt data
 
 	int				toread;
 	char			*inbuffer;
@@ -624,8 +624,8 @@ int		csql_send_statement (csqldb *db, int command_type, const char *sql, int is_
 void	hash_field (unsigned char hval[], const char *field, int len, int times);
 void	hex_hash_field (char result[], const char *field, int len);
 void	hex_hash_field2 (char result[], const char *field, unsigned char *randpoll);
-int		encrypt_buffer (char *buffer, int dim, char random[], aes_encrypt_ctx ctx[1]);
-int		decrypt_buffer (char *buffer, int dim, aes_decrypt_ctx ctx[1]);
+int		encrypt_buffer (char *buffer, int dim, char random[], csql_aes_encrypt_ctx ctx[1]);
+int		decrypt_buffer (char *buffer, int dim, csql_aes_decrypt_ctx ctx[1]);
 int		generate_session_key (csqldb *db, int encryption, char *password, char *rand1, char *rand2);
 int		csql_bindexecute(csqldb *db, const char *sql, char **colvalue, int *colsize, int *coltype, int ncols);
 int		csql_bind_value (csqldb *db, int index, int bindtype, char *value, int len);

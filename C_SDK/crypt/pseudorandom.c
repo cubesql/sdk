@@ -21,7 +21,7 @@
 
 static unsigned int x[N];         /* the 25 seeds */
 
-void rand_init (unsigned int seed)
+void csql_rand_init (unsigned int seed)
 {
 	int k;
 
@@ -30,12 +30,12 @@ void rand_init (unsigned int seed)
 		x[k] = (69069 * x[k-1]) & 0xffffffff;
 }
 
-void static_randinit (void)
+void csql_static_randinit (void)
 {
-	rand_init((unsigned int)time(NULL));
+	csql_rand_init((unsigned int)time(NULL));
 }
 
-unsigned int rand_get (void)
+unsigned int csql_rand_get (void)
 {
 	unsigned int y;
 	static unsigned int mag01[2]={ 0x0, 0x8ebfd028};  /* "magic" vector */
@@ -62,26 +62,26 @@ unsigned int rand_get (void)
 	return y;
 }
 
-void rand_fill (char *buf)
+void csql_rand_fill (char *buf)
 {	
 	unsigned int randint, i, times;
 	
 	times = 20 / sizeof(unsigned int);
 	for (i=0; i<times; i++)
 	{
-        randint = rand_get();
+        randint = csql_rand_get();
 		memcpy(buf + (i*sizeof(unsigned int)), &randint, sizeof(unsigned int));
 	}
 }
 
-void rand_fill_16 (char *buf)
+void csql_rand_fill_16 (char *buf)
 {	
 	unsigned int randint, i, times;
 	
 	times = 16 / sizeof(unsigned int);
 	for (i=0; i<times; i++)
 	{
-		randint = rand_get();
+		randint = csql_rand_get();
 		memcpy(buf + (i*sizeof(unsigned int)), &randint, sizeof(unsigned int));
 	}
 }

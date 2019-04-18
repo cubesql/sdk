@@ -106,17 +106,17 @@ typedef unsigned char      aes_08t;
 typedef struct
 {   aes_32t ks[KS_LENGTH];
     aes_32t rn;
-} aes_encrypt_ctx;
+} csql_aes_encrypt_ctx;
 
 typedef struct
 {   aes_32t ks[KS_LENGTH];
     aes_32t rn;
-} aes_decrypt_ctx;
+} csql_aes_decrypt_ctx;
 
 /* This routine must be called before first use if non-static       */
 /* tables are being used                                            */
 
-void gen_tabs(void);
+void csql_gen_tabs(void);
 
 /* The key length (klen) is input in bytes when it is in the range  */
 /* 16 <= klen <= 32 or in bits when in the range 128 <= klen <= 256 */
@@ -124,43 +124,43 @@ void gen_tabs(void);
 #if defined( AES_ENCRYPT )
 
 #if defined(AES_128) || defined(AES_VAR)
-aes_rval aes_encrypt_key128(const unsigned char *in_key, aes_encrypt_ctx cx[1]);
+aes_rval csql_aes_encrypt_key128(const unsigned char *in_key, csql_aes_encrypt_ctx cx[1]);
 #endif
 
 #if defined(AES_192) || defined(AES_VAR)
-aes_rval aes_encrypt_key192(const unsigned char *in_key, aes_encrypt_ctx cx[1]);
+aes_rval csql_aes_encrypt_key192(const unsigned char *in_key, csql_aes_encrypt_ctx cx[1]);
 #endif
 
 #if defined(AES_256) || defined(AES_VAR)
-aes_rval aes_encrypt_key256(const unsigned char *in_key, aes_encrypt_ctx cx[1]);
+aes_rval csql_aes_encrypt_key256(const unsigned char *in_key, csql_aes_encrypt_ctx cx[1]);
 #endif
 
 #if defined(AES_VAR)
-aes_rval aes_encrypt_key(const unsigned char *in_key, int key_len, aes_encrypt_ctx cx[1]);
+aes_rval csql_aes_encrypt_key(const unsigned char *in_key, int key_len, csql_aes_encrypt_ctx cx[1]);
 #endif
 
-aes_rval aes_encrypt(const unsigned char *in_blk, unsigned char *out_blk, const aes_encrypt_ctx cx[1]);
+aes_rval csql_aes_encrypt(const unsigned char *in_blk, unsigned char *out_blk, const csql_aes_encrypt_ctx cx[1]);
 #endif
 
 #if defined( AES_DECRYPT )
 
 #if defined(AES_128) || defined(AES_VAR)
-aes_rval aes_decrypt_key128(const unsigned char *in_key, aes_decrypt_ctx cx[1]);
+aes_rval csql_aes_decrypt_key128(const unsigned char *in_key, csql_aes_decrypt_ctx cx[1]);
 #endif
 
 #if defined(AES_192) || defined(AES_VAR)
-aes_rval aes_decrypt_key192(const unsigned char *in_key, aes_decrypt_ctx cx[1]);
+aes_rval csql_aes_decrypt_key192(const unsigned char *in_key, csql_aes_decrypt_ctx cx[1]);
 #endif
 
 #if defined(AES_256) || defined(AES_VAR)
-aes_rval aes_decrypt_key256(const unsigned char *in_key, aes_decrypt_ctx cx[1]);
+aes_rval csql_aes_decrypt_key256(const unsigned char *in_key, csql_aes_decrypt_ctx cx[1]);
 #endif
 
 #if defined(AES_VAR)
-aes_rval aes_decrypt_key(const unsigned char *in_key, int key_len, aes_decrypt_ctx cx[1]);
+aes_rval csql_aes_decrypt_key(const unsigned char *in_key, int key_len, csql_aes_decrypt_ctx cx[1]);
 #endif
 
-aes_rval aes_decrypt(const unsigned char *in_blk,  unsigned char *out_blk, const aes_decrypt_ctx cx[1]);
+aes_rval csql_aes_decrypt(const unsigned char *in_blk,  unsigned char *out_blk, const csql_aes_decrypt_ctx cx[1]);
 #endif
 
 #if defined(__cplusplus)

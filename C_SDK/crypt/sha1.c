@@ -69,16 +69,14 @@ static u_int32_t _K[] = { 0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xca62c1d6 };
 		sha1_step(ctxt);		\
      }
 
-static void sha1_step (struct sha1_ctxt *);
-
-static void sha1_step(struct sha1_ctxt *ctxt)
+static void sha1_step(struct csql_sha1_ctxt *ctxt)
 {
 	u_int32_t	a, b, c, d, e;
 	size_t t, s;
 	u_int32_t	tmp;
 
 #if SHA1_BYTE_ORDER == SHA1_LITTLE_ENDIAN
-	struct sha1_ctxt tctxt;
+	struct csql_sha1_ctxt tctxt;
 	bcopy(&ctxt->m.b8[0], &tctxt.m.b8[0], 64);
 	ctxt->m.b8[0] = tctxt.m.b8[3]; ctxt->m.b8[1] = tctxt.m.b8[2];
 	ctxt->m.b8[2] = tctxt.m.b8[1]; ctxt->m.b8[3] = tctxt.m.b8[0];
@@ -154,9 +152,9 @@ static void sha1_step(struct sha1_ctxt *ctxt)
 
 /*------------------------------------------------------------*/
 
-void sha1_init(struct sha1_ctxt *ctxt)
+void csql_sha1_init(struct csql_sha1_ctxt *ctxt)
 {
-	bzero(ctxt, sizeof(struct sha1_ctxt));
+	bzero(ctxt, sizeof(struct csql_sha1_ctxt));
 	H(0) = 0x67452301;
 	H(1) = 0xefcdab89;
 	H(2) = 0x98badcfe;
@@ -164,7 +162,7 @@ void sha1_init(struct sha1_ctxt *ctxt)
 	H(4) = 0xc3d2e1f0;
 }
 
-void sha1_pad(struct sha1_ctxt *ctxt)
+void csql_sha1_pad(struct csql_sha1_ctxt *ctxt)
 {
 	size_t padlen;		/*pad length in bytes*/
 	size_t padstart;
@@ -197,7 +195,7 @@ void sha1_pad(struct sha1_ctxt *ctxt)
 #endif
 }
 
-void sha1_loop(struct sha1_ctxt *ctxt, const caddr_t input0, size_t len)
+void csql_sha1_loop(struct csql_sha1_ctxt *ctxt, const caddr_t input0, size_t len)
 {
 	const u_int8_t *input;
 	size_t gaplen;
@@ -223,13 +221,12 @@ void sha1_loop(struct sha1_ctxt *ctxt, const caddr_t input0, size_t len)
 	}
 }
 
-void
-sha1_result(struct sha1_ctxt *ctxt, caddr_t digest0)
+void csql_sha1_result(struct csql_sha1_ctxt *ctxt, caddr_t digest0)
 {
 	u_int8_t *digest;
 
 	digest = (u_int8_t *)digest0;
-	sha1_pad(ctxt);
+	csql_sha1_pad(ctxt);
 #if SHA1_BYTE_ORDER == SHA1_BIG_ENDIAN
 	bcopy(&ctxt->h.b8[0], digest, 20);
 #else
@@ -246,10 +243,10 @@ sha1_result(struct sha1_ctxt *ctxt, caddr_t digest0)
 #endif
 }
 
-void sha1(unsigned char hval[], const unsigned char data[], unsigned int len)
+void csql_sha1(unsigned char hval[], const unsigned char data[], unsigned int len)
 {   
-	struct sha1_ctxt ctxt;
+	struct csql_sha1_ctxt ctxt;
 
-    sha1_init(&ctxt); sha1_loop(&ctxt, (const caddr_t) data, len); sha1_result(&ctxt, (char *)hval);
+    csql_sha1_init(&ctxt); csql_sha1_loop(&ctxt, (const caddr_t) data, len); csql_sha1_result(&ctxt, (char *)hval);
 }
 

@@ -104,8 +104,8 @@ extern "C"
 #define fwd_lrnd(y,x,k,c)   (s(y,c) = (k)[c] ^ no_table(x,t_use(s,box),fwd_var,rf1,c))
 #endif
 
-aes_rval aes_encrypt(const unsigned char *in,
-                        unsigned char *out, const aes_encrypt_ctx cx[1])
+aes_rval csql_aes_encrypt(const unsigned char *in,
+                        unsigned char *out, const csql_aes_encrypt_ctx cx[1])
 {   aes_32t         locals(b0, b1);
     const aes_32t   *kp = cx->ks;
 #if defined( dec_fmvars )
@@ -225,8 +225,8 @@ aes_rval aes_encrypt(const unsigned char *in,
 #define inv_lrnd(y,x,k,c)   (s(y,c) = (k)[c] ^ no_table(x,t_use(i,box),inv_var,rf1,c))
 #endif
 
-aes_rval aes_decrypt(const unsigned char *in,
-                        unsigned char *out, const aes_decrypt_ctx cx[1])
+aes_rval csql_aes_decrypt(const unsigned char *in,
+                        unsigned char *out, const csql_aes_decrypt_ctx cx[1])
 {   aes_32t        locals(b0, b1);
 #if defined( dec_imvars )
     dec_imvars; /* declare variables for inv_mcol() if needed */

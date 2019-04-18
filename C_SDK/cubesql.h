@@ -26,7 +26,7 @@ extern "C" {
 #define CUBESQL_APIEXPORT
 #endif
     
-#define CUBESQL_SDK_VERSION                 "050703"   // means 5.7.3
+#define CUBESQL_SDK_VERSION                 "050800"   // means 5.8.0
     
 // custom boolean values (C89 doesn't have boolean support)
 #ifndef kTRUE
@@ -137,7 +137,11 @@ CUBESQL_APIEXPORT void      cubesql_setpath (int type, char *path);
 CUBESQL_APIEXPORT int       cubesql_set_database (csqldb *db, const char *dbname);
 CUBESQL_APIEXPORT int64     cubesql_affected_rows (csqldb *db);
 CUBESQL_APIEXPORT int64     cubesql_last_inserted_rowID (csqldb *db);
-	
+    
+CUBESQL_APIEXPORT int       cubesql_send_data (csqldb *db, const char *buffer, int len);
+CUBESQL_APIEXPORT int       cubesql_send_enddata (csqldb *db);
+CUBESQL_APIEXPORT char      *cubesql_receive_data (csqldb *db, int *len, int *is_end_chunk);
+    
 CUBESQL_APIEXPORT csqlvm	*cubesql_vmprepare (csqldb *db, const char *sql);
 CUBESQL_APIEXPORT int		cubesql_vmbind_int (csqlvm *vm, int index, int value);
 CUBESQL_APIEXPORT int		cubesql_vmbind_double (csqlvm *vm, int index, double value);
