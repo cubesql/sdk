@@ -332,7 +332,7 @@ int cubesql_cursor_columntypebind (csqlc *c, int index) {
 	
 	if (type == CUBESQL_Type_Integer) return CUBESQL_BIND_INTEGER;
 	if (type == CUBESQL_Type_Float) return CUBESQL_BIND_DOUBLE;
-	if (type == CUBESQL_Type_Text) return CUBESQL_BIND_BLOB;
+	if (type == CUBESQL_Type_Blob) return CUBESQL_BIND_BLOB;
     
 	return CUBESQL_BIND_TEXT;
 }
