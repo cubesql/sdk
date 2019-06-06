@@ -511,7 +511,7 @@ char *cubesql_cursor_cstring (csqlc *c, int row, int column) {
 	int	 len;
 	
 	field = cubesql_cursor_field(c, row, column, &len);
-	if ((field == NULL) || (len <= 0)) return NULL;
+	if ((field == NULL) || (len < 0)) return NULL;
 	
 	s = (char *) calloc(1, len+1);
 	if (s == NULL) return NULL;
@@ -525,7 +525,7 @@ char *cubesql_cursor_cstring_static (csqlc *c, int row, int column, char *static
 	int	 len;
 	
 	field = cubesql_cursor_field(c, row, column, &len);
-	if ((field == NULL) || (len <= 0)) return NULL;
+	if ((field == NULL) || (len < 0)) return NULL;
 	
 	if (len > bufferlen-1) len =  bufferlen-1;
 	memcpy(staticbuffer, field, len);
@@ -1308,13 +1308,16 @@ int csql_bindexecute(csqldb *db, const char *sql, char **colvalue, int *colsize,
 	
 	// send individual fields
 	for (i=0; i<nvalues; i++) {
-		if (coltype[i] == CUBESQL_BIND_NULL) {
-			colvalue[i] = "";
-			colsize[i] = 1;
-		}
+		// fix to null values
+        if ((coltype[i] == CUBESQL_BIND_NULL) || (coltype[i] == CUBESQL_BIND_TEXT && colvalue[i] == NULL)) {
+            colvalue[i] = "";
+            colsize[i] = 0;
+        }
+        
 		// includes the terminal 0
-		if ((coltype[i] != CUBESQL_BIND_BLOB) && (coltype[i] != CUBESQL_BIND_NULL))
+        if (coltype[i] != CUBESQL_BIND_BLOB) {
 			colsize[i]++;
+        }
 		
 		if (csql_sendchunk(db, colvalue[i], colsize[i], coltype[i], kTRUE) == CUBESQL_ERR)
 			return CUBESQL_ERR;
