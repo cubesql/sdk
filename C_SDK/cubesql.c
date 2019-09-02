@@ -447,6 +447,7 @@ found_buffer:
 	if ((c->has_rowid) && (column != CUBESQL_ROWID)) n = ((row-1) * (c->ncols + 1)) + (column);
 	else n = ((row-1) * c->ncols) + (column-1);
 	
+    if (n < 0) n = 0;
 	if (n > 0) result = c->data + c->psum[n-1];
 	else result = c->data;// + c->psum[n];
 	if (len) *len = c->size[n];
