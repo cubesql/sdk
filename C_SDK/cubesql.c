@@ -1000,7 +1000,7 @@ int ssl_post_connection_check (csqldb *db) {
 	
 	host = db->host;
 	cert = SSL_get_peer_certificate(db->ssl);
-	if (cert == NULL) goto err_occured;
+	if (cert == NULL) goto err_occurred;
 	
 	/*	DEBUG CODE
 		for (i=0; i<180; ++i) {
@@ -1014,17 +1014,17 @@ int ssl_post_connection_check (csqldb *db) {
 	
 	subj = X509_get_subject_name(cert);
 	idx = X509_NAME_get_text_by_NID(subj, NID_commonName, data, 256);
-	if ((host == NULL) || (subj == NULL) || (idx < 0)) goto err_occured;
+	if ((host == NULL) || (subj == NULL) || (idx < 0)) goto err_occurred;
 	
 	data[255] = 0;
 	//printf("%s\n", data);
-	if (wildcmp(data, host) == 0) goto err_occured;
-	// WAS if (strcasecmp(data, host) != 0) goto err_occured;
+	if (wildcmp(data, host) == 0) goto err_occurred;
+	// WAS if (strcasecmp(data, host) != 0) goto err_occurred;
 	
 	X509_free(cert);
     return (int)SSL_get_verify_result(db->ssl);
 	
-err_occured:
+err_occurred:
     if (cert) X509_free(cert);
 	return X509_V_ERR_APPLICATION_VERIFICATION;
 }
@@ -1213,7 +1213,7 @@ int csql_socketconnect (csqldb *db) {
 	// bail if there was an error
 	if (rc < 0) {
         const char *s = strerror(errno);
-        csql_seterror(db, socket_err, (s) ? (s) : "An error occured while trying to connect");
+        csql_seterror(db, socket_err, (s) ? (s) : "An error occurred while trying to connect");
 		return -1;
 	}
 	
@@ -1244,7 +1244,7 @@ int csql_socketconnect (csqldb *db) {
 		}
 		if (db->ssl == NULL) {
             ERR_print_errors_fp (stderr);
-			csql_seterror(db, ERR_SSL, "An SSL error occured while trying to connect");
+			csql_seterror(db, ERR_SSL, "An SSL error occurred while trying to connect");
 			return -1;
 		}
 		
@@ -1827,7 +1827,7 @@ int csql_netread (csqldb *db, int expected_size, int expected_nfields, int is_ch
 		}
 		
 		if (uncompress((Bytef *)buffer, &zExpSize, (Bytef *)db->inbuffer, (uLong)db->toread) != Z_OK) {
-			csql_seterror(db, CUBESQL_ZLIB_ERROR, "An error occured while trying to uncompress received cursor");
+			csql_seterror(db, CUBESQL_ZLIB_ERROR, "An error occurred while trying to uncompress received cursor");
 			free(buffer);
 			return CUBESQL_ERR;
 		}
@@ -1986,7 +1986,7 @@ int csql_socketwrite (csqldb *db, const char *buffer, int nbuffer) {
 		
 		ret = bsd_select(fd+1, NULL, &write_fds, &except_fds, &tv);
 		
-		// something wrong occured
+		// something wrong occurred
 		if (FD_ISSET(fd, &except_fds)) {
 			csql_seterror(db, ERR_SOCKET, "select returns except_fds inside csql_socketwrite");
 			return CUBESQL_ERR;
@@ -1997,13 +1997,13 @@ int csql_socketwrite (csqldb *db, const char *buffer, int nbuffer) {
 			int err = csql_socketerror(fd);
 			if (err == 0) continue;
 			
-			csql_seterror(db, err, "An error occured inside csql_socketwrite");
+			csql_seterror(db, err, "An error occurred inside csql_socketwrite");
 			return CUBESQL_ERR;
 		}
 		
 		// ret = 0 means timeout
 		if (ret <= 0) {
-			csql_seterror(db, ERR_SOCKET_TIMEOUT, "A timeout error occured inside csql_socketwrite");
+			csql_seterror(db, ERR_SOCKET_TIMEOUT, "A timeout error occurred inside csql_socketwrite");
 			return CUBESQL_ERR;
 		}
 		
@@ -2017,7 +2017,7 @@ int csql_socketwrite (csqldb *db, const char *buffer, int nbuffer) {
             #endif
 
 			if (nwritten <= 0) {
-				csql_seterror(db, ERR_SOCKET_WRITE, "An error occured while trying to execute sock_write");
+				csql_seterror(db, ERR_SOCKET_WRITE, "An error occurred while trying to execute sock_write");
 				return CUBESQL_ERR;
 			}
 			
@@ -2069,12 +2069,12 @@ int csql_socketread (csqldb *db, int is_header, int timeout) {
 			int err = csql_socketerror(fd);
 			if (err == 0) continue;
 			
-			csql_seterror(db, err, "An error occured while executing csql_socketread");
+			csql_seterror(db, err, "An error occurred while executing csql_socketread");
 		}
 		
 		// ret = 0 means timeout
 		if (ret <= 0) {
-			csql_seterror(db, ERR_SOCKET_TIMEOUT, "A timeout error occured inside csql_socketread");
+			csql_seterror(db, ERR_SOCKET_TIMEOUT, "A timeout error occurred inside csql_socketread");
 			return CUBESQL_ERR;
 		}
 		
@@ -2085,7 +2085,7 @@ int csql_socketread (csqldb *db, int is_header, int timeout) {
         #endif
 		
 		if (nread == -1 || nread == 0) {
-			csql_seterror(db, ERR_SOCKET_READ, "An error occured while executing sock_read");
+			csql_seterror(db, ERR_SOCKET_READ, "An error occurred while executing sock_read");
 			return CUBESQL_ERR;
 		}
 		
