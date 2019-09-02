@@ -1265,17 +1265,20 @@ int csql_bind_value (csqldb *db, int index, int bindtype, char *value, int len) 
 	int field_size[1];
 	int nfields = 0, nsizedim = 0, packet_size = 0, datasize = 0;
 	
-	// build packet
-	if (value) {
-		if (len == -1) len = (int)strlen(value);
-		nfields = 1;
-		nsizedim = sizeof(int) * nfields;
-		datasize = len;
-		packet_size = datasize + nsizedim;
-		field_size[0] = htonl(datasize);
+    if ((bindtype == CUBESQL_BIND_NULL) || (bindtype == CUBESQL_BIND_ZEROBLOB)) {
+        value = NULL;
     } else {
-        bindtype = CUBESQL_BIND_NULL;
-        value = "";
+        if (!value) {value = ""; len = 0;}
+        
+        // build packet
+        if (value) {
+            if (len == -1) len = (int)strlen(value);
+            nfields = 1;
+            nsizedim = sizeof(int) * nfields;
+            datasize = len;
+            packet_size = datasize + nsizedim;
+            field_size[0] = htonl(datasize);
+        }
     }
 	
 	// prepare BIND command
@@ -1285,16 +1288,14 @@ int csql_bind_value (csqldb *db, int index, int bindtype, char *value, int len) 
 	if (bindtype == CUBESQL_BIND_ZEROBLOB) db->request.expandedSize = htonl(len);
 	
 	// send request
-    if ((bindtype != CUBESQL_BIND_NULL) && (bindtype != CUBESQL_BIND_ZEROBLOB)) {
-        csql_netwrite(db, (char *) field_size, nsizedim, (char *)value, datasize);
-    }
+    csql_netwrite(db, (char *) field_size, nsizedim, (char *)value, datasize);
     
 	// read reply
 	return csql_netread(db, -1, -1, kFALSE, NULL, NO_TIMEOUT);
 }
 
 int csql_bindexecute(csqldb *db, const char *sql, char **colvalue, int *colsize, int *coltype, int nvalues) {
-	int		i;
+	int i;
 	
 	// check for trace function
 	if (db->trace) db->trace(sql, db->traceArgument);

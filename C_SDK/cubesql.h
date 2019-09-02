@@ -26,7 +26,7 @@ extern "C" {
 #define CUBESQL_APIEXPORT
 #endif
     
-#define CUBESQL_SDK_VERSION                 "050802"   // means 5.8.2
+#define CUBESQL_SDK_VERSION                 "050803"   // means 5.8.3
     
 // custom boolean values (C89 doesn't have boolean support)
 #ifndef kTRUE
