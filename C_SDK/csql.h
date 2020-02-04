@@ -4,7 +4,7 @@
  *	This file is the private interface for the CubeSQL Server SDK.
  *	You just need to include the cubesql.h header file in your projects.
  *
- *  (c) 2006-2018 SQLabs srl -- All Rights Reserved
+ *  (c) 2006-2020 SQLabs srl -- All Rights Reserved
  *  Author: Marco Bambini (MB)
  *
  */
@@ -25,13 +25,6 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <fcntl.h>
-#ifdef __APPLE__
-//#define CUBESQL_ENABLE_MEMDEBUG
-#ifdef CUBESQL_ENABLE_MEMDEBUG
-#include </usr/include/malloc/malloc.h>
-#include "debugmem.h"
-#endif
-#endif
 
 #ifdef WIN32
 #include <Shlwapi.h>
@@ -72,39 +65,40 @@ extern "C"
 	
 #ifdef WIN32
 // WINDOWS
-#define SSL_LIB		"ssleay32.dll"
-#define CRYPTO_LIB	"libeay32.dll"
+#define SSL_LIB		        "ssleay32.dll"
+#define CRYPTO_LIB	        "libeay32.dll"
 
 #pragma warning (disable: 4005)
 #pragma warning (disable: 4068)
-#define snprintf		_snprintf
-#define strdup			_strdup
-#define strtoll(x,y,z)	_strtoi64(x,y,z)
-#define BSD_FD_ISSET	FD_ISSET
-#define SHUT_RDWR       2
+#define snprintf		    _snprintf
+#define strdup			    _strdup
+#define strtoll(x,y,z)	    _strtoi64(x,y,z)
+#define BSD_FD_ISSET	    FD_ISSET
+#define SHUT_RDWR           2
 #define SA SOCKADDR
-#define INET_ADDRSTRLEN 16
-#define EINTR 			WSAEINTR
-#define EAGAIN 			WSAEWOULDBLOCK
-#define EMSGSIZE 		WSAEMSGSIZE
-#define EAFNOSUPPORT 	WSAEAFNOSUPPORT
-#define EWOULDBLOCK 	WSAEWOULDBLOCK
-#define ECONNRESET 		WSAECONNRESET
-#define EINPROGRESS 	WSAEINPROGRESS
-#define IPV6_V6ONLY		27
+#define INET_ADDRSTRLEN     16
+#define EINTR 			    WSAEINTR
+#define EAGAIN 			    WSAEWOULDBLOCK
+#define EMSGSIZE 		    WSAEMSGSIZE
+#define EAFNOSUPPORT 	    WSAEAFNOSUPPORT
+#define EWOULDBLOCK 	    WSAEWOULDBLOCK
+#define ECONNRESET 		    WSAECONNRESET
+#define EINPROGRESS 	    WSAEINPROGRESS
+#define IPV6_V6ONLY		    27
 		
-#define ioctl ioctlsocket
-#define bsd_h_errno() h_errno
-#define bsd_setsockopt	setsockopt
-#define bsd_getsockopt getsockopt
-#define bsd_inet_pton inet_pton
-#define bsd_shutdown shutdown
-#define cleanup() WSACleanup()
-#define bsd_select	select
+#define ioctl               ioctlsocket
+#define bsd_h_errno()       h_errno
+#define bsd_setsockopt      setsockopt
+#define bsd_getsockopt      getsockopt
+#define bsd_inet_pton       inet_pton
+#define bsd_shutdown        shutdown
+#define cleanup()           WSACleanup()
+#define bsd_select	        select
 #define sock_read(a,b,c)	recv((a), (b), (c), 0L)
 #define sock_write(a,b,c)	send((a), (b), (c), 0L)
-#define	PATH_SEPARATOR	"\\"
-#define Pause() Sleep(INFINITE)
+#define	PATH_SEPARATOR	    "\\"
+#define Pause()             Sleep(INFINITE)
+#define mssleep(ms)         Sleep(ms)
 	
 typedef int socklen_t;
 typedef int ssize_t;
@@ -132,8 +126,8 @@ typedef unsigned long in_addr_t;
 #define cleanup()
 #define sock_write                      write
 #define sock_read                       read
-#define Sleep(ms)                       usleep((ms)*1000)
 #define Pause()                         pause()
+#define mssleep(ms)                     usleep((ms)*1000)
 #endif
 	
 /* PROTOCOL MACROS */
@@ -415,8 +409,8 @@ extern unsigned long OpenSSL_version_num(void);
 #define SSL_set_ex_data (* (void (*)(SSL *, int, void *)) ssl_func[45])
 #define SSL_get_ex_data (* (void * (*)(SSL *, int)) ssl_func[46])
 
-#define SSL_set_app_data(s,arg)        (SSL_set_ex_data(s,0,arg))
-#define SSL_get_app_data(s)            (SSL_get_ex_data(s,0))
+#define SSL_set_app_data(s,arg) (SSL_set_ex_data(s,0,arg))
+#define SSL_get_app_data(s) (SSL_get_ex_data(s,0))
     
 #define CRYPTO_num_locks (* (int (*)(void)) crypto_func[0])
 #define CRYPTO_set_locking_callback (* (void (*)(void (*)(int, int, const char *, int))) crypto_func[1])
@@ -488,8 +482,7 @@ extern unsigned long OpenSSL_version_num(void);
 #define kDEFAULT_ALLOC_ROWS				100
 	
 // client -> server header
-typedef struct
-{
+typedef struct {
 	unsigned int	signature;					// PROTOCOL_SIGNATURE defined as 'SQLS'
 	unsigned int	packetSize;					// size of the entire packet (header excluded)
 	unsigned char	command;					// main command
@@ -508,8 +501,7 @@ typedef struct
 } inhead;
 
 // server -> client header
-typedef struct
-{
+typedef struct {
 	unsigned int	signature;					// PROTOCOL_SIGNATURE defined as 'SQLS'
 	unsigned int	packetSize;					// size of the entire packet (header excluded)
 	unsigned short	errorCode;					// 0 means no error
@@ -523,48 +515,47 @@ typedef struct
 	unsigned short	reserved2;					// unused in this version
 } outhead;
 	
-struct csqldb
-{
-	int				timeout;					// timeout used in the socket I/O operations
-	int			 	sockfd;						// the socket
-	int				port;						// port used for the connection
-	char			host[512];					// hostname
-	char			username[512];				// username
-	char			password[512];				// password
-	char			errmsg[512];				// last error message
-	int				errcode;					// last error code
-	int				useOldProtocol;				// flag to set if you want to use the old REALSQLServer protocol
-	int				verifyPeer;					// flag to check if peer verification must be performed
+struct csqldb {
+	int				        timeout;					// timeout used in the socket I/O operations
+	int			 	        sockfd;						// the socket
+	int				        port;						// port used for the connection
+	char			        host[512];					// hostname
+	char			        username[512];				// username
+	char			        password[512];				// password
+	char			        errmsg[512];				// last error message
+	int				        errcode;					// last error code
+	int				        useOldProtocol;				// flag to set if you want to use the old REALSQLServer protocol
+	int				        verifyPeer;					// flag to check if peer verification must be performed
 	
-	char			*token;						// optional token used in token connect
-	char			*hostverification;			// optional host verification name to use in SSL peer verification
-	void			*userptr;					// optional pointer saved by the user
-	int				encryption;					// CUBESQL_ENCRYPTION_NONE - CUBESQL_ENCRYPTION_AES128 - CUBESQL_ENCRYPTION_AES192 - CUBESQL_ENCRYPTION_AES256
-	csql_aes_encrypt_ctx    encryptkey[1];				// session key used to encrypt data
-	csql_aes_decrypt_ctx    decryptkey[1];				// session key used to decrypt data
+	char			        *token;						// optional token used in token connect
+	char			        *hostverification;			// optional host verification name to use in SSL peer verification
+	void			        *userptr;					// optional pointer saved by the user
+	int				        encryption;					// CUBESQL_ENCRYPTION_NONE - CUBESQL_ENCRYPTION_AES128
+                                                        // CUBESQL_ENCRYPTION_AES192 - CUBESQL_ENCRYPTION_AES256
+    
+	csql_aes_encrypt_ctx    encryptkey[1];              // session key used to encrypt data
+	csql_aes_decrypt_ctx    decryptkey[1];              // session key used to decrypt data
 
-	int				toread;
-	char			*inbuffer;
-	int				insize;
+	int				        toread;
+	char			        *inbuffer;
+	int				        insize;
 	
-	inhead			request;					// request header
-	outhead			reply;						// response header
+	inhead			        request;                    // request header
+	outhead			        reply;                      // response header
 	
-	SSL_CTX			*ssl_ctx;
-	SSL				*ssl;
+	SSL_CTX			        *ssl_ctx;
+	SSL				        *ssl;
 	
-	void (*trace)  (const char*, void*);		// trace function
-	void			*traceArgument;				// user argument to be passed to the trace function
+	cubesql_trace_callback  trace;                      // trace callback
+	void                    *data;                      // user argument to be passed to the callbacks function
 };
-	
-struct csqlvm
-{
+
+struct csqlvm {
 	csqldb		*db;
 	int			vmindex;
 };
 	
-struct csqlc
-{
+struct csqlc {
 	csqldb		*db;
 	int			ncols;
 	int			nrows;
@@ -640,15 +631,6 @@ int		ssl_post_connection_check (csqldb *db);
 int		ssl_verify_callback (int ok, X509_STORE_CTX *store);
 int		ssl_password_callback(char *buf, int size, int flag, void *userdata);
 int		wildcmp(const char *wild, const char *string);
-	
-#if CUBESQL_ENABLE_MEMDEBUG
-#define malloc			debug_malloc
-#define free			debug_free
-#define realloc			debug_realloc
-#define DEBUG_MEMORY	debug_printmem()
-#else
-#define DEBUG_MEMORY
-#endif
 	
 #if defined(__cplusplus)
 }

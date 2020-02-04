@@ -105,8 +105,8 @@ int main(int argc, const char * argv[]) {
     // "/Users/marco/Desktop/SQLabs/openssl/pluginissue_cert_win-64bit/Hosting.crt"
     
     // path to OpenSSL 1.1 libraries
-    cubesql_setpath(CUBESQL_CRYPTO_LIBRARY_PATH, "/Users/marco/Desktop/SQLabs/openssl/libcrypto.1.1.dylib");
-    cubesql_setpath(CUBESQL_SSL_LIBRARY_PATH, "/Users/marco/Desktop/SQLabs/openssl/libssl.1.1.dylib");
+//    cubesql_setpath(CUBESQL_CRYPTO_LIBRARY_PATH, "/Users/marco/Desktop/SQLabs/openssl/libcrypto.1.1.dylib");
+//    cubesql_setpath(CUBESQL_SSL_LIBRARY_PATH, "/Users/marco/Desktop/SQLabs/openssl/libssl.1.1.dylib");
     const char *certificatePath = NULL;// "/Users/marco/Desktop/SQLabs/openssl/pluginissue_cert_win-64bit/Hosting.crt";
     
     do_print_ssl();

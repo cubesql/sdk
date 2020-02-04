@@ -4,7 +4,7 @@
  *	This file is the public interface for the cubeSQL Server SDK.
  *	You just need to include this header file in your projects.
  *
- *  (c) 2006-2018 SQLabs srl -- All Rights Reserved
+ *  (c) 2006-2020 SQLabs srl -- All Rights Reserved
  *  Author: Marco Bambini (MB)
  *
  */
@@ -26,7 +26,7 @@ extern "C" {
 #define CUBESQL_APIEXPORT
 #endif
     
-#define CUBESQL_SDK_VERSION                 "050803"   // means 5.8.3
+#define CUBESQL_SDK_VERSION                 "050804"   // means 5.8.4
     
 // custom boolean values (C89 doesn't have boolean support)
 #ifndef kTRUE
@@ -109,11 +109,11 @@ enum {
 #define CUBESQL_BIND_INT64                  8
 #define CUBESQL_BIND_ZEROBLOB               9
 	
-// define opaque datatypes
+// define opaque datatypes and callbacks
 typedef struct csqldb csqldb;
 typedef struct csqlc csqlc;
 typedef struct csqlvm csqlvm;
-typedef void (*trace_function) (const char*, void*);
+typedef void (*cubesql_trace_callback) (const char *, void *);
 	
 // function prototypes
 CUBESQL_APIEXPORT const char *cubesql_version (void);
@@ -131,12 +131,13 @@ CUBESQL_APIEXPORT void		cubesql_cancel (csqldb *db);
 CUBESQL_APIEXPORT int		cubesql_errcode (csqldb *db);
 CUBESQL_APIEXPORT char		*cubesql_errmsg (csqldb *db);
 CUBESQL_APIEXPORT int64		cubesql_changes (csqldb *db);
-CUBESQL_APIEXPORT void		cubesql_trace (csqldb *db, trace_function trace, void *arg);
+CUBESQL_APIEXPORT void		cubesql_set_trace_callback (csqldb *db, cubesql_trace_callback trace, void *arg);
 CUBESQL_APIEXPORT void      cubesql_setpath (int type, char *path);
     
 CUBESQL_APIEXPORT int       cubesql_set_database (csqldb *db, const char *dbname);
 CUBESQL_APIEXPORT int64     cubesql_affected_rows (csqldb *db);
 CUBESQL_APIEXPORT int64     cubesql_last_inserted_rowID (csqldb *db);
+CUBESQL_APIEXPORT void      cubesql_mssleep (int ms);
     
 CUBESQL_APIEXPORT int       cubesql_send_data (csqldb *db, const char *buffer, int len);
 CUBESQL_APIEXPORT int       cubesql_send_enddata (csqldb *db);

@@ -127,7 +127,7 @@ int cubesql_execute (csqldb *db, const char *sql) {
 	cubesql_clear_errors(db);
 	
 	// check for trace function
-	if (db->trace) db->trace(sql, db->traceArgument);
+	if (db->trace) db->trace(sql, db->data);
 	
 	// send sql statement
 	if (csql_send_statement (db, kCOMMAND_EXECUTE, sql, kFALSE, kFALSE) != CUBESQL_NOERR) return CUBESQL_ERR;
@@ -143,7 +143,7 @@ csqlc *cubesql_select (csqldb *db, const char *sql, int is_serverside) {
 	cubesql_clear_errors(db);
 	
 	// check for trace function
-	if (db->trace) db->trace(sql, db->traceArgument);
+	if (db->trace) db->trace(sql, db->data);
 	
 	// send sql statement
 	if (csql_send_statement (db, kCOMMAND_SELECT, sql, kFALSE, kFALSE) != CUBESQL_NOERR) return NULL;
@@ -203,9 +203,9 @@ char *cubesql_errmsg (csqldb *db) {
 	return db->errmsg;
 }
 
-void cubesql_trace (csqldb *db, trace_function trace_ptr, void *arg) {
-	db->trace = trace_ptr;
-	db->traceArgument = arg;
+void cubesql_set_trace_callback (csqldb *db, cubesql_trace_callback trace_ptr, void *data) {
+    db->trace = trace_ptr;
+    db->data = data;
 }
 
 // MARK: -
@@ -587,7 +587,7 @@ csqlvm *cubesql_vmprepare (csqldb *db, const char *sql) {
 	cubesql_clear_errors(db);
 	
 	// check for trace function
-	if (db->trace) db->trace(sql, db->traceArgument);
+	if (db->trace) db->trace(sql, db->data);
 	
 	// send sql statement
 	if (csql_send_statement (db, kVM_PREPARE, sql, kFALSE, kFALSE) != CUBESQL_NOERR) return NULL;
@@ -1299,7 +1299,7 @@ int csql_bindexecute(csqldb *db, const char *sql, char **colvalue, int *colsize,
 	int i;
 	
 	// check for trace function
-	if (db->trace) db->trace(sql, db->traceArgument);
+	if (db->trace) db->trace(sql, db->data);
 	
 	// send sql statement first
 	if (csql_send_statement(db, kCOMMAND_CHUNK_BIND, sql, kFALSE, kFALSE) != CUBESQL_NOERR) return CUBESQL_ERR;
@@ -2369,6 +2369,7 @@ void csql_load_ssl (void) {
 	int  idx = 0;
 	void *ssl_handle = NULL;
 	void *crypto_handle = NULL;
+    int  DHfound = kFALSE;
 	#ifdef WIN32
 	WCHAR sslW[MAX_PATH];
     WCHAR dllpath[MAX_PATH];
@@ -2404,7 +2405,6 @@ void csql_load_ssl (void) {
 		if (fname == NULL) break;
         
         p = load_function(crypto_handle, fname);
-		
 		if (p == NULL) {
             // OpenSSL 1.1
             if (strcmp(fname, "CRYPTO_num_locks") == 0) continue;
@@ -2420,9 +2420,25 @@ void csql_load_ssl (void) {
 			goto abort_load_ssl;
             #endif
 		}
-		
 		crypto_func[idx] = p;
 	}
+    
+    // special case for Crypto libs on Windows
+    if (DHfound == kFALSE) {
+        // for some reason DH related functions are found on sslLib on MacOS (but not on Windows)
+        // try to manually load them from cryptoLib but save pointers to ssl_func in order to re-use all the working code
+        char *dh_func[] = {"DH_new", "DH_generate_parameters_ex", "DH_check", "DH_generate_key", "RAND_seed", NULL};
+        int  idx2 = 37; // index of "DH_new" into the settings.ssl_func array
+        for (idx=0;; ++idx, ++idx2) {
+            fname = dh_func[idx];
+            if (fname == NULL) break;
+            
+            p = load_function(crypto_handle, fname);
+            if (p == NULL) goto abort_load_ssl;
+            ssl_func[idx2] = p;
+        }
+        DHfound = kTRUE;
+    }
 	
 	// THEN LINK SSL LIB (WHICH APPARENTLY REQUIRES CRYPTO LIB)
 	// try to open SSL shared library
@@ -2452,6 +2468,17 @@ void csql_load_ssl (void) {
 		if (fname == NULL) break;
 		
         p = load_function(ssl_handle, fname);
+        
+        if (DHfound == kTRUE) {
+            if ((strcmp(fname, "DH_new") == 0) ||
+                (strcmp(fname, "DH_generate_parameters_ex") == 0) ||
+                (strcmp(fname, "DH_check") == 0) ||
+                (strcmp(fname, "DH_generate_key") == 0) ||
+                (strcmp(fname, "RAND_seed") == 0)) {
+                // do not re-set the same pointer
+                continue;
+            }
+        }
         
         // special flags used in the CUBESQL_DYNAMIC_SSL_LIBRARY case
         if (p != NULL) {
@@ -2574,6 +2601,155 @@ int encryption_is_ssl (int encryption) {
         (encryption == CUBESQL_ENCRYPTION_SSL_AES192) || (encryption == CUBESQL_ENCRYPTION_SSL_AES256)) return kTRUE;
 	return kFALSE;
 }
+
+#ifndef CUBESQL_DISABLE_APPLINK
+#if CUBESQL_ENABLE_SSL_ENCRYPTION
+#if CUBESQL_DYNAMIC_SSL_LIBRARY
+#ifdef WIN32
+// BEGIN applink.c
+/*
+ * Copyright 2004-2016 The OpenSSL Project Authors. All Rights Reserved.
+ *
+ * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * this file except in compliance with the License.  You can obtain a copy
+ * in the file LICENSE in the source distribution or at
+ * https://www.openssl.org/source/license.html
+ */
+
+#define APPLINK_STDIN   1
+#define APPLINK_STDOUT  2
+#define APPLINK_STDERR  3
+#define APPLINK_FPRINTF 4
+#define APPLINK_FGETS   5
+#define APPLINK_FREAD   6
+#define APPLINK_FWRITE  7
+#define APPLINK_FSETMOD 8
+#define APPLINK_FEOF    9
+#define APPLINK_FCLOSE  10      /* should not be used */
+
+#define APPLINK_FOPEN   11      /* solely for completeness */
+#define APPLINK_FSEEK   12
+#define APPLINK_FTELL   13
+#define APPLINK_FFLUSH  14
+#define APPLINK_FERROR  15
+#define APPLINK_CLEARERR 16
+#define APPLINK_FILENO  17      /* to be used with below */
+
+#define APPLINK_OPEN    18      /* formally can't be used, as flags can vary */
+#define APPLINK_READ    19
+#define APPLINK_WRITE   20
+#define APPLINK_LSEEK   21
+#define APPLINK_CLOSE   22
+#define APPLINK_MAX     22      /* always same as last macro */
+
+#ifndef APPMACROS_ONLY
+# include <stdio.h>
+# include <io.h>
+# include <fcntl.h>
+
+static void *app_stdin(void)
+{
+    return stdin;
+}
+
+static void *app_stdout(void)
+{
+    return stdout;
+}
+
+static void *app_stderr(void)
+{
+    return stderr;
+}
+
+static int app_feof(FILE *fp)
+{
+    return feof(fp);
+}
+
+static int app_ferror(FILE *fp)
+{
+    return ferror(fp);
+}
+
+static void app_clearerr(FILE *fp)
+{
+    clearerr(fp);
+}
+
+static int app_fileno(FILE *fp)
+{
+    return _fileno(fp);
+}
+
+static int app_fsetmod(FILE *fp, char mod)
+{
+    return _setmode(_fileno(fp), mod == 'b' ? _O_BINARY : _O_TEXT);
+}
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+__declspec(dllexport)
+void **
+# if defined(__BORLANDC__)
+/*
+ * __stdcall appears to be the only way to get the name
+ * decoration right with Borland C. Otherwise it works
+ * purely incidentally, as we pass no parameters.
+ */
+__stdcall
+# else
+__cdecl
+# endif
+OPENSSL_Applink(void)
+{
+    static int once = 1;
+    static void *OPENSSL_ApplinkTable[APPLINK_MAX + 1] =
+        { (void *)APPLINK_MAX };
+
+    if (once) {
+        OPENSSL_ApplinkTable[APPLINK_STDIN] = app_stdin;
+        OPENSSL_ApplinkTable[APPLINK_STDOUT] = app_stdout;
+        OPENSSL_ApplinkTable[APPLINK_STDERR] = app_stderr;
+        OPENSSL_ApplinkTable[APPLINK_FPRINTF] = fprintf;
+        OPENSSL_ApplinkTable[APPLINK_FGETS] = fgets;
+        OPENSSL_ApplinkTable[APPLINK_FREAD] = fread;
+        OPENSSL_ApplinkTable[APPLINK_FWRITE] = fwrite;
+        OPENSSL_ApplinkTable[APPLINK_FSETMOD] = app_fsetmod;
+        OPENSSL_ApplinkTable[APPLINK_FEOF] = app_feof;
+        OPENSSL_ApplinkTable[APPLINK_FCLOSE] = fclose;
+
+        OPENSSL_ApplinkTable[APPLINK_FOPEN] = fopen;
+        OPENSSL_ApplinkTable[APPLINK_FSEEK] = fseek;
+        OPENSSL_ApplinkTable[APPLINK_FTELL] = ftell;
+        OPENSSL_ApplinkTable[APPLINK_FFLUSH] = fflush;
+        OPENSSL_ApplinkTable[APPLINK_FERROR] = app_ferror;
+        OPENSSL_ApplinkTable[APPLINK_CLEARERR] = app_clearerr;
+        OPENSSL_ApplinkTable[APPLINK_FILENO] = app_fileno;
+
+        OPENSSL_ApplinkTable[APPLINK_OPEN] = _open;
+        OPENSSL_ApplinkTable[APPLINK_READ] = _read;
+        OPENSSL_ApplinkTable[APPLINK_WRITE] = _write;
+        OPENSSL_ApplinkTable[APPLINK_LSEEK] = _lseek;
+        OPENSSL_ApplinkTable[APPLINK_CLOSE] = _close;
+
+        once = 0;
+    }
+
+    return OPENSSL_ApplinkTable;
+}
+
+#ifdef __cplusplus
+}
+#endif
+#endif
+// END applink.c
+#endif
+#endif
+#endif
+#endif
 
 // MARK: - Utils -
 
