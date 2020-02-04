@@ -52,6 +52,10 @@ static void print_cursor(csqlc *c) {
     printf("\n");
 }
 
+//static void do_trace (const char *sql, void *unused) {
+//    printf("%s\n", sql);
+//}
+
 static int do_setup (csqldb *db) {
     int err = 0;
     
@@ -84,6 +88,8 @@ static void do_test (csqldb *db) {
 	// insert a couple records
 	err = cubesql_execute(db, "INSERT INTO foo (col1, col2, col3) VALUES ('test1', 'test2', 13);");
     if (err != CUBESQL_NOERR) goto abort;
+    
+    // cubesql_set_trace_callback(db, do_trace, NULL);
     
 	err = cubesql_execute(db, "INSERT INTO foo (col1, col2, col3) VALUES ('test3', 'test4', 17);");
     if (err != CUBESQL_NOERR) goto abort;
