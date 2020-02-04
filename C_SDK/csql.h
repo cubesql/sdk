@@ -546,7 +546,7 @@ struct csqldb {
 	SSL_CTX			        *ssl_ctx;
 	SSL				        *ssl;
 	
-	cubesql_trace_callback  trace;                      // trace callback
+	void (*trace) (const char*, void*);                 // trace callback
 	void                    *data;                      // user argument to be passed to the callbacks function
 };
 
