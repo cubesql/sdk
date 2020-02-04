@@ -104,11 +104,23 @@ int cubesql_connect_old_protocol (csqldb **db, const char *host, int port, const
 void cubesql_disconnect (csqldb *db, int gracefully) {
     if (!db) return;
     
+    // MUTEX_LOCK(&db->mutex);
+    
 	// clear errors first
 	cubesql_clear_errors(db);
 	
     // sanity check on socket
     if (db->sockfd <= 0) return;
+    
+    #if CUBESQL_ENABLE_NOTIFICATIONS
+    if (db->callbackfd) {
+        db->callback_running = kFALSE;
+        closesocket(db->callbackfd);
+        while (db->callbackthread_closed != kTRUE) {
+            mssleep(10);
+        }
+    }
+    #endif
     
 	// disconnect
 	if (gracefully == kTRUE) {
@@ -119,10 +131,15 @@ void cubesql_disconnect (csqldb *db, int gracefully) {
 	
 	// close socket and free db
 	csql_socketclose(db);
+    
+    // MUTEX_UNLOCK(&db->mutex);
+    MUTEX_DESTROY(&db->mutex);
 	csql_dbfree(db);
 }
 
 int cubesql_execute (csqldb *db, const char *sql) {
+    MUTEX_LOCK(&db->mutex);
+    
 	// clear errors first
 	cubesql_clear_errors(db);
 	
@@ -133,12 +150,16 @@ int cubesql_execute (csqldb *db, const char *sql) {
 	if (csql_send_statement (db, kCOMMAND_EXECUTE, sql, kFALSE, kFALSE) != CUBESQL_NOERR) return CUBESQL_ERR;
 	
 	// read replay
-	return csql_netread(db, -1, -1, kFALSE, NULL, NO_TIMEOUT);
+	int rc = csql_netread(db, -1, -1, kFALSE, NULL, NO_TIMEOUT);
+    
+    MUTEX_UNLOCK(&db->mutex);
+    return rc;
 }
 
 csqlc *cubesql_select (csqldb *db, const char *sql, int is_serverside) {
 	// serverside is disabled in this version
-	
+	MUTEX_LOCK(&db->mutex);
+    
 	// clear errors first
 	cubesql_clear_errors(db);
 	
@@ -149,7 +170,10 @@ csqlc *cubesql_select (csqldb *db, const char *sql, int is_serverside) {
 	if (csql_send_statement (db, kCOMMAND_SELECT, sql, kFALSE, kFALSE) != CUBESQL_NOERR) return NULL;
 	
 	// read the cursor
-	return csql_read_cursor(db, NULL);
+	csqlc *c = csql_read_cursor(db, NULL);
+    
+    MUTEX_UNLOCK(&db->mutex);
+    return c;
 }
 
 int cubesql_commit (csqldb *db) {
@@ -161,9 +185,14 @@ int cubesql_rollback (csqldb *db) {
 }
 
 int cubesql_bind (csqldb *db, const char *sql, char **colvalue, int *colsize, int *coltype, int ncols) {
-	// clear errors first
+    MUTEX_LOCK(&db->mutex);
+	
+    // clear errors first
 	cubesql_clear_errors(db);
-	return csql_bindexecute(db, sql, colvalue, colsize, coltype, ncols);
+	int rc = csql_bindexecute(db, sql, colvalue, colsize, coltype, ncols);
+    
+    MUTEX_UNLOCK(&db->mutex);
+    return rc;
 }
 
 int cubesql_ping (csqldb *db) {
@@ -174,12 +203,18 @@ int64 cubesql_changes (csqldb *db) {
 	csqlc	*cursor = NULL;
 	int64	nchanges = 0;
 	
+    MUTEX_LOCK(&db->mutex);
+    
 	// send sql statement
-	if (csql_send_statement (db, kCOMMAND_SELECT, "SELECT changes();", kFALSE, kFALSE) != CUBESQL_NOERR) return 0;
+    if (csql_send_statement (db, kCOMMAND_SELECT, "SELECT changes();", kFALSE, kFALSE) != CUBESQL_NOERR) {
+        MUTEX_UNLOCK(&db->mutex);
+        return 0;
+    }
 	
 	// read the cursor
 	cursor = csql_read_cursor(db, NULL);
-	if (!cursor) return 0;
+    MUTEX_UNLOCK(&db->mutex);
+    if (!cursor) return 0;
 	
 	nchanges = cubesql_cursor_int64(cursor, 1, 1, 0);
 	
@@ -189,10 +224,12 @@ int64 cubesql_changes (csqldb *db) {
 
 void cubesql_cancel (csqldb *db) {
 	if (db->sockfd <= 0) return;
-		
+    
+    MUTEX_LOCK(&db->mutex);
 	bsd_shutdown(db->sockfd, SHUT_RDWR);
 	closesocket(db->sockfd);
 	db->sockfd = 0;
+    MUTEX_UNLOCK(&db->mutex);
 }
 
 int	cubesql_errcode (csqldb *db) {
@@ -204,9 +241,111 @@ char *cubesql_errmsg (csqldb *db) {
 }
 
 void cubesql_set_trace_callback (csqldb *db, cubesql_trace_callback trace_ptr, void *data) {
-    db->trace = trace_ptr;
-    db->data = data;
+	db->trace = trace_ptr;
+	db->data = data;
 }
+
+void *cubesql_callback_thread (void *arg) {
+    csqldb *db = (csqldb *)arg;
+    int fd = db->callbackfd;
+    
+    db->callback_running = kTRUE;
+    db->callbackthread_closed = kFALSE;
+    
+    while (db->callback_running) {
+        fd_set set;
+        FD_ZERO(&set);
+        FD_SET(fd, &set);
+        
+        // wait for read event
+        int rc = select(fd + 1, &set, NULL, NULL, NULL);
+        if ((rc <= 0) || (db->callback_running == kFALSE)) continue;
+        
+        MUTEX_LOCK(&db->mutex);
+        db->is_callback = kTRUE;
+        csqlc *c = csql_read_cursor(db, NULL);
+        db->is_callback = kFALSE;
+        MUTEX_UNLOCK(&db->mutex);
+        if (!c) continue;
+        
+        if (db->update) {
+            char tname[512];
+            cubesql_cursor_cstring_static(c, CUBESQL_CURROW, 1, tname, sizeof(tname));
+            int op = cubesql_cursor_int(c, CUBESQL_CURROW, 2, 0);
+            int64 rowid = cubesql_cursor_int64(c, CUBESQL_CURROW, 3, 0);
+            db->update(db, tname, op, rowid, db->data);
+        }
+        cubesql_cursor_free(c);
+    }
+    
+    db->callbackthread_closed = kTRUE;
+    return NULL;
+}
+
+int cubesql_set_update_callback (csqldb *db, const char *tablename, cubesql_update_callback callback, void *data) {
+    #if CUBESQL_ENABLE_NOTIFICATIONS
+    // means that callback is already setup and I should send the command as is
+    if (db->callbackfd != 0) {
+        char sql[512];
+        if (!callback) return cubesql_execute(db, "STOP CALLBACK;");
+        snprintf(sql, sizeof(sql), "START CALLBACK ON '%s';", (tablename) ? tablename : "*");
+        return cubesql_execute(db, sql);
+    }
+    
+    // setup callback (if any)
+    // 1. retrieve clientID and clientSecret from sockfd (using SETUP CALLBACK)
+    // 2. connect to CALLBACK_PORT via a special header (passing clientID and clientSecret)
+    // 3. send START CALLBACK ON command
+    // 4. loop to listen callbackfd (block on select read)
+    // 5. when loop exists close socket and free resources
+    // 5a. when main thread connection closes it should also close callbackfd (in order to trigger the block loop)
+    if (callback) {
+        csqlc *c = cubesql_select(db, "SETUP CALLBACK", kFALSE);
+        if (!c) return CUBESQL_ERR;
+        
+        unsigned int clientID = cubesql_cursor_int(c, CUBESQL_CURROW, 2, 0);
+        cubesql_cursor_seek(c, CUBESQL_SEEKNEXT);
+        unsigned int clientSecret = cubesql_cursor_int(c, CUBESQL_CURROW, 2, 0);
+        cubesql_cursor_free(c);
+        if (clientID == 0 || clientSecret == 0) return CUBESQL_ERR;
+        
+        // real connect to notification port
+        db->is_callback = kTRUE;
+        int callbackfd = csql_socketconnect(db);
+        db->is_callback = kFALSE;
+        if (callbackfd == -1) return CUBESQL_ERR;
+        db->callbackfd = callbackfd;
+        printf("callbackfd %d\n", callbackfd);
+        
+        // setup custom header
+        csql_initrequest(db, 0, 0, kCOMMAND_CALLBACK, kNO_SELECTOR);
+        db->request.numFields = htonl(clientID);
+        db->request.expandedSize = htonl(clientSecret);
+        
+        // send custom header to server side to setup connection
+        db->is_callback = kTRUE;
+        if (csql_socketwrite(db, (char *)&db->request, kHEADER_SIZE) != CUBESQL_NOERR) {db->is_callback = kFALSE; return CUBESQL_ERR;}
+        db->is_callback = kFALSE;
+        
+        // start callback thread
+        pthread_t tid;
+        if (pthread_create(&tid, NULL, cubesql_callback_thread, (void *)db) != 0) return CUBESQL_ERR;
+        
+        // finish setting up callback
+        char sql[512];
+        snprintf(sql, sizeof(sql), "START CALLBACK ON '%s';", (tablename) ? tablename : "*");
+        int ret = cubesql_execute(db, sql);
+        
+        // set callback function ONLY at the end of the setup process
+        if (ret == CUBESQL_NOERR) {
+            db->update = callback;
+        }
+    }
+    #endif
+    
+    return CUBESQL_NOERR;
+}
+
 
 // MARK: -
 
@@ -252,6 +391,10 @@ int64 cubesql_last_inserted_rowID (csqldb *db) {
     cubesql_cursor_free(c);
     
     return value;
+}
+
+void cubesql_mssleep (int ms) {
+    mssleep(ms);
 }
 
 // MARK: - Binary Data -
@@ -583,6 +726,8 @@ void cubesql_cursor_free (csqlc *c) {
 csqlvm *cubesql_vmprepare (csqldb *db, const char *sql) {
 	csqlvm	*vm = NULL;
 	
+    MUTEX_LOCK(&db->mutex);
+    
 	// clear errors first
 	cubesql_clear_errors(db);
 	
@@ -590,11 +735,13 @@ csqlvm *cubesql_vmprepare (csqldb *db, const char *sql) {
 	if (db->trace) db->trace(sql, db->data);
 	
 	// send sql statement
-	if (csql_send_statement (db, kVM_PREPARE, sql, kFALSE, kFALSE) != CUBESQL_NOERR) return NULL;
+    if (csql_send_statement (db, kVM_PREPARE, sql, kFALSE, kFALSE) != CUBESQL_NOERR) {MUTEX_UNLOCK(&db->mutex); return NULL;}
 	
 	// read replay
-	if (csql_netread(db, -1, -1, kFALSE, NULL, NO_TIMEOUT) != CUBESQL_NOERR) return NULL;
+    if (csql_netread(db, -1, -1, kFALSE, NULL, NO_TIMEOUT) != CUBESQL_NOERR) {MUTEX_UNLOCK(&db->mutex); return NULL;}
 	
+    MUTEX_UNLOCK(&db->mutex);
+    
 	// allocate space for csqlvm
 	vm = (csqlvm *) malloc (sizeof(csqlvm));
 	if (vm == NULL) return NULL;
@@ -646,6 +793,8 @@ int cubesql_vmbind_zeroblob (csqlvm *vm, int index, int len) {
 
 int cubesql_vmexecute (csqlvm *vm) {
 	csqldb *db = vm->db;
+    
+    MUTEX_LOCK(&db->mutex);
 	
 	// clear errors first
 	cubesql_clear_errors(db);
@@ -655,12 +804,17 @@ int cubesql_vmexecute (csqlvm *vm) {
 	csql_netwrite(db, NULL, 0, NULL, 0);
 	
 	// read replay
-	return csql_netread(db, -1, -1, kFALSE, NULL, NO_TIMEOUT);
+	int rc = csql_netread(db, -1, -1, kFALSE, NULL, NO_TIMEOUT);
+    
+    MUTEX_UNLOCK(&db->mutex);
+    return rc;
 }
 
 csqlc *cubesql_vmselect (csqlvm *vm) {
 	csqldb *db = vm->db;
 	
+    MUTEX_LOCK(&db->mutex);
+    
 	// clear errors first
 	cubesql_clear_errors(db);
 	
@@ -669,7 +823,10 @@ csqlc *cubesql_vmselect (csqlvm *vm) {
 	csql_netwrite(db, NULL, 0, NULL, 0);
 	
 	// read the cursor
-	return csql_read_cursor(db, NULL);
+	csqlc *c = csql_read_cursor(db, NULL);
+    
+    MUTEX_UNLOCK(&db->mutex);
+    return c;
 }
 
 int cubesql_vmclose (csqlvm *vm) {
@@ -677,9 +834,11 @@ int cubesql_vmclose (csqlvm *vm) {
     
 	csqldb *db = vm->db;
 	
+    MUTEX_LOCK(&db->mutex);
 	csql_initrequest(db, 0, 0, kVM_CLOSE, kNO_SELECTOR);
 	csql_netwrite(db, NULL, 0, NULL, 0);
 	csql_netread(db, -1, -1, kFALSE, NULL, NO_TIMEOUT);
+    MUTEX_UNLOCK(&db->mutex);
 	
 	free(vm);
 	return CUBESQL_NOERR;
@@ -868,11 +1027,14 @@ csqldb *csql_dbinit (const char *host, int port, const char *username, const cha
 	
 	// save db fields
 	db->port = port;
+	// TODO: FIX ME
+    db->callbackport = port+1;
 	db->timeout = timeout;
 	db->encryption = encryption;
 	db->token = NULL;
 	db->useOldProtocol = kFALSE;
 	db->verifyPeer = kFALSE;
+    MUTEX_CREATE(&db->mutex);
 	
 	snprintf((char *) db->host, sizeof(db->host), "%s", host);
 	snprintf((char *) db->username, sizeof(db->username),  "%s", username);
@@ -1002,22 +1164,11 @@ int ssl_post_connection_check (csqldb *db) {
 	cert = SSL_get_peer_certificate(db->ssl);
 	if (cert == NULL) goto err_occurred;
 	
-	/*	DEBUG CODE
-		for (i=0; i<180; ++i) {
-			idx = X509_NAME_get_text_by_NID(subj, i, data, 256);
-			if ((subj != NULL) &&  (idx >= 0)) {
-				data[255] = 0;
-				printf("%d %s\n", i, data);
-			}
-		}
-	 */
-	
 	subj = X509_get_subject_name(cert);
 	idx = X509_NAME_get_text_by_NID(subj, NID_commonName, data, 256);
 	if ((host == NULL) || (subj == NULL) || (idx < 0)) goto err_occurred;
 	
 	data[255] = 0;
-	//printf("%s\n", data);
 	if (wildcmp(data, host) == 0) goto err_occurred;
 	// WAS if (strcasecmp(data, host) != 0) goto err_occurred;
 	
@@ -1080,7 +1231,8 @@ int csql_socketconnect (csqldb *db) {
     
     // get the address information for the server using getaddrinfo()
     char port_string[256];
-    snprintf(port_string, sizeof(port_string), "%d", db->port);
+    // TODO: FIX ME
+    snprintf(port_string, sizeof(port_string), "%d", (db->is_callback) ? db->callbackport : db->port);
     rc = getaddrinfo((const char *) db->host, port_string, &hints, &addr_list);
     if (rc != 0 || addr_list == NULL) {
         csql_seterror(db, ERR_SOCKET, "Error while resolving getaddrinfo (host not found)");
@@ -1138,6 +1290,7 @@ int csql_socketconnect (csqldb *db) {
 	
 	// calculate the connection timeout and reset timers
 	int connect_timeout = (db->timeout > 0) ? db->timeout : CUBESQL_DEFAULT_TIMEOUT;
+    if (db->is_callback) connect_timeout = CUBESQL_DEFAULT_NOTIF_TIMEOUT;
 	time_t start = time(NULL);
     time_t now = start;
     rc = 0;
@@ -1226,6 +1379,10 @@ int csql_socketconnect (csqldb *db) {
 	// turn off non-blocking
 	int ioctl_blocking = 0;	/* ~0; //TRUE; */
 	ioctl(sockfd, FIONBIO, &ioctl_blocking);
+    
+    // TODO: FIX ME
+    // no SSL for notification channel in this version
+    if (db->is_callback) return sockfd;
 	
 	// socket is connected now check for SSL
     #if CUBESQL_ENABLE_SSL_ENCRYPTION
@@ -1266,6 +1423,8 @@ int csql_bind_value (csqldb *db, int index, int bindtype, char *value, int len) 
 	int field_size[1];
 	int nfields = 0, nsizedim = 0, packet_size = 0, datasize = 0;
 	
+    MUTEX_LOCK(&db->mutex);
+    
     if ((bindtype == CUBESQL_BIND_NULL) || (bindtype == CUBESQL_BIND_ZEROBLOB)) {
         value = NULL;
     } else {
@@ -1292,7 +1451,10 @@ int csql_bind_value (csqldb *db, int index, int bindtype, char *value, int len) 
     csql_netwrite(db, (char *) field_size, nsizedim, (char *)value, datasize);
     
 	// read reply
-	return csql_netread(db, -1, -1, kFALSE, NULL, NO_TIMEOUT);
+	int rc = csql_netread(db, -1, -1, kFALSE, NULL, NO_TIMEOUT);
+    
+    MUTEX_UNLOCK(&db->mutex);
+    return rc;
 }
 
 int csql_bindexecute(csqldb *db, const char *sql, char **colvalue, int *colsize, int *coltype, int nvalues) {
@@ -1974,7 +2136,8 @@ int csql_socketwrite (csqldb *db, const char *buffer, int nbuffer) {
 	fd_set write_fds;
 	struct timeval tv;
 	
-	fd = db->sockfd;
+	// TODO: FIX ME
+    fd = (db->is_callback) ? db->callbackfd : db->sockfd;
 	while (nleft > 0) {
 		FD_ZERO(&write_fds);
 		FD_SET(fd, &write_fds);
@@ -2011,15 +2174,15 @@ int csql_socketwrite (csqldb *db, const char *buffer, int nbuffer) {
 			FD_CLR(fd, &write_fds);
 			
             #if CUBESQL_ENABLE_SSL_ENCRYPTION
-            nwritten = (db->ssl) ? (int)SSL_write(db->ssl, ptr, nleft) : (int)sock_write(fd, ptr, nleft);
+            if (!db->is_callback) nwritten = (db->ssl) ? (int)SSL_write(db->ssl, ptr, nleft) : (int)sock_write(fd, ptr, nleft);
             #else
             nwritten = (int)sock_write(fd, ptr, nleft);
             #endif
 
-			if (nwritten <= 0) {
-				csql_seterror(db, ERR_SOCKET_WRITE, "An error occurred while trying to execute sock_write");
-				return CUBESQL_ERR;
-			}
+			if (nwritten <= 0 || nwritten > nleft) {
+                csql_seterror(db, ERR_SOCKET_WRITE, "An error occurred while trying to execute sock_write");
+                return CUBESQL_ERR;
+            }
 			
 			nleft -= nwritten;
 			ptr += nwritten;
@@ -2030,12 +2193,14 @@ int csql_socketwrite (csqldb *db, const char *buffer, int nbuffer) {
 }
 
 int csql_socketread (csqldb *db, int is_header, int timeout) {
-	int		nread, nleft, ret, fd = db->sockfd;
+	int		nread, nleft, ret;
 	char	*ptr;
 	fd_set read_fds;
 	fd_set except_fds;
 	struct timeval tv;
-	
+	// TODO: FIX ME
+    int fd = (db->is_callback) ? db->callbackfd : db->sockfd;
+    
 	if (is_header == kTRUE) {
 		ptr = (char *)&db->reply;
 		nleft = kHEADER_SIZE;
@@ -2079,7 +2244,7 @@ int csql_socketread (csqldb *db, int is_header, int timeout) {
 		}
 		
         #if CUBESQL_ENABLE_SSL_ENCRYPTION
-        nread = (db->ssl) ? (int)SSL_read(db->ssl, ptr, nleft) : (int)sock_read(fd, ptr, nleft);
+        if (!db->is_callback) nread = (db->ssl) ? (int)SSL_read(db->ssl, ptr, nleft) : (int)sock_read(fd, ptr, nleft);
         #else
         nread = (int)sock_read(fd, ptr, nleft);
         #endif
@@ -2786,22 +2951,17 @@ void hex_hash_field2 (char result[], const char *field, unsigned char *randpoll)
 	snprintf((char *)randhex, sizeof(randhex), "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
 			 randpoll[0],randpoll[1],randpoll[2],randpoll[3],randpoll[4],randpoll[5],randpoll[6],randpoll[7],randpoll[8],
 			 randpoll[9],randpoll[10],randpoll[11],randpoll[12],randpoll[13],randpoll[14],randpoll[15]);
-	
-	//printf("randpool %s\n", randhex);
-	
+		
 	// concat two fields
 	len = snprintf(buffer, sizeof(buffer), "%s%s", field, randhex);
 	
 	// compute hash
 	csql_sha1(hval, (const unsigned char *)buffer, len);
 	
-	// convert result
-	// result must be SHA1_DIGEST_SIZE*2+2 long
+	// convert result (must be SHA1_DIGEST_SIZE*2+2 long)
 	snprintf(result, SHA1_DIGEST_SIZE*2+2, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
 			 hval[0],hval[1],hval[2],hval[3],hval[4],hval[5],hval[6],hval[7],hval[8],hval[9],hval[10],
 			 hval[11],hval[12],hval[13],hval[14],hval[15],hval[16],hval[17],hval[18],hval[19]);
-	
-	//printf("result %s\n", result);
 }
 
 void random_hash_field (unsigned char hval[], const char *randpoll, const char *field) {

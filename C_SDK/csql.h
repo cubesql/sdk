@@ -33,7 +33,6 @@
 #include "zlib.h"
 #else
 #include <zlib.h>
-#include <pthread.h>
 #include <sys/utsname.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -52,6 +51,28 @@
 #include <netdb.h>
 #include <dlfcn.h>
 #include <libgen.h>
+#endif
+
+#if CUBESQL_ENABLE_NOTIFICATIONS
+#ifdef WIN32
+#include "win32pthread.h"
+#else
+#include <pthread.h>
+#endif
+#endif
+
+#if CUBESQL_ENABLE_NOTIFICATIONS
+#define MUTEX_T                 pthread_mutex_t
+#define MUTEX_CREATE(_mutex)    pthread_mutex_init(_mutex, NULL)
+#define MUTEX_DESTROY(_mutex)   pthread_mutex_destroy(_mutex)
+#define MUTEX_LOCK(_mutex)      pthread_mutex_lock(_mutex)
+#define MUTEX_UNLOCK(_mutex)    pthread_mutex_unlock(_mutex)
+#else
+#define MUTEX_T                 void*
+#define MUTEX_CREATE(_mutex)
+#define MUTEX_DESTROY(_mutex)
+#define MUTEX_LOCK(_mutex)
+#define MUTEX_UNLOCK(_mutex)
 #endif
 
 #if defined(__cplusplus)
@@ -446,6 +467,7 @@ extern unsigned long OpenSSL_version_num(void);
 #define kCOMMAND_CURSOR_STEP			11
 #define kCOMMAND_CURSOR_CLOSE			12
 #define kCOMMAND_CHUNK_BIND				19
+#define kCOMMAND_CALLBACK               27
 #define kCOMMAND_IGNORE					666
 #define kCOMMAND_ABORT					667
 	
@@ -526,6 +548,12 @@ struct csqldb {
 	int				        errcode;					// last error code
 	int				        useOldProtocol;				// flag to set if you want to use the old REALSQLServer protocol
 	int				        verifyPeer;					// flag to check if peer verification must be performed
+    
+    int                     is_callback;                // flag to control which socket to use in read/write operations
+    int                     callbackfd;                 // the callback fd used to received notifications
+    int                     callbackport;               // port used for the callback notification
+    int                     callback_running;           // flag used to control callback thread loop
+    int                     callbackthread_closed;      // used to syncronize client disconnection/close
 	
 	char			        *token;						// optional token used in token connect
 	char			        *hostverification;			// optional host verification name to use in SSL peer verification
@@ -546,7 +574,9 @@ struct csqldb {
 	SSL_CTX			        *ssl_ctx;
 	SSL				        *ssl;
 	
+    MUTEX_T                 mutex;                      // mutex required to protect multithreaded operations
 	cubesql_trace_callback  trace;                      // trace callback
+    cubesql_update_callback update;                     // update callback
 	void                    *data;                      // user argument to be passed to the callbacks function
 };
 
@@ -594,7 +624,8 @@ void	csql_libinit (void);
 csqldb *csql_dbinit (const char *host, int port, const char *username, const char *password, int timeout, int encryption, const char *ssl_certificate, const char *root_certificate, const char *ssl_certificate_password, const char *ssl_chiper_list);
 int		csql_socketinit (csqldb *db);
 void	csql_dbfree (csqldb *db);
-void	csql_socketclose (csqldb *db);	
+void	csql_socketclose (csqldb *db);
+int     csql_socketconnect (csqldb *db);
 int		csql_connect (csqldb *db, int encryption);
 int		csql_connect_encrypted (csqldb *db);
 int		csql_netread (csqldb *db, int expected_size, int expected_nfields, int is_chunk, int *end_chunk, int timeout);

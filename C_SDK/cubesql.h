@@ -26,7 +26,7 @@ extern "C" {
 #define CUBESQL_APIEXPORT
 #endif
     
-#define CUBESQL_SDK_VERSION                 "050804"   // means 5.8.4
+#define CUBESQL_SDK_VERSION                 "060000"   // means 6.0.0
     
 // custom boolean values (C89 doesn't have boolean support)
 #ifndef kTRUE
@@ -39,7 +39,12 @@ extern "C" {
 	
 // default values
 #define	CUBESQL_DEFAULT_PORT                4430
+#define CUBESQL_DEFAULT_NOTIF_PORT          4431
 #define CUBESQL_DEFAULT_TIMEOUT             12
+#define CUBESQL_DEFAULT_NOTIF_TIMEOUT       6
+
+// set the following macro to 0 if you do not want callback notification support (and no mutex overhead)
+#define CUBESQL_ENABLE_NOTIFICATIONS        1
     
 // client side error codes
 #define CUBESQL_NOERR                       0
@@ -114,6 +119,7 @@ typedef struct csqldb csqldb;
 typedef struct csqlc csqlc;
 typedef struct csqlvm csqlvm;
 typedef void (*cubesql_trace_callback) (const char *, void *);
+typedef void (*cubesql_update_callback) (csqldb *, const char *, int, int64, void *);
 	
 // function prototypes
 CUBESQL_APIEXPORT const char *cubesql_version (void);
@@ -131,8 +137,9 @@ CUBESQL_APIEXPORT void		cubesql_cancel (csqldb *db);
 CUBESQL_APIEXPORT int		cubesql_errcode (csqldb *db);
 CUBESQL_APIEXPORT char		*cubesql_errmsg (csqldb *db);
 CUBESQL_APIEXPORT int64		cubesql_changes (csqldb *db);
-CUBESQL_APIEXPORT void		cubesql_set_trace_callback (csqldb *db, cubesql_trace_callback trace, void *arg);
 CUBESQL_APIEXPORT void      cubesql_setpath (int type, char *path);
+CUBESQL_APIEXPORT void      cubesql_set_trace_callback (csqldb *db, cubesql_trace_callback trace, void *arg);
+CUBESQL_APIEXPORT int       cubesql_set_update_callback (csqldb *db, const char *tablename, cubesql_update_callback callback, void *data);
     
 CUBESQL_APIEXPORT int       cubesql_set_database (csqldb *db, const char *dbname);
 CUBESQL_APIEXPORT int64     cubesql_affected_rows (csqldb *db);
