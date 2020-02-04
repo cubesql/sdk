@@ -4,3 +4,4 @@
 *.plist
 *.xcworkspacedata
 Sample/Console/XCode/testapp.xcodeproj/xcshareddata/xcschemes/testapp.xcscheme
+Internals/old/
