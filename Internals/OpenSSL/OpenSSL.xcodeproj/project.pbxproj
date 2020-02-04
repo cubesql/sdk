@@ -1,0 +1,357 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A9DB49A32209C59200C0E3F1 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = A9DB49A22209C59200C0E3F1 /* main.c */; };
+		A9DB49D22209C93400C0E3F1 /* cubesql.c in Sources */ = {isa = PBXBuildFile; fileRef = A9DB49AA2209C5C500C0E3F1 /* cubesql.c */; };
+		A9DB49D32209C93A00C0E3F1 /* aeskey.c in Sources */ = {isa = PBXBuildFile; fileRef = A9DB49AC2209C5C500C0E3F1 /* aeskey.c */; };
+		A9DB49D42209C93D00C0E3F1 /* aescrypt.c in Sources */ = {isa = PBXBuildFile; fileRef = A9DB49B02209C5C500C0E3F1 /* aescrypt.c */; };
+		A9DB49D52209C94000C0E3F1 /* sha1.c in Sources */ = {isa = PBXBuildFile; fileRef = A9DB49B22209C5C500C0E3F1 /* sha1.c */; };
+		A9DB49D62209C94200C0E3F1 /* pseudorandom.c in Sources */ = {isa = PBXBuildFile; fileRef = A9DB49B32209C5C500C0E3F1 /* pseudorandom.c */; };
+		A9DB49D72209C94400C0E3F1 /* base64.c in Sources */ = {isa = PBXBuildFile; fileRef = A9DB49B52209C5C500C0E3F1 /* base64.c */; };
+		A9DB49D82209C94700C0E3F1 /* aestab.c in Sources */ = {isa = PBXBuildFile; fileRef = A9DB49B62209C5C500C0E3F1 /* aestab.c */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A9DB499D2209C59200C0E3F1 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		A9DB499F2209C59200C0E3F1 /* OpenSSL */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = OpenSSL; sourceTree = BUILT_PRODUCTS_DIR; };
+		A9DB49A22209C59200C0E3F1 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		A9DB49AA2209C5C500C0E3F1 /* cubesql.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = cubesql.c; sourceTree = "<group>"; };
+		A9DB49AC2209C5C500C0E3F1 /* aeskey.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = aeskey.c; sourceTree = "<group>"; };
+		A9DB49AD2209C5C500C0E3F1 /* pseudorandom.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pseudorandom.h; sourceTree = "<group>"; };
+		A9DB49AE2209C5C500C0E3F1 /* aestab.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = aestab.h; sourceTree = "<group>"; };
+		A9DB49AF2209C5C500C0E3F1 /* base64.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = base64.h; sourceTree = "<group>"; };
+		A9DB49B02209C5C500C0E3F1 /* aescrypt.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = aescrypt.c; sourceTree = "<group>"; };
+		A9DB49B12209C5C500C0E3F1 /* aesopt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = aesopt.h; sourceTree = "<group>"; };
+		A9DB49B22209C5C500C0E3F1 /* sha1.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sha1.c; sourceTree = "<group>"; };
+		A9DB49B32209C5C500C0E3F1 /* pseudorandom.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = pseudorandom.c; sourceTree = "<group>"; };
+		A9DB49B42209C5C500C0E3F1 /* aes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = aes.h; sourceTree = "<group>"; };
+		A9DB49B52209C5C500C0E3F1 /* base64.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = base64.c; sourceTree = "<group>"; };
+		A9DB49B62209C5C500C0E3F1 /* aestab.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = aestab.c; sourceTree = "<group>"; };
+		A9DB49B72209C5C500C0E3F1 /* sha1.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sha1.h; sourceTree = "<group>"; };
+		A9DB49B82209C5C500C0E3F1 /* csql.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = csql.h; sourceTree = "<group>"; };
+		A9DB49BE2209C5C500C0E3F1 /* cubesql.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cubesql.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A9DB499C2209C59200C0E3F1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A9DB49962209C59200C0E3F1 = {
+			isa = PBXGroup;
+			children = (
+				A9DB49A12209C59200C0E3F1 /* OpenSSL */,
+				A9DB49A02209C59200C0E3F1 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A9DB49A02209C59200C0E3F1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A9DB499F2209C59200C0E3F1 /* OpenSSL */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A9DB49A12209C59200C0E3F1 /* OpenSSL */ = {
+			isa = PBXGroup;
+			children = (
+				A9DB49A92209C5C500C0E3F1 /* C_SDK */,
+				A9DB49A22209C59200C0E3F1 /* main.c */,
+			);
+			path = OpenSSL;
+			sourceTree = "<group>";
+		};
+		A9DB49A92209C5C500C0E3F1 /* C_SDK */ = {
+			isa = PBXGroup;
+			children = (
+				A9DB49AA2209C5C500C0E3F1 /* cubesql.c */,
+				A9DB49BE2209C5C500C0E3F1 /* cubesql.h */,
+				A9DB49B82209C5C500C0E3F1 /* csql.h */,
+				A9DB49AB2209C5C500C0E3F1 /* crypt */,
+			);
+			name = C_SDK;
+			path = ../../../C_SDK;
+			sourceTree = "<group>";
+		};
+		A9DB49AB2209C5C500C0E3F1 /* crypt */ = {
+			isa = PBXGroup;
+			children = (
+				A9DB49AC2209C5C500C0E3F1 /* aeskey.c */,
+				A9DB49AD2209C5C500C0E3F1 /* pseudorandom.h */,
+				A9DB49AE2209C5C500C0E3F1 /* aestab.h */,
+				A9DB49AF2209C5C500C0E3F1 /* base64.h */,
+				A9DB49B02209C5C500C0E3F1 /* aescrypt.c */,
+				A9DB49B12209C5C500C0E3F1 /* aesopt.h */,
+				A9DB49B22209C5C500C0E3F1 /* sha1.c */,
+				A9DB49B32209C5C500C0E3F1 /* pseudorandom.c */,
+				A9DB49B42209C5C500C0E3F1 /* aes.h */,
+				A9DB49B52209C5C500C0E3F1 /* base64.c */,
+				A9DB49B62209C5C500C0E3F1 /* aestab.c */,
+				A9DB49B72209C5C500C0E3F1 /* sha1.h */,
+			);
+			path = crypt;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A9DB499E2209C59200C0E3F1 /* OpenSSL */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A9DB49A62209C59200C0E3F1 /* Build configuration list for PBXNativeTarget "OpenSSL" */;
+			buildPhases = (
+				A9DB499B2209C59200C0E3F1 /* Sources */,
+				A9DB499C2209C59200C0E3F1 /* Frameworks */,
+				A9DB499D2209C59200C0E3F1 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OpenSSL;
+			productName = OpenSSL;
+			productReference = A9DB499F2209C59200C0E3F1 /* OpenSSL */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A9DB49972209C59200C0E3F1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1120;
+				ORGANIZATIONNAME = SQLabs;
+				TargetAttributes = {
+					A9DB499E2209C59200C0E3F1 = {
+						CreatedOnToolsVersion = 10.1;
+					};
+				};
+			};
+			buildConfigurationList = A9DB499A2209C59200C0E3F1 /* Build configuration list for PBXProject "OpenSSL" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A9DB49962209C59200C0E3F1;
+			productRefGroup = A9DB49A02209C59200C0E3F1 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A9DB499E2209C59200C0E3F1 /* OpenSSL */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A9DB499B2209C59200C0E3F1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A9DB49D52209C94000C0E3F1 /* sha1.c in Sources */,
+				A9DB49D82209C94700C0E3F1 /* aestab.c in Sources */,
+				A9DB49D32209C93A00C0E3F1 /* aeskey.c in Sources */,
+				A9DB49D72209C94400C0E3F1 /* base64.c in Sources */,
+				A9DB49D62209C94200C0E3F1 /* pseudorandom.c in Sources */,
+				A9DB49A32209C59200C0E3F1 /* main.c in Sources */,
+				A9DB49D42209C93D00C0E3F1 /* aescrypt.c in Sources */,
+				A9DB49D22209C93400C0E3F1 /* cubesql.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A9DB49A42209C59200C0E3F1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		A9DB49A52209C59200C0E3F1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		A9DB49A72209C59200C0E3F1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 3ZH6236ET5;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"CUBESQL_ENABLE_SSL_ENCRYPTION=1",
+					"CUBESQL_DYNAMIC_SSL_LIBRARY=1",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = "/Users/marco/GitHub/SQLabs/sdk/C_SDK/**";
+				OTHER_LDFLAGS = "-lz";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		A9DB49A82209C59200C0E3F1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 3ZH6236ET5;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"CUBESQL_ENABLE_SSL_ENCRYPTION=1",
+					"CUBESQL_DYNAMIC_SSL_LIBRARY=1",
+				);
+				HEADER_SEARCH_PATHS = "/Users/marco/GitHub/SQLabs/sdk/C_SDK/**";
+				OTHER_LDFLAGS = "-lz";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A9DB499A2209C59200C0E3F1 /* Build configuration list for PBXProject "OpenSSL" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A9DB49A42209C59200C0E3F1 /* Debug */,
+				A9DB49A52209C59200C0E3F1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A9DB49A62209C59200C0E3F1 /* Build configuration list for PBXNativeTarget "OpenSSL" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A9DB49A72209C59200C0E3F1 /* Debug */,
+				A9DB49A82209C59200C0E3F1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A9DB49972209C59200C0E3F1 /* Project object */;
+}

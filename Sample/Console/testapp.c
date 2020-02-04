@@ -16,6 +16,8 @@
 #define USERNAME	"admin"
 #define PASSWORD	"admin"
 
+// MARK: -
+
 static void print_cursor(csqlc *c) {
     int        i, nrows, ncols, len;
     char    *s, b[512];
@@ -140,6 +142,8 @@ abort:
     return;
 }
 
+// MARK: -
+
 int main (void) {
     csqldb *db = NULL;
 	
@@ -148,8 +152,8 @@ int main (void) {
 		goto abort;
 	
 	// do a simple test
+    do_test_bind(db);
     do_test(db);
-	// do_test_bind(db);
 	
 	// disconnect
 	cubesql_disconnect(db, kTRUE);
