@@ -26,7 +26,7 @@ extern "C" {
 #define CUBESQL_APIEXPORT
 #endif
     
-#define CUBESQL_SDK_VERSION                 "050804"   // means 5.8.4
+#define CUBESQL_SDK_VERSION                 "050900"   // means 5.9.0
     
 // custom boolean values (C89 doesn't have boolean support)
 #ifndef kTRUE
@@ -125,6 +125,7 @@ CUBESQL_APIEXPORT int		cubesql_execute (csqldb *db, const char *sql);
 CUBESQL_APIEXPORT csqlc		*cubesql_select (csqldb *db, const char *sql, int unused);
 CUBESQL_APIEXPORT int		cubesql_commit (csqldb *db);
 CUBESQL_APIEXPORT int		cubesql_rollback (csqldb *db);
+CUBESQL_APIEXPORT int       cubesql_begintransaction (csqldb *db);
 CUBESQL_APIEXPORT int		cubesql_bind (csqldb *db, const char *sql, char **colvalue, int *colsize, int *coltype, int ncols);
 CUBESQL_APIEXPORT int		cubesql_ping (csqldb *db);
 CUBESQL_APIEXPORT void		cubesql_cancel (csqldb *db);

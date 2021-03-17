@@ -160,6 +160,10 @@ int cubesql_rollback (csqldb *db) {
 	return cubesql_execute(db, "ROLLBACK;");
 }
 
+int cubesql_begintransaction (csqldb *db) {
+    return cubesql_execute(db, "BEGIN TRANSACTION;");
+}
+
 int cubesql_bind (csqldb *db, const char *sql, char **colvalue, int *colsize, int *coltype, int ncols) {
 	// clear errors first
 	cubesql_clear_errors(db);
