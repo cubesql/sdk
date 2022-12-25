@@ -425,7 +425,7 @@ class csqldb
             $temp = $server_names;
             $data_seek = 0;
             for ($j = 0; $j < $server_colcount; $j++) {
-                $len = strpos($this->inbuffer, 0, $temp) - $temp + 1;
+                $len = strpos($this->inbuffer, chr(0), $temp) - $temp + 1;
                 $col_names[$j] = substr($this->inbuffer, $temp, $len - 1);
                 $data_seek += $len;
                 $temp += $len;
@@ -437,7 +437,7 @@ class csqldb
                 $server_tables = $server_data + $data_seek;
                 $temp = $server_tables;
                 for ($j = 0; $j < $server_colcount; $j++) {
-                    $len = strpos($this->inbuffer, 0, $temp) - $temp + 1;
+                    $len = strpos($this->inbuffer, chr(0), $temp) - $temp + 1;
                     $table_names[$j] = substr($this->inbuffer, $temp, $len - 1);
                     $data_seek += $len;
                     $temp += $len;
