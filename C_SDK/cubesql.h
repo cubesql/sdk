@@ -17,11 +17,13 @@ extern "C" {
 #endif
     
 #ifdef WIN32
+#ifndef CUBESQL_APIEXPORT
     #ifdef CUBESQL_EXPORTSDLL
     #define CUBESQL_APIEXPORT               __declspec(dllexport)
     #else
     #define CUBESQL_APIEXPORT               __declspec(dllimport)
     #endif
+#endif
 #else
 #define CUBESQL_APIEXPORT
 #endif

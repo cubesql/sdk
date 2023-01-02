@@ -291,22 +291,22 @@ int cubesql_cursor_currentrow (csqlc *c) {
 	return c->current_row;
 }
 
-int cubesql_cursor_seek (csqlc *c, int index) {
+int cubesql_cursor_seek (csqlc *c, int Index) {
 	if (c->server_side == kTRUE) {
-		if (index != CUBESQL_SEEKNEXT) return kFALSE;
+		if (Index != CUBESQL_SEEKNEXT) return kFALSE;
 		if (c->eof == kTRUE) return kFALSE;
 		return (csql_cursor_step(c) == CUBESQL_NOERR) ? kTRUE : kFALSE;
 	}
 		
-	if (index == CUBESQL_SEEKNEXT) index = c->current_row + 1;
-	else if (index == CUBESQL_SEEKFIRST) index = 1;
-	else if (index == CUBESQL_SEEKPREV) index = c->current_row - 1;
-	else if (index == CUBESQL_SEEKLAST) index = c->nrows;
+	if (Index == CUBESQL_SEEKNEXT) Index = c->current_row + 1;
+	else if (Index == CUBESQL_SEEKFIRST) Index = 1;
+	else if (Index == CUBESQL_SEEKPREV) Index = c->current_row - 1;
+	else if (Index == CUBESQL_SEEKLAST) Index = c->nrows;
 	
-	if ((c->nrows != -1) && (index > c->nrows)) {c->eof = kTRUE; return kFALSE;}
-	if (index < 0) return kFALSE;
-	c->eof = (index == c->nrows + 1) ? kTRUE : kFALSE;
-	c->current_row = index;
+	if ((c->nrows != -1) && (Index > c->nrows)) {c->eof = kTRUE; return kFALSE;}
+	if (Index < 0) return kFALSE;
+	c->eof = (Index == c->nrows + 1) ? kTRUE : kFALSE;
+	c->current_row = Index;
 	
 	return kTRUE;
 }
@@ -316,22 +316,22 @@ int cubesql_cursor_iseof (csqlc *c) {
 	return c->eof;
 }
 
-int cubesql_cursor_columntype (csqlc *c, int index) {
-	if ((index <= 0) || (index > c->ncols)) return -1;
-	if (c->has_rowid) return c->types[index];
-	else return c->types[index-1];
+int cubesql_cursor_columntype (csqlc *c, int Index) {
+	if ((Index <= 0) || (Index > c->ncols)) return -1;
+	if (c->has_rowid) return c->types[Index];
+	else return c->types[Index-1];
 }
 
-int cubesql_cursor_columntypebind (csqlc *c, int index) {
+int cubesql_cursor_columntypebind (csqlc *c, int Index) {
 	//char *v = NULL;
 	//int  vlen = 0;
 	int  type;
-	if ((index <= 0) || (index > c->ncols)) return -1;
-	if (c->has_rowid) type = c->types[index];
-	else type = c->types[index-1];
+	if ((Index <= 0) || (Index > c->ncols)) return -1;
+	if (c->has_rowid) type = c->types[Index];
+	else type = c->types[Index-1];
 	
 	// check for special NULL value
-	//v = cubesql_cursor_field (c, CUBESQL_CURROW, index, &vlen);
+	//v = cubesql_cursor_field (c, CUBESQL_CURROW, Index, &vlen);
 	//if ((v == NULL) || (vlen == -1)) return kBIND_NULL;
 	
 	if (type == CUBESQL_Type_Integer) return CUBESQL_BIND_INTEGER;
@@ -392,7 +392,7 @@ char *cubesql_cursor_field (csqlc *c, int row, int column, int *len) {
 		return result;
 	}
 	
-	// first find out the right index buffer
+	// first find out the right Index buffer
 	if (c->nbuffer) {
 		// search in current buffer first (90% of the time it should be true)
 		if (c->current_buffer == 0) v1 = 0;
@@ -447,7 +447,7 @@ found_buffer:
 		}
 	}
 		
-	// compute index inside the cursor
+	// compute Index inside the cursor
 	if ((c->has_rowid) && (column != CUBESQL_ROWID)) n = ((row-1) * (c->ncols + 1)) + (column);
 	else n = ((row-1) * c->ncols) + (column-1);
 	
@@ -608,44 +608,44 @@ csqlvm *cubesql_vmprepare (csqldb *db, const char *sql) {
 	return vm;
 }
 
-int cubesql_vmbind_int (csqlvm *vm, int index, int intvalue) {
+int cubesql_vmbind_int (csqlvm *vm, int Index, int intvalue) {
 	char	value[256];
 	
 	// convert int to text
 	snprintf(value, sizeof(value), "%d", intvalue);
-	return csql_bind_value(vm->db, index, CUBESQL_BIND_INTEGER, value, -1);
+	return csql_bind_value(vm->db, Index, CUBESQL_BIND_INTEGER, value, -1);
 }
 
-int cubesql_vmbind_double (csqlvm *vm, int index, double dvalue) {
+int cubesql_vmbind_double (csqlvm *vm, int Index, double dvalue) {
 	char	value[256];
 	
 	// convert double to text
 	snprintf(value, sizeof(value), "%f", dvalue);
-	return csql_bind_value(vm->db, index, CUBESQL_BIND_DOUBLE, value, -1);
+	return csql_bind_value(vm->db, Index, CUBESQL_BIND_DOUBLE, value, -1);
 }
 
-int cubesql_vmbind_text (csqlvm *vm, int index, char *value, int len) {
-	return csql_bind_value(vm->db, index, CUBESQL_BIND_TEXT, value, -1);
+int cubesql_vmbind_text (csqlvm *vm, int Index, char *value, int len) {
+	return csql_bind_value(vm->db, Index, CUBESQL_BIND_TEXT, value, -1);
 }
 
-int cubesql_vmbind_blob (csqlvm *vm, int index, void *value, int len) {
-	return csql_bind_value(vm->db, index, CUBESQL_BIND_BLOB, (char *)value, len);
+int cubesql_vmbind_blob (csqlvm *vm, int Index, void *value, int len) {
+	return csql_bind_value(vm->db, Index, CUBESQL_BIND_BLOB, (char *)value, len);
 }
 
-int cubesql_vmbind_null (csqlvm *vm, int index) {
-	return csql_bind_value(vm->db, index, CUBESQL_BIND_NULL, NULL, 0);
+int cubesql_vmbind_null (csqlvm *vm, int Index) {
+	return csql_bind_value(vm->db, Index, CUBESQL_BIND_NULL, NULL, 0);
 }
 
-int cubesql_vmbind_int64 (csqlvm *vm, int index, int64 int64value) {
+int cubesql_vmbind_int64 (csqlvm *vm, int Index, int64 int64value) {
 	char	value[256];
 	
 	// convert int to text
 	snprintf(value, sizeof(value), "%lld", int64value);
-	return csql_bind_value(vm->db, index, CUBESQL_BIND_INT64, value, -1);
+	return csql_bind_value(vm->db, Index, CUBESQL_BIND_INT64, value, -1);
 }
 
-int cubesql_vmbind_zeroblob (csqlvm *vm, int index, int len) {
-	return csql_bind_value(vm->db, index, CUBESQL_BIND_ZEROBLOB, NULL, len);
+int cubesql_vmbind_zeroblob (csqlvm *vm, int Index, int len) {
+	return csql_bind_value(vm->db, Index, CUBESQL_BIND_ZEROBLOB, NULL, len);
 }
 
 int cubesql_vmexecute (csqlvm *vm) {
@@ -678,14 +678,17 @@ csqlc *cubesql_vmselect (csqlvm *vm) {
 
 int cubesql_vmclose (csqlvm *vm) {
     if (!vm) return CUBESQL_NOERR;
-    
-	csqldb *db = vm->db;
 	
-	csql_initrequest(db, 0, 0, kVM_CLOSE, kNO_SELECTOR);
-	csql_netwrite(db, NULL, 0, NULL, 0);
-	csql_netread(db, -1, -1, kFALSE, NULL, NO_TIMEOUT);
-	
-	free(vm);
+	{ // bracket needed to avoid compile error in VS 2008
+		
+		csqldb *db = vm->db;
+		
+		csql_initrequest(db, 0, 0, kVM_CLOSE, kNO_SELECTOR);
+		csql_netwrite(db, NULL, 0, NULL, 0);
+		csql_netread(db, -1, -1, kFALSE, NULL, NO_TIMEOUT);
+		
+		free(vm);
+	}
 	return CUBESQL_NOERR;
 }
 
@@ -790,14 +793,14 @@ abort:
 }
 
 int cubesql_cursor_addrow (csqlc *cursor, char **row, int *len) {
-	int i, j, index, rlen;
+	int i, j, Index, rlen;
 	
 	// row can be added to a custom created cursor only
 	if (cursor->cursor_id != -1) return kFALSE;
 	
 	// check if there is enough space for the new row
-	index = cursor->nrows * cursor->ncols;
-	if (cursor->nalloc < index + cursor->ncols) {
+	Index = cursor->nrows * cursor->ncols;
+	if (cursor->nalloc < Index + cursor->ncols) {
 		int newsize = cursor->nalloc + (kDEFAULT_ALLOC_ROWS * 2);
 		
 		cursor->buffer = (char**) realloc(cursor->data, sizeof(char*) * cursor->ncols * newsize);
@@ -810,7 +813,7 @@ int cubesql_cursor_addrow (csqlc *cursor, char **row, int *len) {
 	}
 	
 	// append new row to the cursor
-	for (j=0, i=index; j < cursor->ncols; j++, i++) {
+	for (j=0, i=Index; j < cursor->ncols; j++, i++) {
 		rlen = len[j];
 		if (rlen < 0) rlen = 0;
 		
@@ -1055,7 +1058,24 @@ int csql_socketconnect (csqldb *db) {
     // apparently a listening IPv4 socket can accept incoming connections from only IPv4 clients
     // so I must explicitly connect using IPv4 if I want to be able to connect with older cubeSQL versions
     // https://stackoverflow.com/questions/16480729/connecting-ipv4-client-to-ipv6-server-connection-refused
-    
+	
+	// variables
+	int rc;
+	int sock_index = 0;
+	int sock_current = 0;
+	int sock_list[MAX_SOCK_LIST] = {0};
+	int connect_timeout;
+	int i;
+	int socket_err = 0;
+	int sockfd = 0;
+	struct timeval tv;
+	char port_string[256];
+	time_t start;
+	time_t now;
+	fd_set write_fds;
+	fd_set except_fds;
+	
+	
     // ipv4/ipv6 specific variables
     struct sockaddr_storage serveraddr;
     struct addrinfo hints, *addr_list = NULL, *addr;
@@ -1069,7 +1089,7 @@ int csql_socketconnect (csqldb *db) {
     // check if we were provided the address of the server using
     // inet_pton() to convert the text form of the address to binary form.
     // If it is numeric then we want to prevent getaddrinfo() from doing any name resolution.
-    int rc = inet_pton(AF_INET, (const char *) db->host, &serveraddr);
+    rc = inet_pton(AF_INET, (const char *) db->host, &serveraddr);
     if (rc == 1) { /* valid IPv4 text address? */
         hints.ai_family = AF_INET;
         hints.ai_flags |= AI_NUMERICHOST;
@@ -1083,7 +1103,6 @@ int csql_socketconnect (csqldb *db) {
     }
     
     // get the address information for the server using getaddrinfo()
-    char port_string[256];
     snprintf(port_string, sizeof(port_string), "%d", db->port);
     rc = getaddrinfo((const char *) db->host, port_string, &hints, &addr_list);
     if (rc != 0 || addr_list == NULL) {
@@ -1091,11 +1110,9 @@ int csql_socketconnect (csqldb *db) {
         return -1;
     }
     
-    int sock_index = 0;
-    int sock_current = 0;
-    int sock_list[MAX_SOCK_LIST] = {0};
     for (addr = addr_list; addr != NULL; addr = addr->ai_next, ++sock_index) {
-        if (sock_index >= MAX_SOCK_LIST) break;
+		int len = 1;
+		if (sock_index >= MAX_SOCK_LIST) break;
         
         // display protocol specific formatted address
         // char szHost[256], szPort[16];
@@ -1106,7 +1123,6 @@ int csql_socketconnect (csqldb *db) {
         if (sock_current < 0) continue;
         
         // set socket options
-        int len = 1;
         bsd_setsockopt(sock_current, SOL_SOCKET, SO_KEEPALIVE, (const char *) &len, sizeof(len));
         len = 1;
         bsd_setsockopt(sock_current, IPPROTO_TCP, TCP_NODELAY, (const char *) &len, sizeof(len));
@@ -1125,11 +1141,13 @@ int csql_socketconnect (csqldb *db) {
             #endif
             bsd_setsockopt(sock_current, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&ipv6only, sizeof(ipv6only));
         }
-        
-        // turn on non-blocking
-        unsigned long ioctl_blocking = 1;    /* ~0; //TRUE; */
-        ioctl(sock_current, FIONBIO, &ioctl_blocking);
-        
+		
+		{
+			// turn on non-blocking
+			unsigned long ioctl_blocking = 1;    /* ~0; //TRUE; */
+			ioctl(sock_current, FIONBIO, &ioctl_blocking);
+		}
+		
         // initiate non-blocking connect ignoring return code
         connect(sock_current, addr->ai_addr, addr->ai_addrlen);
         
@@ -1141,23 +1159,17 @@ int csql_socketconnect (csqldb *db) {
     freeaddrinfo(addr_list);
 	
 	// calculate the connection timeout and reset timers
-	int connect_timeout = (db->timeout > 0) ? db->timeout : CUBESQL_DEFAULT_TIMEOUT;
-	time_t start = time(NULL);
-    time_t now = start;
+	connect_timeout = (db->timeout > 0) ? db->timeout : CUBESQL_DEFAULT_TIMEOUT;
+	start = time(NULL);
+    now = start;
     rc = 0;
     
-    int socket_err = 0;
-    int sockfd = 0;
-    fd_set write_fds;
-    fd_set except_fds;
-    struct timeval tv;
-    
-	while (rc == 0 && ((now - start) < connect_timeout)) {
+    while (rc == 0 && ((now - start) < connect_timeout)) {
+		int nfds = 0;
 		FD_ZERO(&write_fds);
         FD_ZERO(&except_fds);
         
-        int nfds = 0;
-        for (int i=0; i<MAX_SOCK_LIST; ++i) {
+        for (i=0; i<MAX_SOCK_LIST; ++i) {
             if (sock_list[i]) {
                 FD_SET(sock_list[i], &write_fds);
                 FD_SET(sock_list[i], &except_fds);
@@ -1177,7 +1189,7 @@ int csql_socketconnect (csqldb *db) {
         }
         
         // check for error first
-        for (int i=0; i<MAX_SOCK_LIST; ++i) {
+        for (i=0; i<MAX_SOCK_LIST; ++i) {
             if (sock_list[i] > 0) {
                 if (FD_ISSET(sock_list[i], &except_fds)) {
                     closesocket(sock_list[i]);
@@ -1187,7 +1199,7 @@ int csql_socketconnect (csqldb *db) {
         }
         
         // check which file descriptor is ready (need to check for socket error also)
-        for (int i=0; i<MAX_SOCK_LIST; ++i) {
+        for (i=0; i<MAX_SOCK_LIST; ++i) {
             if (sock_list[i] > 0) {
                 if (FD_ISSET(sock_list[i], &write_fds)) {
                     int err = csql_socketerror(sock_list[i]);
@@ -1210,7 +1222,7 @@ int csql_socketconnect (csqldb *db) {
 	}
     
     // close still opened sockets
-    for (int i=0; i<MAX_SOCK_LIST; ++i) {
+    for (i=0; i<MAX_SOCK_LIST; ++i) {
         if ((sock_list[i] > 0) && (sock_list[i] != sockfd)) closesocket(sock_list[i]);
     }
     
@@ -1228,8 +1240,10 @@ int csql_socketconnect (csqldb *db) {
 	}
 	
 	// turn off non-blocking
-	int ioctl_blocking = 0;	/* ~0; //TRUE; */
-	ioctl(sockfd, FIONBIO, &ioctl_blocking);
+	{
+		int ioctl_blocking = 0;	/* ~0; //TRUE; */
+		ioctl(sockfd, FIONBIO, &ioctl_blocking);
+	}
 	
 	// socket is connected now check for SSL
     #if CUBESQL_ENABLE_SSL_ENCRYPTION
@@ -1266,7 +1280,7 @@ int csql_socketconnect (csqldb *db) {
 	return sockfd;
 }
 
-int csql_bind_value (csqldb *db, int index, int bindtype, char *value, int len) {
+int csql_bind_value (csqldb *db, int Index, int bindtype, char *value, int len) {
 	int field_size[1];
 	int nfields = 0, nsizedim = 0, packet_size = 0, datasize = 0;
 	
@@ -1289,7 +1303,7 @@ int csql_bind_value (csqldb *db, int index, int bindtype, char *value, int len) 
 	// prepare BIND command
 	csql_initrequest(db, packet_size, nfields, kVM_BIND, kNO_SELECTOR);
 	db->request.flag3 = (unsigned char) bindtype;
-	db->request.reserved1 = htons(index);
+	db->request.reserved1 = htons(Index);
 	if (bindtype == CUBESQL_BIND_ZEROBLOB) db->request.expandedSize = htonl(len);
 	
 	// send request
@@ -1361,20 +1375,22 @@ int csql_send_statement (csqldb *db, int command_type, const char *sql, int is_p
 
 csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 	csqlc	*c = NULL;
-	int		index, gdone = kFALSE, is_partial = kFALSE;
-	int		has_tables, has_rowid, nfields, server_rowcount, server_colcount, cursor_colcount;
+	int		Index, gdone = kFALSE, is_partial = kFALSE;
+	int		has_tables, has_rowid, server_rowcount, server_colcount, cursor_colcount;
 	char	*buffer;
 	int		i, nrows, ncols, count, data_seek = 0, end_chuck;
 	int		*server_types, *server_sizes, *server_sum;
 	char	*server_names, *server_data, *server_tables;
 	
+	server_sum = NULL;
+	
 	// allocate basic cursor struct
 	if (existing_c == NULL) {
-		index = 0;
+		Index = 0;
 		c = csql_cursor_alloc(db);
 	}
 	else {
-		index = 1;
+		Index = 1;
 		c = existing_c;
 	}
 			
@@ -1403,7 +1419,7 @@ csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 		if (TESTBIT(db->reply.flag1, SERVER_SERVER_SIDE)) c->server_side = kTRUE;
 		if (c->server_side) is_partial = kFALSE;
 		
-		nfields = ntohl(db->reply.numFields);
+	//	nfields = ntohl(db->reply.numFields);
 		server_rowcount = ntohl(db->reply.rows);
 		server_colcount = ntohl(db->reply.cols);
 		cursor_colcount = (has_rowid ? server_colcount-1 : server_colcount);
@@ -1425,7 +1441,7 @@ csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 		
 		// set buffers
 		server_tables = NULL;
-		if (index == 0) {
+		if (Index == 0) {
 			char	*temp;
 			int		len;
 			
@@ -1480,7 +1496,7 @@ csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 		}
 		
 		// adjust others counters/pointers
-		if (index == 0) {
+		if (Index == 0) {
 			c->types = server_types;
 			c->size = server_sizes;
 			c->names = server_names;
@@ -1494,7 +1510,7 @@ csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 		}
 		
 		// adjust pointers for server side cursors
-		if ((c->server_side) && (index > 0)) {
+		if ((c->server_side) && (Index > 0)) {
 			c->index++;
 			if ((c->index > 1) && (c->p0 != (char *)c->size)) free(c->size);
 			c->types = (int *) c->p0;
@@ -1508,7 +1524,7 @@ csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 			c->size0 = c->size;
 		}
 		 
-		//if (db->protocol == k2009PROTOCOL) c->cursor_id = ntohs(db->reply.index);
+		//if (db->protocol == k2009PROTOCOL) c->cursor_id = ntohs(db->reply.Index);
 		c->has_rowid = has_rowid;
 		c->nrows += nrows;
 		c->ncols = ncols;
@@ -1530,16 +1546,29 @@ csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 		// send ACK only in case of chunk cursor
 		if ((is_partial == kTRUE) && (c->server_side == kFALSE)) csql_ack(db, kCHUNK_OK);
 		else gdone = kTRUE;
-		index++;
+		Index++;
 	}
 	while (gdone != kTRUE);
 	return c;
 
 abort_memory:
+	if (server_sum != NULL)
+	{
+		free(server_sum);
+		server_sum = NULL;
+	}
 	csql_seterror(db, CUBESQL_MEMORY_ERROR, "Not enought memory to allocate buffer required to build the cursor");
 	
 abort:
-	if ((c) && (existing_c != NULL)) cubesql_cursor_free(c);
+	if (c == existing_c)
+	{
+		c = NULL;
+	}
+	if (c)
+	{
+		cubesql_cursor_free(c);
+		c = NULL;
+	}
 	return NULL;
 }
 
@@ -2109,11 +2138,11 @@ void csql_seterror(csqldb *db, int errcode, const char *errmsg) {
 }
 
 int csql_socketerror (int fd) {
-	int			err, sockerr, err2;
+	int			err, sockerr;
 	socklen_t	errlen = sizeof(err);
 	
 	sockerr = bsd_getsockopt(fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen);
-	err2 = errno;
+//	err2 = errno;
 	
 	if (sockerr < 0)
 		return -1;
@@ -2826,12 +2855,12 @@ void random_hash_field (unsigned char hval[], const char *randpoll, const char *
 	csql_sha1((unsigned char *)hval, (const unsigned char *)buffer, kRANDPOOLSIZE+SHA1_DIGEST_SIZE);
 }
 
-int encrypt_buffer (char *buffer, int dim, char random[], csql_aes_encrypt_ctx ctx[1]) {
+int encrypt_buffer (char *buffer, int dim, char Random[], csql_aes_encrypt_ctx ctx[1]) {
 	char    dbuf[2 * BLOCK_LEN];
-	int		i, len, index=0;
+	int		i, len, Index=0;
 	char	*b1, *b2;
 	
-	memcpy(dbuf, random, BLOCK_LEN);
+	memcpy(dbuf, Random, BLOCK_LEN);
 	
 	if (dim < BLOCK_LEN) {
 		// if the buffer is less than one block
@@ -2845,7 +2874,7 @@ int encrypt_buffer (char *buffer, int dim, char random[], csql_aes_encrypt_ctx c
         csql_aes_encrypt((const unsigned char*) (dbuf + dim), (unsigned char*)(dbuf + dim), ctx);
         
         // copy back encrypted data
-        memcpy(random, dbuf, BLOCK_LEN);
+        memcpy(Random, dbuf, BLOCK_LEN);
         memcpy(buffer, dbuf + BLOCK_LEN, dim);
         
         return (dim+BLOCK_LEN);
@@ -2865,15 +2894,15 @@ int encrypt_buffer (char *buffer, int dim, char random[], csql_aes_encrypt_ctx c
 		
 		len -= BLOCK_LEN;
 		
-		if (index == 0)
+		if (Index == 0)
 			memcpy(buffer, b1, BLOCK_LEN);
 		
 		// advance the buffer pointers
 		if (len >= BLOCK_LEN) {
-        	b2 = buffer + (index * BLOCK_LEN);
+        	b2 = buffer + (Index * BLOCK_LEN);
         	b1 = b2 + BLOCK_LEN;
         }
-        index++;
+        Index++;
 	}
 	while (len >= BLOCK_LEN);
 	
@@ -2881,7 +2910,7 @@ int encrypt_buffer (char *buffer, int dim, char random[], csql_aes_encrypt_ctx c
 		char b3[BLOCK_LEN];
 		char back[BLOCK_LEN];
 		
-		memcpy(b3, buffer + (index * BLOCK_LEN), len);
+		memcpy(b3, buffer + (Index * BLOCK_LEN), len);
 		
 		// xor ciphertext into last block
         for(i = 0; i < len; ++i)
@@ -2908,7 +2937,7 @@ int encrypt_buffer (char *buffer, int dim, char random[], csql_aes_encrypt_ctx c
 }
 
 int decrypt_buffer (char *buffer, int dim, csql_aes_decrypt_ctx ctx[1]) {
-	int 	len, nextlen, i, index=0;
+	int 	len, nextlen, i, Index=0;
 	char	*b1, *b2;
 	char	buf[BLOCK_LEN], b3[BLOCK_LEN];
 	
@@ -2942,9 +2971,9 @@ int decrypt_buffer (char *buffer, int dim, csql_aes_decrypt_ctx ctx[1]) {
         	for(i = 0; i < BLOCK_LEN; ++i)
         		buf[i] ^= b1[i];
         	
-        	memcpy(buffer + index*BLOCK_LEN, buf, BLOCK_LEN);
+        	memcpy(buffer + Index*BLOCK_LEN, buf, BLOCK_LEN);
 			
-			index++;
+			Index++;
 			len -= BLOCK_LEN;
 			if (len == 0) return 0;
 			
@@ -2977,9 +3006,9 @@ int decrypt_buffer (char *buffer, int dim, csql_aes_decrypt_ctx ctx[1]) {
             for(i = 0; i < BLOCK_LEN; ++i)
                 b3[i] ^= b1[i];
             
-            memcpy(buffer + index*BLOCK_LEN, b3, BLOCK_LEN);
-            index++;
-            memcpy(buffer + index*BLOCK_LEN, buf, nextlen);
+            memcpy(buffer + Index*BLOCK_LEN, b3, BLOCK_LEN);
+            Index++;
+            memcpy(buffer + Index*BLOCK_LEN, buf, nextlen);
             
             return 0;
 		}

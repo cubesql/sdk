@@ -34,7 +34,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include "sha1.h"
+#include "cubesql_sha1.h"
 
 /* constant table */
 static u_int32_t _K[] = { 0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xca62c1d6 };
