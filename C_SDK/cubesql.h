@@ -1,10 +1,10 @@
 /*
  *  cubesql.h
  *
- *	This file is the public interface for the cubeSQL Server SDK.
+ *	This file is the public interface for the CubeSQL Server SDK.
  *	You just need to include this header file in your projects.
  *
- *  (c) 2006-2020 SQLabs srl -- All Rights Reserved
+ *  (c) 2006-2023 SQLabs srl -- All Rights Reserved
  *  Author: Marco Bambini (MB)
  *
  */
@@ -26,7 +26,7 @@ extern "C" {
 #define CUBESQL_APIEXPORT
 #endif
     
-#define CUBESQL_SDK_VERSION                 "050900"   // means 5.9.0
+#define CUBESQL_SDK_VERSION                 "060000"   // means 6.0.0
     
 // custom boolean values (C89 doesn't have boolean support)
 #ifndef kTRUE
@@ -73,10 +73,6 @@ extern "C" {
 #define CUBESQL_SEEKFIRST                   -3
 #define CUBESQL_SEEKLAST                    -4
 #define CUBESQL_SEEKPREV                    -5
-
-// SSL dynamic libraries custom path
-#define CUBESQL_SSL_LIBRARY_PATH            1
-#define CUBESQL_CRYPTO_LIBRARY_PATH         2
 	
 #ifndef int64
 #ifdef WIN32

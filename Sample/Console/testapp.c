@@ -19,8 +19,8 @@
 // MARK: -
 
 static void print_cursor(csqlc *c) {
-    int        i, nrows, ncols, len;
-    char    *s, b[512];
+    int  i, nrows, ncols, len;
+    char *s, b[512];
     
     if (c == NULL) return;
     
@@ -154,8 +154,10 @@ int main (void) {
     csqldb *db = NULL;
 	
 	// connection without encryption
-	if (cubesql_connect(&db, HOSTNAME, CUBESQL_DEFAULT_PORT, USERNAME, PASSWORD, CUBESQL_DEFAULT_TIMEOUT, CUBESQL_ENCRYPTION_AES256) != CUBESQL_NOERR)
-		goto abort;
+	if (cubesql_connect(&db, HOSTNAME, CUBESQL_DEFAULT_PORT, USERNAME, PASSWORD, CUBESQL_DEFAULT_TIMEOUT, CUBESQL_ENCRYPTION_NONE) != CUBESQL_NOERR) goto abort;
+    
+    //const char *root_ca_path = "full_path_to_root_CA_file";
+    //if (cubesql_connect_token (&db, HOSTNAME, CUBESQL_DEFAULT_PORT, USERNAME, PASSWORD, CUBESQL_DEFAULT_TIMEOUT, CUBESQL_ENCRYPTION_SSL, NULL, kFALSE, NULL, root_ca_path, NULL, NULL) != CUBESQL_NOERR) goto abort;
 	
 	// do a simple test
     do_test_bind(db);
