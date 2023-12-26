@@ -951,7 +951,7 @@ int csql_socketconnect (csqldb *db) {
 	// ipv6 code from https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_72/rzab6/xip6client.htm
     memset(&hints, 0x00, sizeof(hints));
     hints.ai_flags    = AI_NUMERICSERV;
-    hints.ai_family   = AF_INET;//AF_UNSPEC;
+    hints.ai_family   = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     
     // check if we were provided the address of the server using
