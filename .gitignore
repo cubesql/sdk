@@ -8,3 +8,4 @@ Internals/old/
 .DS_Store
 Sample/MacOS/Client/cubeSQLTest.xcodeproj/project.pbxproj
 Sample/Console/XCode/testapp.xcodeproj/xcshareddata/xcschemes/testapp.xcscheme
+Internals/TestTLS/OpenSSL.xcodeproj/xcshareddata/xcschemes/OpenSSL.xcscheme

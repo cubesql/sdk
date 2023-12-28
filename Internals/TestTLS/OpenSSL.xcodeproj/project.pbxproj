@@ -15,6 +15,7 @@
 		A9DB49D62209C94200C0E3F1 /* pseudorandom.c in Sources */ = {isa = PBXBuildFile; fileRef = A9DB49B32209C5C500C0E3F1 /* pseudorandom.c */; };
 		A9DB49D72209C94400C0E3F1 /* base64.c in Sources */ = {isa = PBXBuildFile; fileRef = A9DB49B52209C5C500C0E3F1 /* base64.c */; };
 		A9DB49D82209C94700C0E3F1 /* aestab.c in Sources */ = {isa = PBXBuildFile; fileRef = A9DB49B62209C5C500C0E3F1 /* aestab.c */; };
+		A9DFF2F82B3DA8FC00CAD971 /* libtls.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9DFF2F72B3DA8FC00CAD971 /* libtls.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -47,6 +48,7 @@
 		A9DB49B72209C5C500C0E3F1 /* sha1.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sha1.h; sourceTree = "<group>"; };
 		A9DB49B82209C5C500C0E3F1 /* csql.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = csql.h; sourceTree = "<group>"; };
 		A9DB49BE2209C5C500C0E3F1 /* cubesql.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cubesql.h; sourceTree = "<group>"; };
+		A9DFF2F72B3DA8FC00CAD971 /* libtls.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtls.a; path = ../libs/macOS/libtls.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A9DFF2F82B3DA8FC00CAD971 /* libtls.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -79,8 +82,8 @@
 		A9DB49A12209C59200C0E3F1 /* OpenSSL */ = {
 			isa = PBXGroup;
 			children = (
-				A9DB49A92209C5C500C0E3F1 /* C_SDK */,
 				A9DB49A22209C59200C0E3F1 /* main.c */,
+				A9DB49A92209C5C500C0E3F1 /* C_SDK */,
 			);
 			path = OpenSSL;
 			sourceTree = "<group>";
@@ -88,6 +91,7 @@
 		A9DB49A92209C5C500C0E3F1 /* C_SDK */ = {
 			isa = PBXGroup;
 			children = (
+				A9DFF2F72B3DA8FC00CAD971 /* libtls.a */,
 				A9DB49AA2209C5C500C0E3F1 /* cubesql.c */,
 				A9DB49BE2209C5C500C0E3F1 /* cubesql.h */,
 				A9DB49B82209C5C500C0E3F1 /* csql.h */,
@@ -305,11 +309,13 @@
 				DEVELOPMENT_TEAM = 3ZH6236ET5;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
-					"CUBESQL_ENABLE_SSL_ENCRYPTION=1",
-					"CUBESQL_DYNAMIC_SSL_LIBRARY=1",
 					"$(inherited)",
 				);
-				HEADER_SEARCH_PATHS = "/Users/marco/GitHub/SQLabs/sdk/C_SDK/**";
+				HEADER_SEARCH_PATHS = (
+					"\"$(SRCROOT)/../../C_SDK/crypt\"",
+					"\"$(SRCROOT)/../../C_SDK\"",
+				);
+				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../../libs/macOS\"";
 				OTHER_LDFLAGS = "-lz";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -320,11 +326,11 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 3ZH6236ET5;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"CUBESQL_ENABLE_SSL_ENCRYPTION=1",
-					"CUBESQL_DYNAMIC_SSL_LIBRARY=1",
+				HEADER_SEARCH_PATHS = (
+					"\"$(SRCROOT)/../../C_SDK/crypt\"",
+					"\"$(SRCROOT)/../../C_SDK\"",
 				);
-				HEADER_SEARCH_PATHS = "/Users/marco/GitHub/SQLabs/sdk/C_SDK/**";
+				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../../libs/macOS\"";
 				OTHER_LDFLAGS = "-lz";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

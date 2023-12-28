@@ -97,26 +97,11 @@ void print_cursor(csqlc *c) {
     printf("\n");
 }
 
-int main(int argc, const char * argv[]) {
+int do_test_clear (void) {
     csqldb *db = NULL;
     
-    // "/Users/marco/Desktop/OpenSSL_1_macOS/libcrypto.1.0.0.dylib"
-    // "/Users/marco/Desktop/OpenSSL_1_macOS/libssl.1.0.0.dylib"
-    // "/Users/marco/Desktop/SQLabs/openssl/pluginissue_cert_win-64bit/Hosting.crt"
+    if (cubesql_connect(&db, HOSTNAME, CUBESQL_DEFAULT_PORT, USERNAME, PASSWORD, CUBESQL_DEFAULT_TIMEOUT, CUBESQL_ENCRYPTION_NONE) != CUBESQL_NOERR) goto abort;
     
-    // path to OpenSSL 1.1 libraries
-//    cubesql_setpath(CUBESQL_CRYPTO_LIBRARY_PATH, "/Users/marco/Desktop/SQLabs/openssl/libcrypto.1.1.dylib");
-//    cubesql_setpath(CUBESQL_SSL_LIBRARY_PATH, "/Users/marco/Desktop/SQLabs/openssl/libssl.1.1.dylib");
-    const char *certificatePath = NULL;// "/Users/marco/Desktop/SQLabs/openssl/pluginissue_cert_win-64bit/Hosting.crt";
-    
-    do_print_ssl();
-    
-    // connection with SSL encryption
-    if (cubesql_connect_ssl(&db, HOSTNAME, CUBESQL_DEFAULT_PORT, USERNAME, PASSWORD, CUBESQL_DEFAULT_TIMEOUT, certificatePath) != CUBESQL_NOERR) {
-       goto abort;
-    }
-    
-    do_print_ssl();
     do_test(db);
     
     // disconnect
@@ -130,4 +115,33 @@ abort:
         cubesql_disconnect(db, kFALSE);
     }
     return -1;
+}
+
+int do_test_tls (const char *rootCAFile) {
+    csqldb *db = NULL;
+    
+    do_print_ssl();
+    if (cubesql_connect_token(&db, HOSTNAME, CUBESQL_DEFAULT_PORT, USERNAME, PASSWORD, CUBESQL_DEFAULT_TIMEOUT, CUBESQL_ENCRYPTION_SSL, NULL, kFALSE, NULL, rootCAFile, NULL, NULL) != CUBESQL_NOERR) goto abort;
+    
+    do_test(db);
+    
+    // disconnect
+    cubesql_disconnect(db, kTRUE);
+    return 0;
+    
+abort:
+    do_print_ssl();
+    if (db) {
+        printf("error %d in cubesql_connect: %s\n", cubesql_errcode(db), cubesql_errmsg(db));
+        cubesql_disconnect(db, kFALSE);
+    }
+    return -1;
+}
+
+
+int main(int argc, const char * argv[]) {
+    do_test_clear();
+    do_test_tls(argv[1]);
+    
+    return 0;
 }
