@@ -15,19 +15,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-    
+	
 #ifdef WIN32
-    #ifdef CUBESQL_EXPORTSDLL
-    #define CUBESQL_APIEXPORT               __declspec(dllexport)
-    #else
-    #define CUBESQL_APIEXPORT               __declspec(dllimport)
-    #endif
+	#ifdef CUBESQL_EXPORTSDLL
+	#define CUBESQL_APIEXPORT               __declspec(dllexport)
+	#else
+	#define CUBESQL_APIEXPORT               __declspec(dllimport)
+	#endif
 #else
 #define CUBESQL_APIEXPORT
 #endif
-    
-#define CUBESQL_SDK_VERSION                 "060000"   // means 6.0.0
-    
+	
+#define CUBESQL_SDK_VERSION                 "060500"   // means 6.5.0
+	
 // custom boolean values (C89 doesn't have boolean support)
 #ifndef kTRUE
 #define kTRUE                               1
@@ -40,7 +40,7 @@ extern "C" {
 // default values
 #define	CUBESQL_DEFAULT_PORT                4430
 #define CUBESQL_DEFAULT_TIMEOUT             12
-    
+	
 // client side error codes
 #define CUBESQL_NOERR                       0
 #define CUBESQL_ERR                         -1
@@ -113,7 +113,7 @@ typedef void (*cubesql_trace_callback) (const char *, void *);
 	
 // function prototypes
 CUBESQL_APIEXPORT const char *cubesql_version (void);
-    
+	
 CUBESQL_APIEXPORT int		cubesql_connect (csqldb **db, const char *host, int port, const char *username, const char *password, int timeout, int encryption);
 CUBESQL_APIEXPORT int		cubesql_connect_ssl (csqldb **db, const char *host, int port, const char *username, const char *password, int timeout, const char *ssl_certificate_path);
 CUBESQL_APIEXPORT void		cubesql_disconnect (csqldb *db, int gracefully);
@@ -130,16 +130,16 @@ CUBESQL_APIEXPORT char		*cubesql_errmsg (csqldb *db);
 CUBESQL_APIEXPORT int64		cubesql_changes (csqldb *db);
 CUBESQL_APIEXPORT void		cubesql_set_trace_callback (csqldb *db, cubesql_trace_callback trace, void *arg);
 CUBESQL_APIEXPORT void      cubesql_setpath (int type, char *path);
-    
+	
 CUBESQL_APIEXPORT int       cubesql_set_database (csqldb *db, const char *dbname);
 CUBESQL_APIEXPORT int64     cubesql_affected_rows (csqldb *db);
 CUBESQL_APIEXPORT int64     cubesql_last_inserted_rowID (csqldb *db);
 CUBESQL_APIEXPORT void      cubesql_mssleep (int ms);
-    
+	
 CUBESQL_APIEXPORT int       cubesql_send_data (csqldb *db, const char *buffer, int len);
 CUBESQL_APIEXPORT int       cubesql_send_enddata (csqldb *db);
 CUBESQL_APIEXPORT char      *cubesql_receive_data (csqldb *db, int *len, int *is_end_chunk);
-    
+	
 CUBESQL_APIEXPORT csqlvm	*cubesql_vmprepare (csqldb *db, const char *sql);
 CUBESQL_APIEXPORT int		cubesql_vmbind_int (csqlvm *vm, int index, int value);
 CUBESQL_APIEXPORT int		cubesql_vmbind_double (csqlvm *vm, int index, double value);
@@ -183,10 +183,10 @@ void	cubesql_settoken (csqldb *db, char *token);
 void	cubesql_sethostverification (csqldb *db, char *hostverification);
 char	*cubesql_gettoken (csqldb *db);
 void	cubesql_seterror (csqldb *db, int errcode, const char *errmsg);
-    
+	
 const char *cubesql_sslversion (void);
 unsigned long cubesql_sslversion_num (void);
-    
+	
 #ifdef __cplusplus
 }  /* End of the 'extern "C"' block */
 #endif

@@ -1,7 +1,7 @@
 /*
  *  cubesql.c
  *
- *  (c) 2006-2018 SQLabs srl -- All Rights Reserved
+ *  (c) 2006-2024 SQLabs srl -- All Rights Reserved
  *  Author: Marco Bambini (MB)
  *
  */
@@ -9,20 +9,21 @@
 #include "cubesql.h"
 #include "csql.h"
 
-#define MAX_SOCK_LIST       6                           // maximum number of socket descriptor to try to connect to
-                                                        // this change is required to support IPv4/IPv6 connections
+// maximum number of socket descriptor to try to connect to
+// this change is required to support IPv4/IPv6 connections
+#define	MAX_SOCK_LIST	6
 
 // MARK: cubeSQL -
 const char *cubesql_version (void) {
-    return CUBESQL_SDK_VERSION;
+	return CUBESQL_SDK_VERSION;
 }
 
 int cubesql_connect (csqldb **db, const char *host, int port, const char *username, const char *password, int timeout, int encryption) {
-    return cubesql_connect_token(db, host, port, username, password, timeout, encryption, NULL, kFALSE, NULL, NULL, NULL, NULL);
+	return cubesql_connect_token(db, host, port, username, password, timeout, encryption, NULL, kFALSE, NULL, NULL, NULL, NULL);
 }
 
 int cubesql_connect_ssl (csqldb **db, const char *host, int port, const char *username, const char *password, int timeout, const char *ssl_certificate_path) {
-    return cubesql_connect_token(db, host, port, username, password, timeout, CUBESQL_ENCRYPTION_SSL, NULL, kFALSE, ssl_certificate_path, NULL, NULL, NULL);
+	return cubesql_connect_token(db, host, port, username, password, timeout, CUBESQL_ENCRYPTION_SSL, NULL, kFALSE, ssl_certificate_path, NULL, NULL, NULL);
 }
 
 int cubesql_connect_token (csqldb **db, const char *host, int port, const char *username, const char *password, int timeout, int encryption, char *token, int useOldProtocol, const char *ssl_certificate, const char *root_certificate, const char *ssl_certificate_password, const char *ssl_chiper_list) {
@@ -35,15 +36,15 @@ int cubesql_connect_token (csqldb **db, const char *host, int port, const char *
 	else if (encryption == 256) encryption = CUBESQL_ENCRYPTION_AES256;
 	else if (is_ssl) useOldProtocol = kFALSE;
 	
-    #if CUBESQL_DISABLE_SSL_ENCRYPTION
-    if (is_ssl) return CUBESQL_SSL_DISABLED_ERROR;
-    #endif
-    
+	#if CUBESQL_DISABLE_SSL_ENCRYPTION
+	if (is_ssl) return CUBESQL_SSL_DISABLED_ERROR;
+	#endif
+	
 	// sanity check parameters
 	if ((host == NULL) || (username == NULL) || (password == NULL)) return CUBESQL_PARAMETER_ERROR;
 	if ((encryption != CUBESQL_ENCRYPTION_NONE) && (encryption != CUBESQL_ENCRYPTION_AES128) &&
-        (encryption != CUBESQL_ENCRYPTION_AES192) && (encryption != CUBESQL_ENCRYPTION_AES256) &&
-        (is_ssl == kFALSE)) return CUBESQL_PARAMETER_ERROR;
+		(encryption != CUBESQL_ENCRYPTION_AES192) && (encryption != CUBESQL_ENCRYPTION_AES256) &&
+		(is_ssl == kFALSE)) return CUBESQL_PARAMETER_ERROR;
 	if (port <= 0) port = CUBESQL_DEFAULT_PORT;
 	if (timeout < 0) timeout = CUBESQL_DEFAULT_TIMEOUT;
 	
@@ -52,7 +53,7 @@ int cubesql_connect_token (csqldb **db, const char *host, int port, const char *
 	
 	// allocate db struct
 	rdb = csql_dbinit (host, port, username, password, timeout, encryption,
-                       ssl_certificate, root_certificate, ssl_certificate_password, ssl_chiper_list);
+					   ssl_certificate, root_certificate, ssl_certificate_password, ssl_chiper_list);
 	if (rdb == NULL) {
 		if (is_ssl) return CUBESQL_SSL_CERT_ERROR;
 		return CUBESQL_MEMORY_ERROR;
@@ -69,14 +70,14 @@ int cubesql_connect_old_protocol (csqldb **db, const char *host, int port, const
 }
 
 void cubesql_disconnect (csqldb *db, int gracefully) {
-    if (!db) return;
-    
+	if (!db) return;
+	
 	// clear errors first
 	cubesql_clear_errors(db);
 	
-    // sanity check on socket
-    if (db->sockfd <= 0) return;
-    
+	// sanity check on socket
+	if (db->sockfd <= 0) return;
+	
 	// disconnect
 	if (gracefully == kTRUE) {
 		csql_initrequest(db, 0, 0, kCOMMAND_CLOSE, kNO_SELECTOR);
@@ -128,7 +129,7 @@ int cubesql_rollback (csqldb *db) {
 }
 
 int cubesql_begintransaction (csqldb *db) {
-    return cubesql_execute(db, "BEGIN TRANSACTION;");
+	return cubesql_execute(db, "BEGIN TRANSACTION;");
 }
 
 int cubesql_bind (csqldb *db, const char *sql, char **colvalue, int *colsize, int *coltype, int ncols) {
@@ -175,72 +176,72 @@ char *cubesql_errmsg (csqldb *db) {
 }
 
 void cubesql_set_trace_callback (csqldb *db, cubesql_trace_callback trace_ptr, void *data) {
-    db->trace = trace_ptr;
-    db->data = data;
+	db->trace = trace_ptr;
+	db->data = data;
 }
 
 // MARK: -
 
 int cubesql_set_database (csqldb *db, const char *dbname) {
-    char sql[512];
-    
-    if (!db || db->sockfd <= 0) return CUBESQL_ERR;
-    
-    if (dbname) {
-        snprintf(sql, sizeof(sql), "USE DATABASE '%s';", dbname);
-    } else {
-        snprintf(sql, sizeof(sql), "UNSET CURRENT DATABASE;");
-    }
-    
-    return cubesql_execute(db, sql);
+	char sql[512];
+	
+	if (!db || db->sockfd <= 0) return CUBESQL_ERR;
+	
+	if (dbname) {
+		snprintf(sql, sizeof(sql), "USE DATABASE '%s';", dbname);
+	} else {
+		snprintf(sql, sizeof(sql), "UNSET CURRENT DATABASE;");
+	}
+	
+	return cubesql_execute(db, sql);
 }
 
 int64 cubesql_affected_rows (csqldb *db) {
-    csqlc *c = NULL;
-    int64 value = 0;
-    
-    if (!db || db->sockfd <= 0) return 0;
-    
-    c = cubesql_select(db, "SHOW CHANGES;", kFALSE);
-    if (c == NULL) return 0;
-    
-    value = cubesql_cursor_int64 (c, 1, 1, 0);
-    cubesql_cursor_free(c);
-    
-    return value;
+	csqlc *c = NULL;
+	int64 value = 0;
+	
+	if (!db || db->sockfd <= 0) return 0;
+	
+	c = cubesql_select(db, "SHOW CHANGES;", kFALSE);
+	if (c == NULL) return 0;
+	
+	value = cubesql_cursor_int64 (c, 1, 1, 0);
+	cubesql_cursor_free(c);
+	
+	return value;
 }
 
 int64 cubesql_last_inserted_rowID (csqldb *db) {
-    csqlc *c = NULL;
-    int64 value = 0;
-    
-    if (!db || db->sockfd <= 0) return 0;
-    
-    c = cubesql_select(db, "SHOW LASTROWID;", kFALSE);
-    if (c == NULL) return 0;
-    
-    value = cubesql_cursor_int64 (c, 1, 1, 0);
-    cubesql_cursor_free(c);
-    
-    return value;
+	csqlc *c = NULL;
+	int64 value = 0;
+	
+	if (!db || db->sockfd <= 0) return 0;
+	
+	c = cubesql_select(db, "SHOW LASTROWID;", kFALSE);
+	if (c == NULL) return 0;
+	
+	value = cubesql_cursor_int64 (c, 1, 1, 0);
+	cubesql_cursor_free(c);
+	
+	return value;
 }
 
 // MARK: - Binary Data -
 
 int cubesql_send_data (csqldb *db, const char *buffer, int len) {
-    int err = csql_sendchunk(db, (char *)buffer, len, 0, kFALSE);
-    if (err != CUBESQL_NOERR) return err;
-    return csql_netread(db, -1, -1, kTRUE, NULL, NO_TIMEOUT);
+	int err = csql_sendchunk(db, (char *)buffer, len, 0, kFALSE);
+	if (err != CUBESQL_NOERR) return err;
+	return csql_netread(db, -1, -1, kTRUE, NULL, NO_TIMEOUT);
 }
 
 int cubesql_send_enddata (csqldb *db) {
-    return csql_ack(db, kCOMMAND_ENDCHUNK);
+	return csql_ack(db, kCOMMAND_ENDCHUNK);
 }
 
 char *cubesql_receive_data (csqldb *db, int *len, int *is_end_chunk) {
-    char *data = csql_receivechunk (db, len, is_end_chunk);
-    csql_ack(db, 0);
-    return data;
+	char *data = csql_receivechunk (db, len, is_end_chunk);
+	csql_ack(db, 0);
+	return data;
 }
 
 // MARK: - Cursor -
@@ -304,7 +305,7 @@ int cubesql_cursor_columntypebind (csqlc *c, int index) {
 	if (type == CUBESQL_Type_Integer) return CUBESQL_BIND_INTEGER;
 	if (type == CUBESQL_Type_Float) return CUBESQL_BIND_DOUBLE;
 	if (type == CUBESQL_Type_Blob) return CUBESQL_BIND_BLOB;
-    
+	
 	return CUBESQL_BIND_TEXT;
 }
 
@@ -418,7 +419,7 @@ found_buffer:
 	if ((c->has_rowid) && (column != CUBESQL_ROWID)) n = ((row-1) * (c->ncols + 1)) + (column);
 	else n = ((row-1) * c->ncols) + (column-1);
 	
-    if (n < 0) n = 0;
+	if (n < 0) n = 0;
 	if (n > 0) result = c->data + c->psum[n-1];
 	else result = c->data;// + c->psum[n];
 	if (len) *len = c->size[n];
@@ -644,8 +645,8 @@ csqlc *cubesql_vmselect (csqlvm *vm) {
 }
 
 int cubesql_vmclose (csqlvm *vm) {
-    if (!vm) return CUBESQL_NOERR;
-    
+	if (!vm) return CUBESQL_NOERR;
+	
 	csqldb *db = vm->db;
 	
 	csql_initrequest(db, 0, 0, kVM_CLOSE, kNO_SELECTOR);
@@ -847,76 +848,85 @@ csqldb *csql_dbinit (const char *host, int port, const char *username, const cha
 	snprintf((char *) db->username, sizeof(db->username),  "%s", username);
 	snprintf((char *) db->password, sizeof(db->password),  "%s", password);
 	
-    #ifndef CUBESQL_DISABLE_SSL_ENCRYPTION
-    if (encryption_is_ssl(encryption) == kTRUE) {
-        if (tls_init() < 0) {
-            fprintf(stderr, "Error while initializing TLS library.");
-            goto load_ssl_abort;
-        }
-        
-        struct tls_config *tls_conf = tls_config_new();
-        if (!tls_conf) {
-            fprintf(stderr, "Error while initializing a new TLS configuration.");
-            goto load_ssl_abort;
-        }
-        
-        if (ssl_certificate_password) {
-            int rc = tls_config_set_key_file(tls_conf, ssl_certificate_password);
-            if (rc < 0) {
-                fprintf(stderr, "Error in tls_config_set_key_file: %s.", tls_config_error(tls_conf));
-                goto load_ssl_abort;
-            }
-        }
-        
-        #ifdef TLS_DEFAULT_CA_FILE
-        if (!root_certificate) root_certificate = TLS_DEFAULT_CA_FILE
-        #endif
-        
-        if (root_certificate) {
-            int rc = tls_config_set_ca_file(tls_conf, root_certificate);
-            if (rc < 0) {
-                fprintf(stderr, "Error in tls_config_set_ca_file: %s.", tls_config_error(tls_conf));
-                goto load_ssl_abort;
-            }
-        }
-        
-        if (ssl_certificate) {
-            int rc = tls_config_set_cert_file(tls_conf, ssl_certificate);
-            if (rc < 0) {
-                fprintf(stderr, "Error in tls_config_set_cert_file: %s.", tls_config_error(tls_conf));
-                goto load_ssl_abort;
-            }
-        }
-        
-        struct tls *tls_context = tls_client();
-        if (!tls_context) {
-            fprintf(stderr, "Error while initializing a new TLS client.");
-            goto load_ssl_abort;
-        }
-        
-        // apply configuration to context
-        int rc = tls_configure(tls_context, tls_conf);
-        if (rc < 0) {
-            fprintf(stderr, "Error in tls_configure: %s.", tls_error(tls_context));
-            goto load_ssl_abort;
-        }
-        
-        // unused
-        if (ssl_chiper_list) {
-        }
-        
-        // save TLS context
-        db->tls_context = tls_context;
-    }
-    #endif
+	#ifndef CUBESQL_DISABLE_SSL_ENCRYPTION
+	if (encryption_is_ssl(encryption) == kTRUE) {
+		if (tls_init() < 0) {
+			fprintf(stderr, "Error while initializing TLS library.");
+			goto load_ssl_abort;
+		}
+		
+		struct tls_config *tls_conf = tls_config_new();
+		if (!tls_conf) {
+			fprintf(stderr, "Error while initializing a new TLS configuration.");
+			goto load_ssl_abort;
+		}
+		
+		if (ssl_certificate_password) {
+			int rc = tls_config_set_key_file(tls_conf, ssl_certificate_password);
+			if (rc < 0) {
+				fprintf(stderr, "Error in tls_config_set_key_file: %s.", tls_config_error(tls_conf));
+				goto load_ssl_abort;
+			}
+		}
+		
+		#ifdef TLS_DEFAULT_CA_FILE
+		if (!root_certificate) root_certificate = TLS_DEFAULT_CA_FILE
+		#endif
+		
+		if (root_certificate) {
+			int rc = tls_config_set_ca_file(tls_conf, root_certificate);
+			if (rc < 0) {
+				fprintf(stderr, "Error in tls_config_set_ca_file: %s.", tls_config_error(tls_conf));
+				goto load_ssl_abort;
+			}
+		} else {
+			// if no root certificate is provided then disable certificate and name verification
+			tls_config_insecure_noverifycert(tls_conf);
+			tls_config_insecure_noverifyname(tls_conf);
+		}
+		
+		if (ssl_certificate) {
+			int rc = tls_config_set_cert_file(tls_conf, ssl_certificate);
+			if (rc < 0) {
+				fprintf(stderr, "Error in tls_config_set_cert_file: %s.", tls_config_error(tls_conf));
+				goto load_ssl_abort;
+			}
+		}
+		
+		// apply cipher list
+		if (ssl_chiper_list) {
+			int rc = tls_config_set_ciphers(tls_conf, ssl_chiper_list);
+			if (rc < 0) {
+				// report error but not abort
+				fprintf(stderr, "Error in tls_config_set_ciphers: %s.", tls_config_error(tls_conf));
+			}
+		}
+		
+		struct tls *tls_context = tls_client();
+		if (!tls_context) {
+			fprintf(stderr, "Error while initializing a new TLS client.");
+			goto load_ssl_abort;
+		}
+		
+		// apply configuration to context
+		int rc = tls_configure(tls_context, tls_conf);
+		if (rc < 0) {
+			fprintf(stderr, "Error in tls_configure: %s.", tls_error(tls_context));
+			goto load_ssl_abort;
+		}
+		
+		// save TLS context
+		db->tls_context = tls_context;
+	}
+	#endif
 
 	return db;
 	
-    #ifndef CUBESQL_DISABLE_SSL_ENCRYPTION
+	#ifndef CUBESQL_DISABLE_SSL_ENCRYPTION
 load_ssl_abort:
-    // TODO: cleanup TLS
+	// TODO: cleanup TLS
 	return NULL;
-    #endif
+	#endif
 }
 
 void csql_dbfree (csqldb *db) {
@@ -927,185 +937,238 @@ void csql_dbfree (csqldb *db) {
 void csql_socketclose (csqldb *db) {
 	if (db->sockfd <= 0) return;
 	
-    #ifndef CUBESQL_DISABLE_SSL_ENCRYPTION
-    if (db->tls_context) {
-        tls_close(db->tls_context);
-        tls_free(db->tls_context);
-        db->tls_context = NULL;
-    }
-    #endif
+	#ifndef CUBESQL_DISABLE_SSL_ENCRYPTION
+	if (db->tls_context) {
+		tls_close(db->tls_context);
+		tls_free(db->tls_context);
+		db->tls_context = NULL;
+	}
+	#endif
 	
 	bsd_shutdown(db->sockfd, SHUT_RDWR);
 	closesocket(db->sockfd);
 }
 
 int csql_socketconnect (csqldb *db) {
-    // apparently a listening IPv4 socket can accept incoming connections from only IPv4 clients
-    // so I must explicitly connect using IPv4 if I want to be able to connect with older cubeSQL versions
-    // https://stackoverflow.com/questions/16480729/connecting-ipv4-client-to-ipv6-server-connection-refused
-    
-    // ipv4/ipv6 specific variables
-    struct sockaddr_storage serveraddr;
-    struct addrinfo hints, *addr_list = NULL, *addr;
+	// apparently a listening IPv4 socket can accept incoming connections from only IPv4 clients
+	// so I must explicitly connect using IPv4 if I want to be able to connect with older cubeSQL versions
+	// https://stackoverflow.com/questions/16480729/connecting-ipv4-client-to-ipv6-server-connection-refused
+	
+	// ipv4/ipv6 specific variables
+	struct sockaddr_storage serveraddr;
+	struct addrinfo hints, *addr_list = NULL, *addr;
 	
 	// ipv6 code from https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_72/rzab6/xip6client.htm
-    memset(&hints, 0x00, sizeof(hints));
-    hints.ai_flags    = AI_NUMERICSERV;
-    hints.ai_family   = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    
-    // check if we were provided the address of the server using
-    // inet_pton() to convert the text form of the address to binary form.
-    // If it is numeric then we want to prevent getaddrinfo() from doing any name resolution.
-    int rc = inet_pton(AF_INET, (const char *) db->host, &serveraddr);
-    if (rc == 1) { /* valid IPv4 text address? */
-        hints.ai_family = AF_INET;
-        hints.ai_flags |= AI_NUMERICHOST;
-    }
-    else {
-        rc = inet_pton(AF_INET6, (const char *) db->host, &serveraddr);
-        if (rc == 1) { /* valid IPv6 text address? */
-            hints.ai_family = AF_INET6;
-            hints.ai_flags |= AI_NUMERICHOST;
-        }
-    }
-    
-    // get the address information for the server using getaddrinfo()
-    char port_string[256];
-    snprintf(port_string, sizeof(port_string), "%d", db->port);
-    rc = getaddrinfo((const char *) db->host, port_string, &hints, &addr_list);
-    if (rc != 0 || addr_list == NULL) {
-        csql_seterror(db, ERR_SOCKET, "Error while resolving getaddrinfo (host not found)");
-        return -1;
-    }
-    
-    int sock_index = 0;
-    int sock_current = 0;
-    int sock_list[MAX_SOCK_LIST] = {0};
-    for (addr = addr_list; addr != NULL; addr = addr->ai_next, ++sock_index) {
-        if (sock_index >= MAX_SOCK_LIST) break;
-        
-        // display protocol specific formatted address
-        // char szHost[256], szPort[16];
-        // getnameinfo(addr->ai_addr, addr->ai_addrlen, szHost, sizeof(szHost), szPort, sizeof(szPort), NI_NUMERICHOST | NI_NUMERICSERV);
-        // printf("getnameinfo(): host=%s, port=%s, family=%d\n", szHost, szPort, addr->ai_family);
-        
-        sock_current = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
-        if (sock_current < 0) continue;
-        
-        // set socket options
-        int len = 1;
-        bsd_setsockopt(sock_current, SOL_SOCKET, SO_KEEPALIVE, (const char *) &len, sizeof(len));
-        len = 1;
-        bsd_setsockopt(sock_current, IPPROTO_TCP, TCP_NODELAY, (const char *) &len, sizeof(len));
-        #ifdef SO_NOSIGPIPE
-        len = 1;
-        bsd_setsockopt(sock_current, SOL_SOCKET, SO_NOSIGPIPE, (const char *) &len, sizeof(len));
-        #endif
-        
-        // by default, an IPv6 socket created on Windows Vista and later only operates over the IPv6 protocol
-        // in order to make an IPv6 socket into a dual-stack socket, the setsockopt function must be called
-        if (addr->ai_family == AF_INET6) {
-            #ifdef WIN32
-            DWORD ipv6only = 0;
-            #else
-            int   ipv6only = 0;
-            #endif
-            bsd_setsockopt(sock_current, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&ipv6only, sizeof(ipv6only));
-        }
-        
-        // turn on non-blocking
-        unsigned long ioctl_blocking = 1;    /* ~0; //TRUE; */
-        ioctl(sock_current, FIONBIO, &ioctl_blocking);
-        
-        // initiate non-blocking connect ignoring return code
-        connect(sock_current, addr->ai_addr, addr->ai_addrlen);
-        
-        // add sock_current to internal list of trying to connect sockets
-        sock_list[sock_index] = sock_current;
-    }
-    
-    // free not more needed memory
-    freeaddrinfo(addr_list);
+	memset(&hints, 0x00, sizeof(hints));
+	hints.ai_flags    = AI_NUMERICSERV;
+	hints.ai_family   = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	
+	// check if we were provided the address of the server using
+	// inet_pton() to convert the text form of the address to binary form.
+	// If it is numeric then we want to prevent getaddrinfo() from doing any name resolution.
+	int rc = inet_pton(AF_INET, (const char *) db->host, &serveraddr);
+	if (rc == 1) { /* valid IPv4 text address? */
+		hints.ai_family = AF_INET;
+		hints.ai_flags |= AI_NUMERICHOST;
+	}
+	else {
+		rc = inet_pton(AF_INET6, (const char *) db->host, &serveraddr);
+		if (rc == 1) { /* valid IPv6 text address? */
+			hints.ai_family = AF_INET6;
+			hints.ai_flags |= AI_NUMERICHOST;
+		}
+	}
+	
+	// get the address information for the server using getaddrinfo()
+	char port_string[256];
+	snprintf(port_string, sizeof(port_string), "%d", db->port);
+	rc = getaddrinfo((const char *) db->host, port_string, &hints, &addr_list);
+	if (rc != 0 || addr_list == NULL) {
+		csql_seterror(db, ERR_SOCKET, "Error while resolving getaddrinfo (host not found)");
+		return -1;
+	}
+	
+	const char *lastConnectionErrorMessage = NULL;
+	int sock_index = 0;
+	int sock_current = 0;
+	int sock_list[MAX_SOCK_LIST] = {0};
+	for (addr = addr_list; addr != NULL; addr = addr->ai_next, ++sock_index) {
+		if (sock_index >= MAX_SOCK_LIST) break;
+
+		// placeholder; successfully instantiated sockets will have > 0
+		sock_list[sock_index] = -1;
+		
+		// display protocol specific formatted address
+		/*
+		char szHost[256], szPort[16];
+		getnameinfo(addr->ai_addr, addr->ai_addrlen, szHost, sizeof(szHost), szPort, sizeof(szPort), NI_NUMERICHOST | NI_NUMERICSERV);
+		printf("getnameinfo(): host=%s, port=%s, family=%d\n", szHost, szPort, addr->ai_family);
+		*/
+		sock_current = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
+		if (sock_current < 0) continue;
+		
+		// set socket options
+		int len = 1;
+		bsd_setsockopt(sock_current, SOL_SOCKET, SO_KEEPALIVE, (const char *) &len, sizeof(len));
+		len = 1;
+		bsd_setsockopt(sock_current, IPPROTO_TCP, TCP_NODELAY, (const char *) &len, sizeof(len));
+		#ifdef SO_NOSIGPIPE
+		len = 1;
+		bsd_setsockopt(sock_current, SOL_SOCKET, SO_NOSIGPIPE, (const char *) &len, sizeof(len));
+		#endif
+		
+		// by default, an IPv6 socket created on Windows Vista and later only operates over the IPv6 protocol
+		// in order to make an IPv6 socket into a dual-stack socket, the setsockopt function must be called
+		if (addr->ai_family == AF_INET6) {
+			#ifdef WIN32
+			DWORD ipv6only = 0;
+			#else
+			int   ipv6only = 0;
+			#endif
+			bsd_setsockopt(sock_current, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&ipv6only, sizeof(ipv6only));
+		}
+		
+		// turn on non-blocking
+		unsigned long ioctl_blocking = 1;    /* ~0; //TRUE; */
+		ioctl(sock_current, FIONBIO, &ioctl_blocking);
+		
+		// initiate non-blocking connect ignoring return code
+		rc = connect(sock_current, addr->ai_addr, addr->ai_addrlen);
+		if (rc < 0) {
+			if (errno != 0 && errno != EINTR && errno != EAGAIN & errno != EINPROGRESS)
+			{
+				// obvious error (e.g. network not reachable) - don't use this socket
+				lastConnectionErrorMessage = strerror(errno);
+				/*
+				printf("connect error: %s (%i)\n", strerror(errno), errno);
+				*/
+				closesocket(sock_current);
+				continue;
+			}
+		}
+		
+		// add sock_current to internal list of trying to connect sockets
+		sock_list[sock_index] = sock_current;
+	}
+	
+	// free not more needed memory
+	freeaddrinfo(addr_list);
 	
 	// calculate the connection timeout and reset timers
 	int connect_timeout = (db->timeout > 0) ? db->timeout : CUBESQL_DEFAULT_TIMEOUT;
 	time_t start = time(NULL);
-    time_t now = start;
-    rc = 0;
-    
-    int socket_err = 0;
-    int sockfd = 0;
-    fd_set write_fds;
-    fd_set except_fds;
-    struct timeval tv;
-    
-	while (rc == 0 && ((now - start) < connect_timeout)) {
+	time_t now = start;
+	rc = 0;
+	
+	int sockfd = 0;
+	fd_set write_fds;
+	fd_set except_fds;
+	struct timeval tv;
+
+	while ((now - start) < connect_timeout) {
 		FD_ZERO(&write_fds);
-        FD_ZERO(&except_fds);
-        
-        int nfds = 0;
-        for (int i=0; i<MAX_SOCK_LIST; ++i) {
-            if (sock_list[i]) {
-                FD_SET(sock_list[i], &write_fds);
-                FD_SET(sock_list[i], &except_fds);
-                if (nfds < sock_list[i]) nfds = sock_list[i];
-            }
-        }
-        
+		FD_ZERO(&except_fds);
+		
 		tv.tv_sec = connect_timeout;
 		tv.tv_usec = 0;
+
+		for (int i=0; i<MAX_SOCK_LIST; ++i) {
+			if (sock_list[i] > 0) {
+				FD_SET(sock_list[i], &write_fds);
+				FD_SET(sock_list[i], &except_fds);
+
+				rc = bsd_select(sock_list[i] + 1, NULL, &write_fds, &except_fds, &tv);
+				
+				if (rc == 0) {
+					// timeout - we can't use this socket
+					closesocket(sock_list[i]);
+					sock_list[i] = -1;
+					continue;
+				}
+
+				if (rc < 0) {
+					if (errno == 0 || errno == EINTR || errno == EAGAIN || errno == EINPROGRESS) {
+						// socket is still connecting
+						continue;
+					}
+					
+					// socket bsd_select error - don't use this socket
+					/*
+					printf("socket bsd_select error: %s (%i)\n", strerror(errno), errno);
+					*/
+					lastConnectionErrorMessage = strerror(errno);
+					closesocket(sock_list[i]);
+					sock_list[i] = -1;
+					continue;
+				}
+			}
+		}
 		
-		rc = bsd_select(nfds + 1, NULL, &write_fds, &except_fds, &tv);
-        
-        if (rc == 0) break;     // timeout
-        else if (rc == -1) {
-            if (errno == EINTR || errno == EAGAIN || errno == EINPROGRESS) continue;
-            break; // handle error
-        }
-        
-        // check for error first
-        for (int i=0; i<MAX_SOCK_LIST; ++i) {
-            if (sock_list[i] > 0) {
-                if (FD_ISSET(sock_list[i], &except_fds)) {
-                    closesocket(sock_list[i]);
-                    sock_list[i] = 0;
-                }
-            }
-        }
-        
-        // check which file descriptor is ready (need to check for socket error also)
-        for (int i=0; i<MAX_SOCK_LIST; ++i) {
-            if (sock_list[i] > 0) {
-                if (FD_ISSET(sock_list[i], &write_fds)) {
-                    int err = csql_socketerror(sock_list[i]);
-                    if (err > 0) {
-                        closesocket(sock_list[i]);
-                        sock_list[i] = 0;
-                    } else {
-                        sockfd = sock_list[i];
-                        break;
-                    }
-                }
-            }
-        }
-        // check if a valid descriptor has been found
-        if (sockfd != 0) break;
+		// check for error
+		for (int i=0; i<MAX_SOCK_LIST; ++i) {
+			if (sock_list[i] > 0) {
+				if (FD_ISSET(sock_list[i], &except_fds)) {
+					int err = csql_socketerror(sock_list[i]);
+					if (err > 0) {
+						lastConnectionErrorMessage = strerror(err);
+					}
+
+					closesocket(sock_list[i]);
+					sock_list[i] = -1;
+				}
+			}
+		}
 		
-        // no socket ready yet
+		// check which file descriptor is ready for writing (need to check for socket error also)
+		for (int i=0; i<MAX_SOCK_LIST; ++i) {
+			if (sock_list[i] > 0) {
+				if (FD_ISSET(sock_list[i], &write_fds)) {
+					int err = csql_socketerror(sock_list[i]);
+					if (err > 0) {
+						lastConnectionErrorMessage = strerror(err);
+
+						closesocket(sock_list[i]);
+						sock_list[i] = -1;
+					} else {
+						//use this socket - break loop (use first one, don't overwrite sockfd with next possible one)
+						sockfd = sock_list[i];
+						break;
+					}
+				}
+			}
+		}
+
+		// check if a valid descriptor has been found
+		if (sockfd != 0) break;
+
+		// are there still unclosed sockets trying to connect?
+		int remainingSocketCount = 0;
+		for (int i=0; i<MAX_SOCK_LIST; ++i) {
+			if (sock_list[i] > 0) {
+				remainingSocketCount++;
+			}
+		}
+
+		// no sockets remaining - break loop
+		if (remainingSocketCount < 1) break;
+		
+		// no socket ready yet
 		now = time(NULL);
-        rc = 0;
 	}
-    
-    // close still opened sockets
-    for (int i=0; i<MAX_SOCK_LIST; ++i) {
-        if ((sock_list[i] > 0) && (sock_list[i] != sockfd)) closesocket(sock_list[i]);
-    }
-    
-	// bail if there was an error
-	if (rc < 0) {
-        const char *s = strerror(errno);
-        csql_seterror(db, socket_err, (s) ? (s) : "An error occurred while trying to connect");
+	
+	// cleanup: close unneeded, still opened sockets
+	for (int i=0; i<MAX_SOCK_LIST; ++i) {
+		if ((sock_list[i] > 0) && (sock_list[i] != sockfd)) closesocket(sock_list[i]);
+	}
+	
+	// bail if no socket has been connected because of an error
+	if ((sockfd <= 0) && lastConnectionErrorMessage && (strstr(lastConnectionErrorMessage, "Unknown") == NULL)) {
+		char errorConnectMessage[1024];
+
+		// set error message
+		snprintf(errorConnectMessage, sizeof(errorConnectMessage), "An error occurred while trying to connect: %s", lastConnectionErrorMessage);
+		csql_seterror(db, ERR_SOCKET, errorConnectMessage);
 		return -1;
 	}
 	
@@ -1115,24 +1178,31 @@ int csql_socketconnect (csqldb *db) {
 		return -1;
 	}
 	
+	// bail if no socket has been connected (but we didn't catch an error message to be shown)
+	if (sockfd <= 0) {
+		// set error message
+		csql_seterror(db, ERR_SOCKET, "An error occurred while trying to connect");
+		return -1;
+	}
+
 	// turn off non-blocking
 	int ioctl_blocking = 0;	/* ~0; //TRUE; */
 	ioctl(sockfd, FIONBIO, &ioctl_blocking);
 	
-	// socket is connected now check for SSL
-    #ifndef CUBESQL_DISABLE_SSL_ENCRYPTION
-    if (encryption_is_ssl(db->encryption)) {
-        int rc = tls_connect_socket(db->tls_context, sockfd, db->host);
-        if (rc < 0) {
-            db->errcode = ERR_SSL;
-            snprintf(db->errmsg, sizeof(db->errmsg), "Error on tls_connect_socket: %s", tls_error(db->tls_context));
-            closesocket(sockfd);
-            return -1;
-        }
-        db->encryption -= CUBESQL_ENCRYPTION_SSL;
-    }
-    #endif
-    
+	// socket is connected - now check for SSL
+	#ifndef CUBESQL_DISABLE_SSL_ENCRYPTION
+	if (encryption_is_ssl(db->encryption)) {
+		int rc = tls_connect_socket(db->tls_context, sockfd, db->host);
+		if (rc < 0) {
+			db->errcode = ERR_SSL;
+			snprintf(db->errmsg, sizeof(db->errmsg), "Error on tls_connect_socket: %s", tls_error(db->tls_context));
+			closesocket(sockfd);
+			return -1;
+		}
+		db->encryption -= CUBESQL_ENCRYPTION_SSL;
+	}
+	#endif
+	
 	return sockfd;
 }
 
@@ -1140,21 +1210,21 @@ int csql_bind_value (csqldb *db, int index, int bindtype, char *value, int len) 
 	int field_size[1];
 	int nfields = 0, nsizedim = 0, packet_size = 0, datasize = 0;
 	
-    if ((bindtype == CUBESQL_BIND_NULL) || (bindtype == CUBESQL_BIND_ZEROBLOB)) {
-        value = NULL;
-    } else {
-        if (!value) {value = ""; len = 0;}
-        
-        // build packet
-        if (value) {
-            if (len == -1) len = (int)strlen(value);
-            nfields = 1;
-            nsizedim = sizeof(int) * nfields;
-            datasize = len;
-            packet_size = datasize + nsizedim;
-            field_size[0] = htonl(datasize);
-        }
-    }
+	if ((bindtype == CUBESQL_BIND_NULL) || (bindtype == CUBESQL_BIND_ZEROBLOB)) {
+		value = NULL;
+	} else {
+		if (!value) {value = ""; len = 0;}
+		
+		// build packet
+		if (value) {
+			if (len == -1) len = (int)strlen(value);
+			nfields = 1;
+			nsizedim = sizeof(int) * nfields;
+			datasize = len;
+			packet_size = datasize + nsizedim;
+			field_size[0] = htonl(datasize);
+		}
+	}
 	
 	// prepare BIND command
 	csql_initrequest(db, packet_size, nfields, kVM_BIND, kNO_SELECTOR);
@@ -1163,8 +1233,8 @@ int csql_bind_value (csqldb *db, int index, int bindtype, char *value, int len) 
 	if (bindtype == CUBESQL_BIND_ZEROBLOB) db->request.expandedSize = htonl(len);
 	
 	// send request
-    csql_netwrite(db, (char *) field_size, nsizedim, (char *)value, datasize);
-    
+	csql_netwrite(db, (char *) field_size, nsizedim, (char *)value, datasize);
+	
 	// read reply
 	return csql_netread(db, -1, -1, kFALSE, NULL, NO_TIMEOUT);
 }
@@ -1185,15 +1255,15 @@ int csql_bindexecute(csqldb *db, const char *sql, char **colvalue, int *colsize,
 	// send individual fields
 	for (i=0; i<nvalues; i++) {
 		// fix to null values
-        if ((coltype[i] == CUBESQL_BIND_NULL) || (coltype[i] == CUBESQL_BIND_TEXT && colvalue[i] == NULL)) {
-            colvalue[i] = "";
-            colsize[i] = 0;
-        }
-        
+		if ((coltype[i] == CUBESQL_BIND_NULL) || (coltype[i] == CUBESQL_BIND_TEXT && colvalue[i] == NULL)) {
+			colvalue[i] = "";
+			colsize[i] = 0;
+		}
+		
 		// includes the terminal 0
-        if (coltype[i] != CUBESQL_BIND_BLOB) {
+		if (coltype[i] != CUBESQL_BIND_BLOB) {
 			colsize[i]++;
-        }
+		}
 		
 		if (csql_sendchunk(db, colvalue[i], colsize[i], coltype[i], kTRUE) == CUBESQL_ERR)
 			return CUBESQL_ERR;
@@ -1884,11 +1954,11 @@ int csql_socketwrite (csqldb *db, const char *buffer, int nbuffer) {
 		if (FD_ISSET(fd, &write_fds)) {
 			FD_CLR(fd, &write_fds);
 			
-            #ifndef CUBESQL_DISABLE_SSL_ENCRYPTION
-            nwritten = (db->tls_context) ? (int)tls_write(db->tls_context, ptr, nleft) : (int)sock_write(fd, ptr, nleft);
-            #else
-            nwritten = (int)sock_write(fd, ptr, nleft);
-            #endif
+			#ifndef CUBESQL_DISABLE_SSL_ENCRYPTION
+			nwritten = (db->tls_context) ? (int)tls_write(db->tls_context, ptr, nleft) : (int)sock_write(fd, ptr, nleft);
+			#else
+			nwritten = (int)sock_write(fd, ptr, nleft);
+			#endif
 
 			if (nwritten <= 0) {
 				csql_seterror(db, ERR_SOCKET_WRITE, "An error occurred while trying to execute sock_write");
@@ -1952,11 +2022,11 @@ int csql_socketread (csqldb *db, int is_header, int timeout) {
 			return CUBESQL_ERR;
 		}
 		
-        #ifndef CUBESQL_DISABLE_SSL_ENCRYPTION
-        nread = (db->tls_context) ? (int)tls_read(db->tls_context, ptr, nleft) : (int)sock_read(fd, ptr, nleft);
-        #else
-        nread = (int)sock_read(fd, ptr, nleft);
-        #endif
+		#ifndef CUBESQL_DISABLE_SSL_ENCRYPTION
+		nread = (db->tls_context) ? (int)tls_read(db->tls_context, ptr, nleft) : (int)sock_read(fd, ptr, nleft);
+		#else
+		nread = (int)sock_read(fd, ptr, nleft);
+		#endif
 		
 		if (nread == -1 || nread == 0) {
 			csql_seterror(db, ERR_SOCKET_READ, "An error occurred while executing sock_read");
@@ -2070,7 +2140,7 @@ void csql_initrequest (csqldb *db, int packetsize, int nfields, char command, ch
 	request->signature = htonl(PROTOCOL_SIGNATURE);
 	
 	if ((packetsize != 0) && (db->encryption != CUBESQL_ENCRYPTION_NONE)) packetsize += BLOCK_LEN;
-    
+	
 	request->packetSize = htonl(packetsize);
 	request->command = command;
 	request->selector = selector;
@@ -2173,23 +2243,23 @@ int csql_cursor_close (csqlc *c) {
 // MARK: - SSL -
 
 const char *cubesql_sslversion (void) {
-    #ifndef CUBESQL_DISABLE_SSL_ENCRYPTION
-    return "LibreSSL 3.8.2";
-    #else
-    return NULL;
-    #endif
+	#ifndef CUBESQL_DISABLE_SSL_ENCRYPTION
+	return SSLeay_version(0);
+	#else
+	return NULL;
+	#endif
 }
 
 unsigned long cubesql_sslversion_num (void) {
-    #ifndef CUBESQL_DISABLE_SSL_ENCRYPTION
-    return 0x3080200fL;
-    #endif
-    return 0;
+	#ifndef CUBESQL_DISABLE_SSL_ENCRYPTION
+	return 0x3080200fL;
+	#endif
+	return 0;
 }
 
 int encryption_is_ssl (int encryption) {
 	if ((encryption == CUBESQL_ENCRYPTION_SSL) || (encryption == CUBESQL_ENCRYPTION_SSL_AES128) ||
-        (encryption == CUBESQL_ENCRYPTION_SSL_AES192) || (encryption == CUBESQL_ENCRYPTION_SSL_AES256)) return kTRUE;
+		(encryption == CUBESQL_ENCRYPTION_SSL_AES192) || (encryption == CUBESQL_ENCRYPTION_SSL_AES256)) return kTRUE;
 	return kFALSE;
 }
 
@@ -2278,28 +2348,28 @@ int encrypt_buffer (char *buffer, int dim, char random[], csql_aes_encrypt_ctx c
 		// xor the file bytes with the random pool
 		for(i = 0; i < dim; ++i)
 			dbuf[i + BLOCK_LEN] ^= dbuf[i];
-        
-        // encrypt the top 16 bytes of the buffer
-        csql_aes_encrypt((const unsigned char*) (dbuf + dim), (unsigned char*)(dbuf + dim), ctx);
-        
-        // copy back encrypted data
-        memcpy(random, dbuf, BLOCK_LEN);
-        memcpy(buffer, dbuf + BLOCK_LEN, dim);
-        
-        return (dim+BLOCK_LEN);
+		
+		// encrypt the top 16 bytes of the buffer
+		csql_aes_encrypt((const unsigned char*) (dbuf + dim), (unsigned char*)(dbuf + dim), ctx);
+		
+		// copy back encrypted data
+		memcpy(random, dbuf, BLOCK_LEN);
+		memcpy(buffer, dbuf + BLOCK_LEN, dim);
+		
+		return (dim+BLOCK_LEN);
 	}
 	
-    b1 = dbuf;
-    b2 = buffer;
+	b1 = dbuf;
+	b2 = buffer;
 	len = dim;
 	
 	do {				
 		// do CBC chaining prior to encryption for current block (in b2)
-        for(i = 0; i < BLOCK_LEN; ++i)
-        	b1[i] ^= b2[i];
-        
-        // encrypt the block (now in b1)
-        csql_aes_encrypt((const unsigned char*)b1, (unsigned char*)b1, ctx);
+		for(i = 0; i < BLOCK_LEN; ++i)
+			b1[i] ^= b2[i];
+		
+		// encrypt the block (now in b1)
+		csql_aes_encrypt((const unsigned char*)b1, (unsigned char*)b1, ctx);
 		
 		len -= BLOCK_LEN;
 		
@@ -2308,10 +2378,10 @@ int encrypt_buffer (char *buffer, int dim, char random[], csql_aes_encrypt_ctx c
 		
 		// advance the buffer pointers
 		if (len >= BLOCK_LEN) {
-        	b2 = buffer + (index * BLOCK_LEN);
-        	b1 = b2 + BLOCK_LEN;
-        }
-        index++;
+			b2 = buffer + (index * BLOCK_LEN);
+			b1 = b2 + BLOCK_LEN;
+		}
+		index++;
 	}
 	while (len >= BLOCK_LEN);
 	
@@ -2322,15 +2392,15 @@ int encrypt_buffer (char *buffer, int dim, char random[], csql_aes_encrypt_ctx c
 		memcpy(b3, buffer + (index * BLOCK_LEN), len);
 		
 		// xor ciphertext into last block
-        for(i = 0; i < len; ++i)
-        	b3[i] ^= b1[i];
+		for(i = 0; i < len; ++i)
+			b3[i] ^= b1[i];
 		
 		// move 'stolen' ciphertext into last block
-        for(i = len; i < BLOCK_LEN; ++i)
-        	b3[i] = b1[i];
+		for(i = len; i < BLOCK_LEN; ++i)
+			b3[i] = b1[i];
 		
 		// encrypt this block
-       	csql_aes_encrypt((const unsigned char*) b3, (unsigned char*) b3, ctx);
+	   	csql_aes_encrypt((const unsigned char*) b3, (unsigned char*) b3, ctx);
 		
 		// save b1
 		memcpy(back, b1, BLOCK_LEN);
@@ -2354,17 +2424,17 @@ int decrypt_buffer (char *buffer, int dim, csql_aes_decrypt_ctx ctx[1]) {
 		len = dim - BLOCK_LEN;
 		
 		// decrypt from position len to position len + BLOCK_LEN
-        csql_aes_decrypt((const unsigned char*) (buffer + len), (unsigned char*) (buffer + len), ctx);
+		csql_aes_decrypt((const unsigned char*) (buffer + len), (unsigned char*) (buffer + len), ctx);
 		
 		// undo the CBC chaining
-        for(i = 0; i < len; ++i)
-            buffer[i] ^= buffer[i + BLOCK_LEN];
+		for(i = 0; i < len; ++i)
+			buffer[i] ^= buffer[i + BLOCK_LEN];
 		
-        return 0;
+		return 0;
 	}
 	
-    b1 = buffer;
-    b2 = b1 + BLOCK_LEN;
+	b1 = buffer;
+	b2 = b1 + BLOCK_LEN;
 	len = dim - BLOCK_LEN;
 	
 	do {
@@ -2377,10 +2447,10 @@ int decrypt_buffer (char *buffer, int dim, csql_aes_decrypt_ctx ctx[1]) {
 		if(nextlen == 0 || nextlen == BLOCK_LEN) {
 			// no ciphertext stealing
 			// unchain CBC using the previous ciphertext block in b1
-        	for(i = 0; i < BLOCK_LEN; ++i)
-        		buf[i] ^= b1[i];
-        	
-        	memcpy(buffer + index*BLOCK_LEN, buf, BLOCK_LEN);
+			for(i = 0; i < BLOCK_LEN; ++i)
+				buf[i] ^= b1[i];
+			
+			memcpy(buffer + index*BLOCK_LEN, buf, BLOCK_LEN);
 			
 			index++;
 			len -= BLOCK_LEN;
@@ -2398,28 +2468,28 @@ int decrypt_buffer (char *buffer, int dim, csql_aes_decrypt_ctx ctx[1]) {
 			memcpy (b3, b2+BLOCK_LEN, len);
 			
 			// produce last 'len' bytes of plaintext by xoring with
-            // the lowest 'len' bytes of next block b3 - C[N-1]
-            for(i = 0; i < len; ++i)
-                buf[i] ^= b3[i];
+			// the lowest 'len' bytes of next block b3 - C[N-1]
+			for(i = 0; i < len; ++i)
+				buf[i] ^= b3[i];
 			
-            // reconstruct the C[N-1] block in b3 by adding in the
-            // last (BLOCK_LEN - len) bytes of C[N-2] in b2
-            for(i = len; i < BLOCK_LEN; ++i)
-                b3[i] = buf[i];
+			// reconstruct the C[N-1] block in b3 by adding in the
+			// last (BLOCK_LEN - len) bytes of C[N-2] in b2
+			for(i = len; i < BLOCK_LEN; ++i)
+				b3[i] = buf[i];
 			
-            // decrypt the C[N-1] block in b3
-            csql_aes_decrypt((const unsigned char*) b3, (unsigned char*) b3, ctx);
+			// decrypt the C[N-1] block in b3
+			csql_aes_decrypt((const unsigned char*) b3, (unsigned char*) b3, ctx);
 			
-            // produce the last but one plaintext block by xoring with
-            // the last but two ciphertext block
-            for(i = 0; i < BLOCK_LEN; ++i)
-                b3[i] ^= b1[i];
-            
-            memcpy(buffer + index*BLOCK_LEN, b3, BLOCK_LEN);
-            index++;
-            memcpy(buffer + index*BLOCK_LEN, buf, nextlen);
-            
-            return 0;
+			// produce the last but one plaintext block by xoring with
+			// the last but two ciphertext block
+			for(i = 0; i < BLOCK_LEN; ++i)
+				b3[i] ^= b1[i];
+			
+			memcpy(buffer + index*BLOCK_LEN, b3, BLOCK_LEN);
+			index++;
+			memcpy(buffer + index*BLOCK_LEN, buf, nextlen);
+			
+			return 0;
 		}
 	}
 	while (1);
