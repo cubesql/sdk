@@ -150,6 +150,98 @@ abort:
 
 // MARK: -
 
+void do_upload_database (csqldb *db, const char *dbname, const char *local_filename_path) {
+    // tell server to initiate upload
+    char sql[1024];
+    snprintf(sql, sizeof(sql), "UPLOAD DATABASE %s WITH REPLACE;", dbname);
+    int err = cubesql_execute(db, sql);
+    if (err != CUBESQL_NOERR) goto abort;
+    
+    // open file local file for reading
+    FILE *file = fopen(local_filename_path, "rb");
+    if (!file) {
+        perror("Error opening file");
+        return;
+    }
+    
+    int tot = 0;
+    const int CHUNK_SIZE = 4096;
+    unsigned char buffer[CHUNK_SIZE];
+    
+    // loop to send database in chunks
+    while (1) {
+        size_t nread = fread(buffer, 1, CHUNK_SIZE, file);
+        if (nread == 0) break;
+        if (nread < 0) {
+            perror("Error reading from file");
+            fclose(file);
+            return;
+        }
+        
+        // send chunk to server
+        tot += nread;
+        cubesql_send_data(db, (const char *)buffer, (int)nread);
+    }
+    
+    // send end-of-chunk
+    cubesql_send_enddata(db);
+    
+    fclose(file);
+    printf("Database %s uploaded (%d bytes)\n", dbname, tot);
+    return;
+abort:
+    printf("Upload database aborted: %s\n", cubesql_errmsg(db));
+}
+
+void do_download_database (csqldb *db, const char *dbname, const char *local_filename_path) {
+    // tell server to initiate download
+    char sql[1024];
+    snprintf(sql, sizeof(sql), "DOWNLOAD DATABASE %s;", dbname);
+    int err = cubesql_execute(db, sql);
+    if (err != CUBESQL_NOERR) goto abort;
+    
+    // create local file
+    FILE *file = fopen(local_filename_path, "wb");
+    if (!file) {
+        perror("Error opening file");
+        return;
+    }
+    
+    // loop to receive database in chunks
+    int tot = 0;
+    while (1) {
+        // receive one chunk at a time
+        int len = 0;
+        int is_end_chunk = 0;
+        char *buffer = cubesql_receive_data (db, &len, &is_end_chunk);
+        
+        // check exit condition
+        if (is_end_chunk) break;
+        
+        // write to file
+        size_t written = fwrite(buffer, 1, len, file);
+        if (written != len) {
+            perror("Error writing to file");
+            fclose(file);
+            return;
+        }
+        tot += len;
+    }
+    
+    fclose(file);
+    printf("Database %s downloaded in %s (%d bytes)\n", dbname, local_filename_path, tot);
+    return;
+abort:
+    printf("Donwload database aborted: %s\n", cubesql_errmsg(db));
+}
+
+void do_replace_database(csqldb *db, const char *download_db_name, const char *upload_db_name, const char *local_file_path) {
+    do_download_database(db, download_db_name, local_file_path);
+    do_upload_database(db, upload_db_name, local_file_path);
+}
+
+// MARK: -
+
 int main (void) {
     csqldb *db = NULL;
 	
@@ -160,9 +252,13 @@ int main (void) {
     //if (cubesql_connect_token (&db, HOSTNAME, CUBESQL_DEFAULT_PORT, USERNAME, PASSWORD, CUBESQL_DEFAULT_TIMEOUT, CUBESQL_ENCRYPTION_SSL, NULL, kFALSE, NULL, root_ca_path, NULL, NULL) != CUBESQL_NOERR) goto abort;
 	
 	// do a simple test
-    do_test_bind(db);
-    do_test(db);
-	
+    // do_test_bind(db);
+    // do_test(db);
+    const char *local_file_path = "/Users/marco/Desktop/db.sqlite";
+    //do_download_database(db, "mytestdb.sqlite", local_file_path);
+    //do_upload_database(db, "db2.sqlite", local_file_path);
+    do_replace_database(db, "mytestdb.sqlite", "db3.sqlite", local_file_path);
+    
 	// disconnect
 	cubesql_disconnect(db, kTRUE);
 	return 0;
