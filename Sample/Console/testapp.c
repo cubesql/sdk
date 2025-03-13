@@ -235,7 +235,7 @@ abort:
     printf("Donwload database aborted: %s\n", cubesql_errmsg(db));
 }
 
-void do_replace_database(csqldb *db, const char *download_db_name, const char *upload_db_name, const char *local_file_path) {
+void do_duplicate_database(csqldb *db, const char *download_db_name, const char *upload_db_name, const char *local_file_path) {
     do_download_database(db, download_db_name, local_file_path);
     do_upload_database(db, upload_db_name, local_file_path);
 }
@@ -257,7 +257,7 @@ int main (void) {
     const char *local_file_path = "/Users/marco/Desktop/db.sqlite";
     //do_download_database(db, "mytestdb.sqlite", local_file_path);
     //do_upload_database(db, "db2.sqlite", local_file_path);
-    do_replace_database(db, "mytestdb.sqlite", "db3.sqlite", local_file_path);
+    do_duplicate_database(db, "mytestdb.sqlite", "db3.sqlite", local_file_path);
     
 	// disconnect
 	cubesql_disconnect(db, kTRUE);
