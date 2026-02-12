@@ -146,7 +146,10 @@ int cubesql_ping (csqldb *db) {
 int64 cubesql_changes (csqldb *db) {
 	csqlc	*cursor = NULL;
 	int64	nchanges = 0;
-	
+
+	// clear errors first
+	cubesql_clear_errors(db);
+
 	// send sql statement
 	if (csql_send_statement (db, kCOMMAND_SELECT, "SELECT changes();", kFALSE, kFALSE) != CUBESQL_NOERR) return 0;
 	
@@ -788,11 +791,13 @@ int cubesql_cursor_addrow (csqlc *cursor, char **row, int *len) {
 	if (cursor->nalloc < index + cursor->ncols) {
 		int newsize = cursor->nalloc + (kDEFAULT_ALLOC_ROWS * 2);
 		
-		cursor->buffer = (char**) realloc(cursor->buffer, sizeof(char*) * cursor->ncols * newsize);
-		if (cursor->buffer == NULL) return kFALSE;
+		char **tmp_buffer = (char**) realloc(cursor->buffer, sizeof(char*) * cursor->ncols * newsize);
+		if (tmp_buffer == NULL) return kFALSE;
+		cursor->buffer = tmp_buffer;
 
-		cursor->size0 = (int*) realloc(cursor->size0, sizeof(int) * cursor->ncols * newsize);
-		if (cursor->size0 == NULL) return kFALSE;
+		int *tmp_size = (int*) realloc(cursor->size0, sizeof(int) * cursor->ncols * newsize);
+		if (tmp_size == NULL) return kFALSE;
+		cursor->size0 = tmp_size;
 		
 		cursor->nalloc = newsize;
 	}
@@ -2204,13 +2209,13 @@ int csql_cursor_reallocate (csqlc *c) {
 	if (c->nalloc == 0) {
 		c->buffer = (char**) malloc(sizeof(char*) * kNUMBUFFER);
 		if (c->buffer == NULL) return kFALSE;
-		
+
 		c->rowsum = (int**) malloc(sizeof(int*) * kNUMBUFFER);
-		if (c->rowsum == NULL) return kFALSE;
-		
+		if (c->rowsum == NULL) { free(c->buffer); c->buffer = NULL; return kFALSE; }
+
 		c->rowcount = (int*) malloc(sizeof(int) * kNUMBUFFER);
-		if (c->rowcount == NULL) return kFALSE;
-		
+		if (c->rowcount == NULL) { free(c->buffer); c->buffer = NULL; free(c->rowsum); c->rowsum = NULL; return kFALSE; }
+
 		c->nalloc = kNUMBUFFER;
 	} else {
 		
