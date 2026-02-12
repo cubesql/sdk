@@ -22,7 +22,6 @@
 #include <string.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <ctype.h>
 #include <fcntl.h>
 
@@ -172,7 +171,7 @@ typedef unsigned long in_addr_t;
 #define kHEADER_SIZE					32
 #define NULL_VALUE						-1
 #define kNUMBUFFER						1000
-#define kMAXCHUNK						100*1024
+#define kMAXCHUNK						(100*1024)
 #define NO_TIMEOUT						0
 #define CONNECT_TIMEOUT					5
 	
@@ -216,6 +215,7 @@ ssize_t tls_write(struct tls *_ctx, const void *_buf, size_t _buflen);
 const char *tls_error(struct tls *_ctx);
 const char *tls_config_error(struct tls_config *_config);
 void tls_free(struct tls *_ctx);
+void tls_config_free(struct tls_config *_config);
 const char* SSLeay_version(int t);
 #endif
 	
