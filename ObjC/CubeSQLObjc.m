@@ -8,6 +8,18 @@
 
 #import "CubeSQLObjC.h"
 
+// Internal initializers: a cursor/VM keeps a STRONG reference to the owning CubeSQL so the
+// underlying csqldb cannot be freed while the cursor/VM is still alive. Without this, releasing
+// (or -disconnect'ing) the connection before its cursors/VMs frees db, and the cursor/VM dealloc
+// then dereferences the freed pointer (cubesql_vmclose/cubesql_cursor_close use vm->db / c->db).
+@interface CubeSQLCursor ()
+- (instancetype) initWithCursor:(csqlc *)p parent:(CubeSQL *)parent;
+@end
+
+@interface CubeSQLVM ()
+- (instancetype) initWithVM:(csqlvm *)p parent:(CubeSQL *)parent;
+@end
+
 @interface CubeSQL() {
     csqldb        *db;
 }
@@ -56,16 +68,16 @@
 - (CubeSQLCursor *)    sqlSelect:(NSString *)sql {
     csqlc *c = cubesql_select(db, [sql UTF8String], kFALSE);
     if (c == NULL) return nil;
-    
-    CubeSQLCursor *cwrapper = [[CubeSQLCursor alloc] initWithCursor:c];
+
+    CubeSQLCursor *cwrapper = [[CubeSQLCursor alloc] initWithCursor:c parent:self];
     return cwrapper;
 }
 
 - (CubeSQLVM *) vmPrepare:(NSString *)sql; {
     csqlvm *vm = cubesql_vmprepare(db, [sql UTF8String]);
     if (vm == NULL) return nil;
-    
-    CubeSQLVM *vmwrapper = [[CubeSQLVM alloc] initWithVM:vm];
+
+    CubeSQLVM *vmwrapper = [[CubeSQLVM alloc] initWithVM:vm parent:self];
     return vmwrapper;
 }
 
@@ -90,7 +102,11 @@
 }
 
 - (NSString *) errorMessage {
-    return [NSString stringWithUTF8String:cubesql_errmsg(db)];
+    // db is NULL before -connect, after -disconnect, and after a failed connect. cubesql_errmsg()
+    // dereferences it without a guard, so protect the common "why did connect fail" call path.
+    if (db == NULL) return nil;
+    const char *msg = cubesql_errmsg(db);
+    return msg ? [NSString stringWithUTF8String:msg] : nil;
 }
 
 - (void) dealloc {
@@ -103,16 +119,22 @@
 
 @interface CubeSQLCursor() {
     csqlc        *c;
+    CubeSQL      *parent;   // strong (ARC default for object ivars): keeps the connection alive
 }
 @end
 
 @implementation CubeSQLCursor
 
-- (id) initWithCursor:(csqlc *)p {
+- (instancetype) initWithCursor:(csqlc *)p parent:(CubeSQL *)aParent {
     if (self = [super init]) {
         c = p;
+        parent = aParent;
     }
     return self;
+}
+
+- (id) initWithCursor:(csqlc *)p {
+    return [self initWithCursor:p parent:nil];
 }
 
 - (int) numRows {
@@ -170,20 +192,22 @@
 
 - (NSData *) blobValue:(int)row column:(int)column {
     int dataSize = 0;
-    
+
+    // cubesql_cursor_field distinguishes SQL NULL (NULL pointer, len -1) from an empty blob
+    // (non-NULL pointer, len 0). Only SQL NULL should map to nil; an empty blob is a real value.
     char *buffer = [self nativeType:row column:column len:&dataSize];
-    if ((buffer == NULL) || (dataSize == 0)) return nil;
-    
+    if (buffer == NULL) return nil;
+    if (dataSize < 0) dataSize = 0;
+
     return [NSData dataWithBytes:(const void *)buffer length:(NSUInteger)dataSize];
 }
 
 -(BOOL) isNULLValue:(int)row column:(int)column {
     int dataSize = 0;
-    
+
+    // SQL NULL is signalled by a NULL field pointer; an empty (zero-length) value is NOT NULL.
     char *buffer = [self nativeType:row column:column len:&dataSize];
-    if ((buffer == NULL) || (dataSize == 0)) return YES;
-    
-    return NO;
+    return (buffer == NULL) ? YES : NO;
 }
 
 - (void) dealloc {
@@ -197,16 +221,22 @@
 
 @interface CubeSQLVM() {
     csqlvm        *vm;
+    CubeSQL       *parent;   // strong: keeps the connection alive while this VM exists
 }
 @end
 
 @implementation CubeSQLVM
 
-- (id) initWithVM:(csqlvm *)p {
+- (instancetype) initWithVM:(csqlvm *)p parent:(CubeSQL *)aParent {
     if (self = [super init]) {
         vm = p;
+        parent = aParent;
     }
     return self;
+}
+
+- (id) initWithVM:(csqlvm *)p {
+    return [self initWithVM:p parent:nil];
 }
 
 - (int) bindInt:(int)index value:(int)value {
@@ -245,8 +275,9 @@
 - (CubeSQLCursor *) select {
 	csqlc *c = cubesql_vmselect(vm);
 	if (c == NULL) return nil;
-	
-	CubeSQLCursor *cwrapper = [[CubeSQLCursor alloc] initWithCursor:c];
+
+	// the cursor shares the VM's owning connection, so it must keep that connection alive too
+	CubeSQLCursor *cwrapper = [[CubeSQLCursor alloc] initWithCursor:c parent:parent];
 	return cwrapper;
 }
 

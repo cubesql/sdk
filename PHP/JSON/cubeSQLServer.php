@@ -59,9 +59,11 @@ class cubeSQLServer
         $request = array('command' => 'CONNECT', 'username' => "$sha1_username", 'password' => "$sha1_password", 'randpool' => "$randpool");
         $json_request = json_encode($request);
         $data = $this->_sendRequest($json_request);
+        // _sendRequest returns null on a write failure (socket error already set); don't deref it.
+        if ($data === NULL) return false;
 
         // save results
-        $this->errorCode = $data['errorCode'];
+        $this->errorCode = array_key_exists('errorCode', $data) ? $data['errorCode'] : NULL;
         $this->errorMessage = (array_key_exists('errorMsg', $data) ? $data['errorMsg'] : NULL);
 
         return !$this->isError();
@@ -72,9 +74,10 @@ class cubeSQLServer
         $rc = $this->connect($host, $port, $username, $password, 12);
         if ($rc === false) return $rc;
 
-        $this->execute("USE DATABASE $database;");
-        if ($rc === false) return $rc;
-
+        // Escape/quote the name so it cannot break out of the literal, and report the result of the
+        // USE (the old code re-tested the stale connect result, so a USE error went undetected here).
+        $escaped = str_replace('"', '""', $database);
+        $this->execute('USE DATABASE "' . $escaped . '";');
         return !$this->isError();
     }
 
@@ -84,9 +87,10 @@ class cubeSQLServer
         $request = array('command' => 'EXECUTE', 'sql' => "$sql");
         $json_request = json_encode($request);
         $data = $this->_sendRequest($json_request);
+        if ($data === NULL) return;   // write failed; error already set by _sendRequest
 
         // save results
-        $this->errorCode = $data['errorCode'];
+        $this->errorCode = array_key_exists('errorCode', $data) ? $data['errorCode'] : NULL;
         $this->errorMessage = (array_key_exists('errorMsg', $data) ? $data['errorMsg'] : NULL);
     }
 

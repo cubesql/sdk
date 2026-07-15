@@ -1338,8 +1338,9 @@ csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 	int		has_tables, has_rowid, nfields, server_rowcount, server_colcount, cursor_colcount;
 	char	*buffer;
 	int		i, nrows, ncols, count, data_seek = 0, end_chunk;
-	int		*server_types, *server_sizes, *server_sum;
+	int		*server_types, *server_sizes, *server_sum = NULL;
 	char	*server_names, *server_data, *server_tables;
+	char	*bufend = NULL;		// one past the last valid byte of the received payload
 	
 	// allocate basic cursor struct
 	if (existing_c == NULL) {
@@ -1382,9 +1383,33 @@ csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 		cursor_colcount = (has_rowid ? server_colcount-1 : server_colcount);
 		nrows = server_rowcount;
 		ncols = cursor_colcount;
-		
+
 		// adjust pointers
 		buffer = db->inbuffer;
+
+		// Reset per iteration: any server_sum from a previous chunk is now owned by the cursor
+		// (stored in c->psum / c->rowsum[]). Keeping it NULL until the malloc below means the
+		// dimension-check aborts here cannot double-free a cursor-owned buffer.
+		server_sum = NULL;
+
+		// Validate the server-declared dimensions BEFORE using them for allocation and pointer math.
+		// rows/cols come straight off the wire; a malicious or corrupt server (or a MITM on a
+		// cleartext connection) could send values that do not match the packet, causing out-of-bounds
+		// reads and 32-bit-overflowing allocations in the code below. Reject anything whose fixed
+		// header (the column-type array plus the rows*cols size array) does not fit within the bytes
+		// actually received. Computed in 64-bit so the check itself cannot overflow; once need <= avail
+		// and avail is the (int-bounded) payload size, every 32-bit product below is guaranteed to fit.
+		{
+			long long avail = (long long) db->toread;
+			long long need;
+			if (TESTBIT(db->reply.flag1, SERVER_COMPRESSED_PACKET))
+				avail = (long long)(unsigned int) ntohl(db->reply.expandedSize);
+			if ((server_rowcount < 0) || (server_colcount < 0)) goto abort_cursor;
+			need = (long long) server_rowcount * (long long) server_colcount * (long long) sizeof(int);
+			if (index == 0) need += (long long) server_colcount * (long long) sizeof(int);
+			if (need > avail) goto abort_cursor;
+			bufend = buffer + avail;
+		}
 		if (c->server_side == kFALSE)
 			server_sum = (int *) malloc(server_rowcount * server_colcount * sizeof(int));
 		else
@@ -1409,17 +1434,23 @@ csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 			server_data = server_names;
 			temp = server_names;
 			for (i=0; i < server_colcount; i++) {
-				len = (int)strlen(temp) + 1;
+				// bound the scan: a name that is not NUL-terminated within the payload would make
+				// strlen() walk off the end of the buffer (the OOB read behind cubesql/sdk#16 PoC)
+				char *nul = (temp <= bufend) ? (char *) memchr(temp, 0, (size_t)(bufend - temp)) : NULL;
+				if (nul == NULL) goto abort_cursor;
+				len = (int)(nul - temp) + 1;
 				data_seek += len;
 				temp += len;
 				server_types[i] = ntohl(server_types[i]);
 			}
-			
+
 			if (has_tables) {
 				server_tables = server_data + data_seek;
 				temp = server_tables;
 				for (i=0; i < server_colcount; i++) {
-					len = (int)strlen(temp) + 1;
+					char *nul = (temp <= bufend) ? (char *) memchr(temp, 0, (size_t)(bufend - temp)) : NULL;
+					if (nul == NULL) goto abort_cursor;
+					len = (int)(nul - temp) + 1;
 					data_seek += len;
 					temp += len;
 				}
@@ -1510,7 +1541,15 @@ csqlc *csql_read_cursor (csqldb *db, csqlc *existing_c) {
 
 abort_memory:
 	csql_seterror(db, CUBESQL_MEMORY_ERROR, "Not enough memory to allocate buffer required to build the cursor");
-	
+	goto abort;
+
+abort_cursor:
+	// server sent dimensions/names that do not fit the packet: reject rather than read out of bounds.
+	// server_sum is either NULL (dimension check, before allocation) or a fresh buffer not yet owned
+	// by the cursor (name-parsing check), so freeing it here is safe and leak-free.
+	if (server_sum) free(server_sum);
+	csql_seterror(db, ERR_WRONG_SIGNATURE, "Invalid cursor dimensions received from the server");
+
 abort:
 	if ((c) && (existing_c == NULL)) cubesql_cursor_free(c);
 	return NULL;

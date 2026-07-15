@@ -1,11 +1,39 @@
 <?php
 declare(strict_types=1);
+
+// Harden the session cookie: not readable from JS (HttpOnly), not sent on cross-site requests
+// (SameSite=Strict — defense-in-depth against CSRF), and Secure when served over HTTPS.
+session_set_cookie_params([
+    'httponly' => true,
+    'samesite' => 'Strict',
+    'secure'   => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
+]);
 session_start();
 
 require_once __DIR__ . '/../CubeSQL.php';
 
 use CubeSQL\CubeSQL;
 use CubeSQL\Cursor;
+
+// ============================================================================
+// CSRF protection: a per-session token that every state-changing POST must echo back. Without it,
+// a logged-in admin visiting a malicious page could have arbitrary SQL (DROP DATABASE, ...) run
+// against their server via an auto-submitting cross-site form.
+// ============================================================================
+if (empty($_SESSION['csrf'])) {
+    $_SESSION['csrf'] = bin2hex(random_bytes(32));
+}
+function csrf_field(): string {
+    return '<input type="hidden" name="csrf" value="' . htmlspecialchars($_SESSION['csrf'], ENT_QUOTES) . '">';
+}
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $sent = $_POST['csrf'] ?? '';
+    if (!is_string($sent) || !hash_equals($_SESSION['csrf'], $sent)) {
+        http_response_code(400);
+        header('Content-Type: text/plain; charset=utf-8');
+        exit('Invalid or missing CSRF token. Reload the page and try again.');
+    }
+}
 
 // ============================================================================
 // Session helpers
@@ -51,11 +79,14 @@ if (isset($_POST['action']) && $_POST['action'] === 'login') {
         'history' => [],
         'current_db' => '',
     ];
+    // New privilege level: rotate the session id to prevent session fixation.
+    session_regenerate_id(true);
     $activeTab = 'info';
 }
 
-// Handle logout
-if (isset($_GET['action']) && $_GET['action'] === 'logout') {
+// Handle logout (POST + CSRF, so a cross-site GET/<img> cannot force a disconnect)
+if (isset($_POST['action']) && $_POST['action'] === 'logout') {
+    $_SESSION = [];
     session_destroy();
     header('Location: ' . strtok($_SERVER['REQUEST_URI'], '?'));
     exit;
@@ -255,6 +286,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
     <p>Connect to a CubeSQL server</p>
     <form method="POST">
         <input type="hidden" name="action" value="login">
+        <?= csrf_field() ?>
         <div class="form-row">
             <div class="form-group">
                 <label>Host</label>
@@ -297,7 +329,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
         <a href="?tab=databases" class="<?= $activeTab === 'databases' ? 'active' : '' ?>">Databases</a>
         <a href="?tab=sql" class="<?= $activeTab === 'sql' ? 'active' : '' ?>">SQL Editor</a>
         <div class="logout">
-            <a href="?action=logout">Disconnect</a>
+            <form method="POST" style="margin:0">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="logout">
+                <button type="submit" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;padding:0">Disconnect</button>
+            </form>
         </div>
     </nav>
 </div>
@@ -351,6 +387,7 @@ foreach ($arr as $row):
 <div class="db-item">
     <form method="POST" style="display:inline">
         <input type="hidden" name="action" value="use_db">
+        <?= csrf_field() ?>
         <input type="hidden" name="tab" value="databases">
         <input type="hidden" name="dbname" value="<?= htmlspecialchars($dbName) ?>">
         <button type="submit" class="<?= $isCurrent ? 'current' : '' ?>"><?= htmlspecialchars($dbName) ?></button>
@@ -385,6 +422,7 @@ foreach ($arr as $row):
 <h2>SQL Editor</h2>
 <form method="POST" id="sql-form">
     <input type="hidden" name="action" value="query">
+        <?= csrf_field() ?>
     <input type="hidden" name="tab" value="sql">
     <div class="sql-editor">
         <textarea name="sql" id="sql-input" placeholder="Enter SQL statement..."><?= htmlspecialchars($_POST['sql'] ?? '') ?></textarea>

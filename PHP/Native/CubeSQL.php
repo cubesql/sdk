@@ -341,9 +341,16 @@ class Connection {
 
         \stream_set_timeout($this->socket, $this->timeout);
 
-        // Perform clear-text authentication (Phase 1 + Phase 2)
-        $this->authClearPhase1();
-        $this->authClearPhase2();
+        // Perform clear-text authentication (Phase 1 + Phase 2). The socket is already open, so if
+        // auth throws (wrong password, server drops the handshake) close it here rather than leak the
+        // stream — Connection has no __destruct to clean it up on GC.
+        try {
+            $this->authClearPhase1();
+            $this->authClearPhase2();
+        } catch (\Throwable $e) {
+            $this->disconnect(false);
+            throw $e;
+        }
     }
 
     private function authClearPhase1(): void {
@@ -620,7 +627,16 @@ class Connection {
         }
 
         // Read sizes (serverRowCount * serverColCount * 4 bytes)
+        // Validate the server-declared dimensions against the actual buffer first: without this a
+        // short read makes unpack() return false and $val silently becomes 0, fabricating a size
+        // rather than surfacing the truncation. (Same class of bug as the C SDK's cursor reader.)
+        if ($serverColCount < 0 || $serverRowCount < 0) {
+            throw new ProtocolException('Invalid cursor dimensions received from the server');
+        }
         $count = $serverColCount * $serverRowCount;
+        if ($pos + $count * 4 > \strlen($buf)) {
+            throw new ProtocolException('Cursor size array exceeds the received packet');
+        }
         $sizes = [];
         $sums = [];
         $afterSizesPos = $pos;
@@ -910,7 +926,10 @@ class Connection {
     // --- Utilities -----------------------------------------------------------
 
     public function setDatabase(string $dbname): void {
-        $this->execute("USE DATABASE '{$dbname}';");
+        // Escape single quotes so a database name containing one cannot break out of the quoted
+        // literal (e.g. "a'; DROP ..."). The API name gives no hint that the value reaches SQL.
+        $escaped = \str_replace("'", "''", $dbname);
+        $this->execute("USE DATABASE '{$escaped}';");
     }
 
     public function affectedRows(): int {
@@ -1198,7 +1217,11 @@ class PreparedStatement {
     }
 
     public function bindDouble(int $index, float $value): void {
-        $this->conn->vmBindValue($index, BindType::Double, \sprintf('%f', $value), -1);
+        // %.17g preserves the full precision and magnitude of an IEEE-754 double and round-trips
+        // exactly. The old '%f' forced 6 fractional digits, which truncated precision and silently
+        // flushed small values to 0 (e.g. 1e-7 -> "0.000000"). sprintf is locale-independent on the
+        // PHP 8.1+ this SDK targets, so the decimal point is always '.'.
+        $this->conn->vmBindValue($index, BindType::Double, \sprintf('%.17g', $value), -1);
     }
 
     public function bindText(int $index, string $value): void {

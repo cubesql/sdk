@@ -348,7 +348,20 @@ class csqldb
                 $this->errormsg = "Timeout while reading from network socket.";
                 throw new UnexpectedValueException("Timeout while reading from network socket.");
             }
-            $bytes .= fread($this->socketfd, $expected_size - strlen($bytes));
+            $chunk = fread($this->socketfd, $expected_size - strlen($bytes));
+            // On a server-closed socket fread() returns '' every call: without this, the loop spins
+            // (burning CPU) until the whole-second timeout above trips. Detect EOF and fail fast.
+            if ($chunk === '' || $chunk === false) {
+                if (feof($this->socketfd)) {
+                    $this->errorcode = -1;
+                    $this->errormsg = "Connection closed by the server.";
+                    throw new UnexpectedValueException("Connection closed by the server.");
+                }
+                // no data yet but not EOF: yield briefly instead of busy-spinning
+                usleep(1000);
+                continue;
+            }
+            $bytes .= $chunk;
         }
         return $bytes;
 
@@ -684,7 +697,9 @@ class cubeSQLServer
         try {
             $this->db = new csqldb($host, $port, $username, $password, $timeout);
             $kCOMMAND_EXECUTE = 3;
-            $this->db->send_statement($kCOMMAND_EXECUTE, 'USE DATABASE "' . $database . '";');
+            // Escape double quotes so a database name cannot break out of the quoted literal.
+            $escaped = str_replace('"', '""', $database);
+            $this->db->send_statement($kCOMMAND_EXECUTE, 'USE DATABASE "' . $escaped . '";');
             $this->db->netread(-1, -1);
             // Test if an error occured
         } catch (Exception $e) {

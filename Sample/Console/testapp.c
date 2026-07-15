@@ -171,13 +171,17 @@ void do_upload_database (csqldb *db, const char *dbname, const char *local_filen
     // loop to send database in chunks
     while (1) {
         size_t nread = fread(buffer, 1, CHUNK_SIZE, file);
-        if (nread == 0) break;
-        if (nread < 0) {
-            perror("Error reading from file");
-            fclose(file);
-            return;
+        if (nread == 0) {
+            // fread returns 0 on both EOF and error (nread is unsigned, so "< 0" can never be true);
+            // distinguish them with ferror so a mid-read failure isn't silently treated as success.
+            if (ferror(file)) {
+                perror("Error reading from file");
+                fclose(file);
+                return;
+            }
+            break;  // clean EOF
         }
-        
+
         // send chunk to server
         tot += nread;
         cubesql_send_data(db, (const char *)buffer, (int)nread);
@@ -214,10 +218,18 @@ void do_download_database (csqldb *db, const char *dbname, const char *local_fil
         int len = 0;
         int is_end_chunk = 0;
         char *buffer = cubesql_receive_data (db, &len, &is_end_chunk);
-        
+
         // check exit condition
         if (is_end_chunk) break;
-        
+
+        // On a network/protocol error cubesql_receive_data returns NULL without setting
+        // is_end_chunk; without this check the loop would spin forever (and fwrite(NULL,...) is UB).
+        if (buffer == NULL) {
+            printf("Download aborted: %s\n", cubesql_errmsg(db));
+            fclose(file);
+            return;
+        }
+
         // write to file
         size_t written = fwrite(buffer, 1, len, file);
         if (written != len) {
