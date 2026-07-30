@@ -24,7 +24,7 @@ Set-ItemProperty -Path "$base\$driverName" -Name Driver -Value $resolved
 Set-ItemProperty -Path "$base\$driverName" -Name Setup -Value $resolved
 Set-ItemProperty -Path "$base\$driverName" -Name APILevel -Value "2"
 Set-ItemProperty -Path "$base\$driverName" -Name ConnectFunctions -Value "YYN"
-Set-ItemProperty -Path "$base\$driverName" -Name DriverODBCVer -Value "03.80"
+Set-ItemProperty -Path "$base\$driverName" -Name DriverODBCVer -Value "02.00"
 Set-ItemProperty -Path "$base\$driverName" -Name FileUsage -Value "0"
 Set-ItemProperty -Path "$base\ODBC Drivers" -Name $driverName -Value "Installed"
 

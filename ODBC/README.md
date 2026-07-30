@@ -1,7 +1,8 @@
 # CubeSQL ODBC Driver
 
-Windows ODBC 3.8 driver for CubeSQL, built directly on the official C SDK. Both
-32-bit and 64-bit drivers are supported.
+Windows ODBC driver for CubeSQL, built directly on the official C SDK. It uses
+the ODBC 2.0 driver ABI so the Windows Driver Manager can provide its standard
+ODBC 3.x compatibility mappings. Both 32-bit and 64-bit drivers are supported.
 
 ## Features
 

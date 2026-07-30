@@ -38,14 +38,15 @@ int main(void) {
     REQUIRE(SQLAllocHandle(SQL_HANDLE_DBC, env, &dbc) == SQL_SUCCESS);
     REQUIRE(SQLGetInfo(dbc, SQL_DRIVER_ODBC_VER, driver_odbc_version,
         sizeof(driver_odbc_version), &len) == SQL_SUCCESS);
-    REQUIRE(len == 5 && !strcmp((char *)driver_odbc_version, CSODBC_ODBC_VERSION));
+    REQUIRE(len == 5 && !strcmp((char *)driver_odbc_version,
+        CSODBC_DRIVER_ODBC_VERSION));
     REQUIRE(SQLGetInfoW(dbc, SQL_DRIVER_ODBC_VER, wide_driver_odbc_version,
         sizeof(wide_driver_odbc_version), &len) == SQL_SUCCESS);
     REQUIRE(len == 5 * (SQLSMALLINT)sizeof(SQLWCHAR));
     REQUIRE(wide_driver_odbc_version[0] == '0' &&
-        wide_driver_odbc_version[1] == '3' &&
+        wide_driver_odbc_version[1] == '2' &&
         wide_driver_odbc_version[2] == '.' &&
-        wide_driver_odbc_version[3] == '8' &&
+        wide_driver_odbc_version[3] == '0' &&
         wide_driver_odbc_version[4] == '0' &&
         wide_driver_odbc_version[5] == 0);
     REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLALLOCCONNECT, &supported) == SQL_SUCCESS);
@@ -53,8 +54,12 @@ int main(void) {
     REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLALLOCENV, &supported) == SQL_SUCCESS);
     REQUIRE(supported == SQL_TRUE);
     REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLALLOCHANDLE, &supported) == SQL_SUCCESS);
-    REQUIRE(supported == SQL_TRUE);
+    REQUIRE(supported == SQL_FALSE);
     REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLALLOCSTMT, &supported) == SQL_SUCCESS);
+    REQUIRE(supported == SQL_TRUE);
+    REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLFREECONNECT, &supported) == SQL_SUCCESS);
+    REQUIRE(supported == SQL_TRUE);
+    REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLFREEENV, &supported) == SQL_SUCCESS);
     REQUIRE(supported == SQL_TRUE);
 
     rc = SQLDriverConnect(dbc, NULL, (SQLCHAR *)"BROKEN", SQL_NTS,
