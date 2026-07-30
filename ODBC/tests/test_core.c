@@ -7,6 +7,11 @@ SQLRETURN SQL_API SQLAllocHandle(SQLSMALLINT, SQLHANDLE, SQLHANDLE *);
 SQLRETURN SQL_API SQLFreeHandle(SQLSMALLINT, SQLHANDLE);
 SQLRETURN SQL_API SQLSetEnvAttr(SQLHENV, SQLINTEGER, SQLPOINTER, SQLINTEGER);
 SQLRETURN SQL_API SQLGetEnvAttr(SQLHENV, SQLINTEGER, SQLPOINTER, SQLINTEGER, SQLINTEGER *);
+SQLRETURN SQL_API SQLGetInfo(SQLHDBC, SQLUSMALLINT, SQLPOINTER, SQLSMALLINT,
+    SQLSMALLINT *);
+SQLRETURN SQL_API SQLGetInfoW(SQLHDBC, SQLUSMALLINT, SQLPOINTER, SQLSMALLINT,
+    SQLSMALLINT *);
+SQLRETURN SQL_API SQLGetFunctions(SQLHDBC, SQLUSMALLINT, SQLUSMALLINT *);
 SQLRETURN SQL_API SQLDriverConnect(SQLHDBC, SQLHWND, SQLCHAR *, SQLSMALLINT,
     SQLCHAR *, SQLSMALLINT, SQLSMALLINT *, SQLUSMALLINT);
 SQLRETURN SQL_API SQLGetDiagRec(SQLSMALLINT, SQLHANDLE, SQLSMALLINT, SQLCHAR *,
@@ -18,7 +23,9 @@ SQLRETURN SQL_API SQLGetDiagRec(SQLSMALLINT, SQLHANDLE, SQLSMALLINT, SQLCHAR *,
 int main(void) {
     SQLHENV env = SQL_NULL_HENV; SQLHDBC dbc = SQL_NULL_HDBC;
     SQLINTEGER version = 0, out_len = 0, native = 0; SQLSMALLINT len = 0;
-    SQLCHAR state[6], message[512]; SQLRETURN rc;
+    SQLCHAR state[6], message[512], driver_odbc_version[6]; SQLRETURN rc;
+    SQLWCHAR wide_driver_odbc_version[6];
+    SQLUSMALLINT supported = SQL_FALSE;
     SQLWCHAR sample[] = {'c', 'a', 'f', 0x00e9, 0};
     char *utf8;
 
@@ -29,6 +36,26 @@ int main(void) {
         sizeof(version), &out_len) == SQL_SUCCESS);
     REQUIRE(version == SQL_OV_ODBC3_80);
     REQUIRE(SQLAllocHandle(SQL_HANDLE_DBC, env, &dbc) == SQL_SUCCESS);
+    REQUIRE(SQLGetInfo(dbc, SQL_DRIVER_ODBC_VER, driver_odbc_version,
+        sizeof(driver_odbc_version), &len) == SQL_SUCCESS);
+    REQUIRE(len == 5 && !strcmp((char *)driver_odbc_version, CSODBC_ODBC_VERSION));
+    REQUIRE(SQLGetInfoW(dbc, SQL_DRIVER_ODBC_VER, wide_driver_odbc_version,
+        sizeof(wide_driver_odbc_version), &len) == SQL_SUCCESS);
+    REQUIRE(len == 5 * (SQLSMALLINT)sizeof(SQLWCHAR));
+    REQUIRE(wide_driver_odbc_version[0] == '0' &&
+        wide_driver_odbc_version[1] == '3' &&
+        wide_driver_odbc_version[2] == '.' &&
+        wide_driver_odbc_version[3] == '8' &&
+        wide_driver_odbc_version[4] == '0' &&
+        wide_driver_odbc_version[5] == 0);
+    REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLALLOCCONNECT, &supported) == SQL_SUCCESS);
+    REQUIRE(supported == SQL_TRUE);
+    REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLALLOCENV, &supported) == SQL_SUCCESS);
+    REQUIRE(supported == SQL_TRUE);
+    REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLALLOCHANDLE, &supported) == SQL_SUCCESS);
+    REQUIRE(supported == SQL_TRUE);
+    REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLALLOCSTMT, &supported) == SQL_SUCCESS);
+    REQUIRE(supported == SQL_TRUE);
 
     rc = SQLDriverConnect(dbc, NULL, (SQLCHAR *)"BROKEN", SQL_NTS,
         NULL, 0, NULL, SQL_DRIVER_NOPROMPT);
