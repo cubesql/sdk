@@ -122,8 +122,41 @@ jobs:
           }
           throw "CubeSQL service did not accept connections on port 4430"
 
+      - name: Enable Windows crash dumps
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $dumpDir = Join-Path $env:RUNNER_TEMP "cubesql-odbc-${{ matrix.name }}-dumps"
+          $dumpKey = "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\cubesql_odbc_smoke.exe"
+          New-Item -ItemType Directory -Force -Path $dumpDir | Out-Null
+          New-Item -Path $dumpKey -Force | Out-Null
+          New-ItemProperty -Path $dumpKey -Name DumpFolder -PropertyType ExpandString `
+              -Value $dumpDir -Force | Out-Null
+          New-ItemProperty -Path $dumpKey -Name DumpType -PropertyType DWord `
+              -Value 2 -Force | Out-Null
+
       - name: Run smoke test through Windows Driver Manager
         run: ctest --test-dir "${{ matrix.build_dir }}" -C Release --output-on-failure
+
+      - name: Upload crash diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cubesql-odbc-windows-${{ matrix.name }}-diagnostics
+          path: |
+            ${{ runner.temp }}/cubesql-odbc-${{ matrix.name }}-dumps
+            ${{ matrix.build_dir }}/Release/*.pdb
+            ${{ matrix.build_dir }}/Release/cubesql_odbc_smoke.exe
+            ${{ matrix.build_dir }}/Release/cubesqlodbc.dll
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Disable Windows crash dumps
+        if: always()
+        shell: pwsh
+        run: |
+          $dumpKey = "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\cubesql_odbc_smoke.exe"
+          Remove-Item -Path $dumpKey -Recurse -Force -ErrorAction SilentlyContinue
 
       - name: Package tested driver
         shell: pwsh

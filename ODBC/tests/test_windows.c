@@ -13,8 +13,15 @@ static void diag(SQLSMALLINT type, SQLHANDLE handle) {
         fprintf(stderr, "[%s] %s (%ld)\n", state, message, (long)native);
 }
 
-#define ODBC(call, type, handle) do { SQLRETURN rc_ = (call); if (!SQL_SUCCEEDED(rc_)) { \
-    fprintf(stderr, "%s failed: %d\n", #call, rc_); diag(type, handle); goto fail; } } while (0)
+#define ODBC(call, type, handle) do { \
+    SQLRETURN rc_; \
+    fprintf(stderr, "ODBC BEGIN: %s\n", #call); fflush(stderr); \
+    rc_ = (call); \
+    fprintf(stderr, "ODBC END: %s -> %d\n", #call, rc_); fflush(stderr); \
+    if (!SQL_SUCCEEDED(rc_)) { \
+        diag(type, handle); goto fail; \
+    } \
+} while (0)
 
 int main(void) {
     SQLHENV env = SQL_NULL_HENV; SQLHDBC dbc = SQL_NULL_HDBC; SQLHSTMT stmt = SQL_NULL_HSTMT;
