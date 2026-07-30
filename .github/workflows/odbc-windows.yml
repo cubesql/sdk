@@ -46,7 +46,7 @@ jobs:
             server_url: https://www.sqlabs.com/download/cubesql/590/cubeSQL_Windows64bit_Setup.msi
             server_sha256: 50ed86b40bc64ff7a2a87d4f845e130138f0ca8f7c1086a380c5431daa749b66
     env:
-      CUBESQL_ODBC_CONNECTION_STRING: DRIVER={CubeSQL ODBC Driver};SERVER=127.0.0.1;PORT=4540;UID=admin;PWD=admin;ENCRYPTION=NONE;TIMEOUT=12;
+      CUBESQL_ODBC_CONNECTION_STRING: DRIVER={CubeSQL ODBC Driver};SERVER=127.0.0.1;PORT=4430;UID=admin;PWD=admin;ENCRYPTION=NONE;TIMEOUT=12;
       CUBESQL_ODBC_REGISTER_TEST_SERVER: "1"
 
     steps:
@@ -63,12 +63,12 @@ jobs:
       - name: Build driver and smoke test
         run: cmake --build "${{ matrix.build_dir }}" --config Release --parallel
 
-      - name: Download and extract CubeSQL server
+      - name: Download and install CubeSQL server
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
           $msi = Join-Path $env:RUNNER_TEMP "cubesql-${{ matrix.name }}.msi"
-          $extract = Join-Path $env:RUNNER_TEMP "cubesql-${{ matrix.name }}-server"
+          $install = Join-Path $env:RUNNER_TEMP "cubesql-${{ matrix.name }}-server"
           $msiLog = Join-Path $env:RUNNER_TEMP "cubesql-${{ matrix.name }}-msi.log"
 
           Invoke-WebRequest -Uri "${{ matrix.server_url }}" -OutFile $msi
@@ -77,17 +77,21 @@ jobs:
               throw "CubeSQL MSI SHA-256 mismatch: $actualHash"
           }
 
-          New-Item -ItemType Directory -Force -Path $extract | Out-Null
-          $msiArgs = @("/a", $msi, "/qn", "TARGETDIR=$extract", "/l*v", $msiLog)
+          New-Item -ItemType Directory -Force -Path $install | Out-Null
+          $msiArgs = @("/i", $msi, "/qn", "/norestart", "APPDIR=$install", "/l*v", $msiLog)
           $result = Start-Process msiexec.exe -ArgumentList $msiArgs -Wait -PassThru
-          if ($result.ExitCode -ne 0) {
+          if ($result.ExitCode -notin @(0, 3010)) {
               Get-Content $msiLog -Tail 100
-              throw "Administrative MSI extraction failed with exit $($result.ExitCode)"
+              throw "CubeSQL MSI installation failed with exit $($result.ExitCode)"
           }
 
-          $server = Get-ChildItem $extract -Recurse -Filter cubesql.exe | Select-Object -First 1
-          if (-not $server) { throw "cubesql.exe was not found in the extracted MSI" }
-          "CUBESQL_SERVER_EXE=$($server.FullName)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+          "CUBESQL_SERVER_MSI=$msi" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+          "CUBESQL_SERVER_MSI_LOG=$msiLog" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+          $service = Get-Service -Name "cubesql.exe" -ErrorAction SilentlyContinue
+          if (-not $service) {
+              Get-Content $msiLog -Tail 100
+              throw "CubeSQL MSI did not register the cubesql.exe service"
+          }
 
       - name: Register ${{ matrix.name }} ODBC driver
         shell: pwsh
@@ -95,44 +99,28 @@ jobs:
           $driver = Resolve-Path "${{ matrix.build_dir }}/Release/cubesqlodbc.dll"
           & ODBC/windows/install.ps1 -DriverPath $driver -Encryption NONE
 
-      - name: Start CubeSQL ${{ matrix.name }} server
+      - name: Wait for CubeSQL ${{ matrix.name }} service
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $data = Join-Path $env:RUNNER_TEMP "cubesql-${{ matrix.name }}-data"
-          $stdout = Join-Path $env:RUNNER_TEMP "cubesql-${{ matrix.name }}.log"
-          $stderr = Join-Path $env:RUNNER_TEMP "cubesql-${{ matrix.name }}.err"
-          New-Item -ItemType Directory -Force -Path $data | Out-Null
-
-          $arguments = @(
-              "-p", "4540",
-              "-x", $data,
-              "-s", (Join-Path $data "cubesql.settings"),
-              "-f", "CONSOLE",
-              "-v", "SQL_ERRORS"
-          )
-          $server = Start-Process -FilePath $env:CUBESQL_SERVER_EXE `
-              -ArgumentList $arguments -PassThru `
-              -RedirectStandardOutput $stdout -RedirectStandardError $stderr
-          "CUBESQL_SERVER_PID=$($server.Id)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
-          "CUBESQL_SERVER_LOG=$stdout" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
-          "CUBESQL_SERVER_ERR=$stderr" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+          $service = Get-Service -Name "cubesql.exe"
+          if ($service.Status -ne "Running") {
+              Start-Service -Name "cubesql.exe"
+          }
 
           $deadline = (Get-Date).AddSeconds(30)
           while ((Get-Date) -lt $deadline) {
-              if ($server.HasExited) {
-                  Get-Content $stdout -ErrorAction SilentlyContinue
-                  Get-Content $stderr -ErrorAction SilentlyContinue
-                  throw "CubeSQL exited before accepting connections"
+              $service.Refresh()
+              if ($service.Status -eq "Stopped") {
+                  throw "CubeSQL service stopped before accepting connections"
               }
-              if (Test-NetConnection 127.0.0.1 -Port 4540 -InformationLevel Quiet `
+              if (Test-NetConnection 127.0.0.1 -Port 4430 -InformationLevel Quiet `
                       -WarningAction SilentlyContinue) {
                   exit 0
               }
               Start-Sleep -Milliseconds 250
-              $server.Refresh()
           }
-          throw "CubeSQL did not accept connections on port 4540"
+          throw "CubeSQL service did not accept connections on port 4430"
 
       - name: Run smoke test through Windows Driver Manager
         run: ctest --test-dir "${{ matrix.build_dir }}" -C Release --output-on-failure
@@ -163,19 +151,16 @@ jobs:
           retention-days: 30
           compression-level: 9
 
-      - name: Stop server and show logs
+      - name: Uninstall CubeSQL server
         if: always()
         shell: pwsh
         run: |
-          if ($env:CUBESQL_SERVER_PID) {
-              Stop-Process -Id $env:CUBESQL_SERVER_PID -Force -ErrorAction SilentlyContinue
-              Wait-Process -Id $env:CUBESQL_SERVER_PID -ErrorAction SilentlyContinue
-          }
-          if ($env:CUBESQL_SERVER_LOG -and (Test-Path $env:CUBESQL_SERVER_LOG)) {
-              Get-Content $env:CUBESQL_SERVER_LOG
-          }
-          if ($env:CUBESQL_SERVER_ERR -and (Test-Path $env:CUBESQL_SERVER_ERR)) {
-              Get-Content $env:CUBESQL_SERVER_ERR
+          if ($env:CUBESQL_SERVER_MSI) {
+              $msiArgs = @("/x", $env:CUBESQL_SERVER_MSI, "/qn", "/norestart")
+              $result = Start-Process msiexec.exe -ArgumentList $msiArgs -Wait -PassThru
+              if ($result.ExitCode -notin @(0, 1605, 3010)) {
+                  Write-Warning "CubeSQL MSI uninstall failed with exit $($result.ExitCode)"
+              }
           }
 
       - name: Unregister ODBC driver

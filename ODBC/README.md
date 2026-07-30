@@ -117,13 +117,13 @@ $env:CUBESQL_ODBC_CONNECTION_STRING = "DRIVER={CubeSQL ODBC Driver};SERVER=local
 ```
 
 GitHub Actions runs this smoke test through the real Windows Driver Manager for
-both MSVC Win32 and x64 builds. Each matrix job verifies and extracts the
-matching pinned CubeSQL 5.9.0 Windows MSI, starts an isolated server on port
-4540, registers the matching driver architecture, runs the CTest smoke target,
+both MSVC Win32 and x64 builds. Each matrix job verifies and silently installs
+the matching pinned CubeSQL 5.9.0 Windows MSI, waits for its service on port
+4430, registers the matching driver architecture, runs the CTest smoke target,
 packages the tested DLL with its install scripts, checksum, license, and
-documentation, then unregisters the driver. Successful runs publish separate
-`cubesql-odbc-windows-x86` and `cubesql-odbc-windows-x64` downloadable
-artifacts for 30 days. See
+documentation, then uninstalls the server and unregisters the driver.
+Successful runs publish separate `cubesql-odbc-windows-x86` and
+`cubesql-odbc-windows-x64` downloadable artifacts for 30 days. See
 `.github/workflows/odbc-windows.yml`.
 
 ## Permanent releases
