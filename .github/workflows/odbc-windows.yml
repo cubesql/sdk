@@ -134,8 +134,6 @@ jobs:
               -Value $dumpDir -Force | Out-Null
           New-ItemProperty -Path $dumpKey -Name DumpType -PropertyType DWord `
               -Value 2 -Force | Out-Null
-          "CUBESQL_ODBC_DUMP_PATH=$dumpDir\cubesql_odbc_smoke.dmp" |
-              Out-File $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Run smoke test through Windows Driver Manager
         shell: pwsh
