@@ -147,14 +147,14 @@ int main(void) {
     ODBC(SQLExecDirectA(stmt,
         (SQLCHAR *)"CREATE DATABASE odbc_smoke.db IF NOT EXISTS;", SQL_NTS),
         SQL_HANDLE_STMT, stmt);
-    ODBC(SQLGetFunctions(dbc, SQL_API_SQLSETCONNECTOPTION, &supported),
+    ODBC(SQLGetFunctions(dbc, SQL_API_SQLSETCONNECTATTR, &supported),
         SQL_HANDLE_DBC, dbc);
     if (!supported) {
-        fprintf(stderr, "Driver Manager did not advertise SQLSetConnectOption.\n");
+        fprintf(stderr, "Driver Manager did not advertise SQLSetConnectAttr.\n");
         goto fail;
     }
-    ODBC(SQLSetConnectOption(dbc, SQL_CURRENT_QUALIFIER,
-        (SQLULEN)(uintptr_t)"odbc_smoke.db"), SQL_HANDLE_DBC, dbc);
+    ODBC(SQLSetConnectAttrA(dbc, SQL_ATTR_CURRENT_CATALOG,
+        (SQLPOINTER)"odbc_smoke.db", SQL_NTS), SQL_HANDLE_DBC, dbc);
     ODBC(SQLExecDirectA(stmt, (SQLCHAR *)"SELECT 'CubeSQL ODBC', 42;", SQL_NTS), SQL_HANDLE_STMT, stmt);
     ODBC(SQLFetch(stmt), SQL_HANDLE_STMT, stmt);
     ODBC(SQLGetData(stmt, 1, SQL_C_CHAR, value, sizeof(value), &indicator), SQL_HANDLE_STMT, stmt);
