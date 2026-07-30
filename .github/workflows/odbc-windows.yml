@@ -136,7 +136,16 @@ jobs:
               -Value 2 -Force | Out-Null
 
       - name: Run smoke test through Windows Driver Manager
-        run: ctest --test-dir "${{ matrix.build_dir }}" -C Release --output-on-failure
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $executable = Resolve-Path `
+              "${{ matrix.build_dir }}/Release/cubesql_odbc_smoke.exe"
+          $process = Start-Process -FilePath $executable -Wait -PassThru -NoNewWindow
+          if ($process.ExitCode -ne 0) {
+              Start-Sleep -Seconds 2
+              throw "ODBC smoke test failed with exit code $($process.ExitCode)"
+          }
 
       - name: Upload crash diagnostics
         if: failure()
