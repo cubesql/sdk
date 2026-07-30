@@ -63,8 +63,6 @@ int main(void) {
     REQUIRE(supported == SQL_TRUE);
     REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLSETCONNECTOPTION, &supported) == SQL_SUCCESS);
     REQUIRE(supported == SQL_TRUE);
-    REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLSETCONNECTATTR, &supported) == SQL_SUCCESS);
-    REQUIRE(supported == SQL_TRUE);
 
     rc = SQLDriverConnect(dbc, NULL, (SQLCHAR *)"BROKEN", SQL_NTS,
         NULL, 0, NULL, SQL_DRIVER_NOPROMPT);

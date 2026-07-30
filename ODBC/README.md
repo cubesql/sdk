@@ -79,6 +79,11 @@ Aliases `HOST`, `USER`, `USERNAME`, `PASSWORD`, `DB`, and `ENC` are accepted.
 Values containing semicolons or closing braces use standard ODBC braces; a
 literal `}` is doubled.
 
+On Windows the driver is registered in ODBC 2 compatibility mode, so the
+Driver Manager does not expose dynamic `SQL_ATTR_CURRENT_CATALOG` changes.
+Select a database with `DATABASE=` in the connection string or execute a
+CubeSQL `USE DATABASE database_name;` command after connecting.
+
 ## Tests
 
 The native integration harness calls the driver ABI directly while using the
