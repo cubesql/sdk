@@ -158,7 +158,11 @@
 #define BRG_LITTLE_ENDIAN   1234 /* byte 0 is least significant (i386) */
 #define BRG_BIG_ENDIAN      4321 /* byte 0 is most significant (mc68k) */
 
-#if defined(__GNUC__) || defined(__GNU_LIBRARY__)
+#if defined(_WIN32) && !defined(PLATFORM_BYTE_ORDER)
+#  define PLATFORM_BYTE_ORDER BRG_LITTLE_ENDIAN
+#endif
+
+#if (defined(__GNUC__) || defined(__GNU_LIBRARY__)) && !defined(_WIN32)
 #  if defined(__FreeBSD__) || defined(__OpenBSD__)
 #    include <sys/endian.h>
 #  elif defined( BSD ) && BSD >= 199103

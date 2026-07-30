@@ -1,0 +1,4 @@
+/build/
+/tests/test_odbc_integration
+/tests/test_odbc_core
+/tests/*.dSYM/

@@ -66,13 +66,24 @@ extern "C"
 // WINDOWS
 #pragma warning (disable: 4005)
 #pragma warning (disable: 4068)
+#ifdef _MSC_VER
 #define snprintf		    _snprintf
 #define strdup			    _strdup
 #define strtoll(x,y,z)	    _strtoi64(x,y,z)
+#endif
 #define BSD_FD_ISSET	    FD_ISSET
 #define SHUT_RDWR           2
 #define SA SOCKADDR
+#ifndef INET_ADDRSTRLEN
 #define INET_ADDRSTRLEN     16
+#endif
+#undef EINTR
+#undef EAGAIN
+#undef EMSGSIZE
+#undef EAFNOSUPPORT
+#undef EWOULDBLOCK
+#undef ECONNRESET
+#undef EINPROGRESS
 #define EINTR 			    WSAEINTR
 #define EAGAIN 			    WSAEWOULDBLOCK
 #define EMSGSIZE 		    WSAEMSGSIZE
@@ -97,7 +108,9 @@ extern "C"
 #define mssleep(ms)         Sleep(ms)
 	
 typedef int socklen_t;
+#ifdef _MSC_VER
 typedef int ssize_t;
+#endif
 typedef unsigned long in_addr_t;
 	
 #else

@@ -16,7 +16,9 @@
 extern "C" {
 #endif
 	
-#ifdef WIN32
+#if defined(CUBESQL_STATIC)
+	#define CUBESQL_APIEXPORT
+#elif defined(WIN32)
 	#ifdef CUBESQL_EXPORTSDLL
 	#define CUBESQL_APIEXPORT               __declspec(dllexport)
 	#else
@@ -76,7 +78,11 @@ extern "C" {
 	
 #ifndef int64
 #ifdef WIN32
+#ifdef _MSC_VER
 typedef __int64 int64;
+#else
+typedef long long int int64;
+#endif
 #else
 typedef long long int int64;
 #endif

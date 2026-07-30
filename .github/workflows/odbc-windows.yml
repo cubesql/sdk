@@ -1,0 +1,234 @@
+name: ODBC Windows
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "odbc-v*"
+    paths:
+      - ".github/workflows/odbc-windows.yml"
+      - "C_SDK/**"
+      - "ODBC/**"
+      - "libs/win-32bit/**"
+      - "libs/win-64bit/**"
+  pull_request:
+    paths:
+      - ".github/workflows/odbc-windows.yml"
+      - "C_SDK/**"
+      - "ODBC/**"
+      - "libs/win-32bit/**"
+      - "libs/win-64bit/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Windows ${{ matrix.name }} Driver Manager smoke test
+    runs-on: windows-2022
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: x86
+            cmake_arch: Win32
+            build_dir: build/odbc-win32
+            registry_arch: "32"
+            server_url: https://www.sqlabs.com/download/cubesql/590/cubeSQL_Windows32bit_Setup.msi
+            server_sha256: 58108d31f39e9b6bc2249cada96d632bbbc90e759e24cc73afeb2050605138a8
+          - name: x64
+            cmake_arch: x64
+            build_dir: build/odbc-win64
+            registry_arch: "64"
+            server_url: https://www.sqlabs.com/download/cubesql/590/cubeSQL_Windows64bit_Setup.msi
+            server_sha256: 50ed86b40bc64ff7a2a87d4f845e130138f0ca8f7c1086a380c5431daa749b66
+    env:
+      CUBESQL_ODBC_CONNECTION_STRING: DRIVER={CubeSQL ODBC Driver};SERVER=127.0.0.1;PORT=4540;UID=admin;PWD=admin;ENCRYPTION=NONE;TIMEOUT=12;
+      CUBESQL_ODBC_REGISTER_TEST_SERVER: "1"
+
+    steps:
+      - name: Check out SDK
+        uses: actions/checkout@v6
+
+      - name: Configure MSVC ${{ matrix.cmake_arch }} build
+        run: >-
+          cmake -S ODBC -B "${{ matrix.build_dir }}"
+          -A "${{ matrix.cmake_arch }}"
+          -DBUILD_TESTING=ON
+          -DCUBESQL_ODBC_WITH_TLS=ON
+
+      - name: Build driver and smoke test
+        run: cmake --build "${{ matrix.build_dir }}" --config Release --parallel
+
+      - name: Download and extract CubeSQL server
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $msi = Join-Path $env:RUNNER_TEMP "cubesql-${{ matrix.name }}.msi"
+          $extract = Join-Path $env:RUNNER_TEMP "cubesql-${{ matrix.name }}-server"
+          $msiLog = Join-Path $env:RUNNER_TEMP "cubesql-${{ matrix.name }}-msi.log"
+
+          Invoke-WebRequest -Uri "${{ matrix.server_url }}" -OutFile $msi
+          $actualHash = (Get-FileHash -Algorithm SHA256 $msi).Hash.ToLowerInvariant()
+          if ($actualHash -ne "${{ matrix.server_sha256 }}") {
+              throw "CubeSQL MSI SHA-256 mismatch: $actualHash"
+          }
+
+          New-Item -ItemType Directory -Force -Path $extract | Out-Null
+          $msiArgs = @("/a", $msi, "/qn", "TARGETDIR=$extract", "/l*v", $msiLog)
+          $result = Start-Process msiexec.exe -ArgumentList $msiArgs -Wait -PassThru
+          if ($result.ExitCode -ne 0) {
+              Get-Content $msiLog -Tail 100
+              throw "Administrative MSI extraction failed with exit $($result.ExitCode)"
+          }
+
+          $server = Get-ChildItem $extract -Recurse -Filter cubesql.exe | Select-Object -First 1
+          if (-not $server) { throw "cubesql.exe was not found in the extracted MSI" }
+          "CUBESQL_SERVER_EXE=$($server.FullName)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Register ${{ matrix.name }} ODBC driver
+        shell: pwsh
+        run: |
+          $driver = Resolve-Path "${{ matrix.build_dir }}/Release/cubesqlodbc.dll"
+          & ODBC/windows/install.ps1 -DriverPath $driver -Encryption NONE
+
+      - name: Start CubeSQL ${{ matrix.name }} server
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $data = Join-Path $env:RUNNER_TEMP "cubesql-${{ matrix.name }}-data"
+          $stdout = Join-Path $env:RUNNER_TEMP "cubesql-${{ matrix.name }}.log"
+          $stderr = Join-Path $env:RUNNER_TEMP "cubesql-${{ matrix.name }}.err"
+          New-Item -ItemType Directory -Force -Path $data | Out-Null
+
+          $arguments = @(
+              "-p", "4540",
+              "-x", $data,
+              "-s", (Join-Path $data "cubesql.settings"),
+              "-f", "CONSOLE",
+              "-v", "SQL_ERRORS"
+          )
+          $server = Start-Process -FilePath $env:CUBESQL_SERVER_EXE `
+              -ArgumentList $arguments -PassThru `
+              -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          "CUBESQL_SERVER_PID=$($server.Id)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+          "CUBESQL_SERVER_LOG=$stdout" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+          "CUBESQL_SERVER_ERR=$stderr" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+
+          $deadline = (Get-Date).AddSeconds(30)
+          while ((Get-Date) -lt $deadline) {
+              if ($server.HasExited) {
+                  Get-Content $stdout -ErrorAction SilentlyContinue
+                  Get-Content $stderr -ErrorAction SilentlyContinue
+                  throw "CubeSQL exited before accepting connections"
+              }
+              if (Test-NetConnection 127.0.0.1 -Port 4540 -InformationLevel Quiet `
+                      -WarningAction SilentlyContinue) {
+                  exit 0
+              }
+              Start-Sleep -Milliseconds 250
+              $server.Refresh()
+          }
+          throw "CubeSQL did not accept connections on port 4540"
+
+      - name: Run smoke test through Windows Driver Manager
+        run: ctest --test-dir "${{ matrix.build_dir }}" -C Release --output-on-failure
+
+      - name: Package tested driver
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $package = Join-Path $env:RUNNER_TEMP "cubesql-odbc-windows-${{ matrix.name }}"
+          New-Item -ItemType Directory -Force -Path $package | Out-Null
+          Copy-Item "${{ matrix.build_dir }}/Release/cubesqlodbc.dll" $package
+          Copy-Item ODBC/windows/install.ps1 $package
+          Copy-Item ODBC/windows/uninstall.ps1 $package
+          Copy-Item ODBC/README.md $package
+          Copy-Item LICENSE $package
+
+          $hash = (Get-FileHash -Algorithm SHA256 `
+              (Join-Path $package "cubesqlodbc.dll")).Hash.ToLowerInvariant()
+          "$hash  cubesqlodbc.dll" | Set-Content `
+              (Join-Path $package "SHA256SUMS.txt") -Encoding ascii
+
+      - name: Upload tested ${{ matrix.name }} driver
+        uses: actions/upload-artifact@v7
+        with:
+          name: cubesql-odbc-windows-${{ matrix.name }}
+          path: ${{ runner.temp }}/cubesql-odbc-windows-${{ matrix.name }}
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 9
+
+      - name: Stop server and show logs
+        if: always()
+        shell: pwsh
+        run: |
+          if ($env:CUBESQL_SERVER_PID) {
+              Stop-Process -Id $env:CUBESQL_SERVER_PID -Force -ErrorAction SilentlyContinue
+              Wait-Process -Id $env:CUBESQL_SERVER_PID -ErrorAction SilentlyContinue
+          }
+          if ($env:CUBESQL_SERVER_LOG -and (Test-Path $env:CUBESQL_SERVER_LOG)) {
+              Get-Content $env:CUBESQL_SERVER_LOG
+          }
+          if ($env:CUBESQL_SERVER_ERR -and (Test-Path $env:CUBESQL_SERVER_ERR)) {
+              Get-Content $env:CUBESQL_SERVER_ERR
+          }
+
+      - name: Unregister ODBC driver
+        if: always()
+        shell: pwsh
+        run: '& ODBC/windows/uninstall.ps1 -Architecture "${{ matrix.registry_arch }}"'
+
+  release:
+    name: Publish permanent ODBC release
+    if: startsWith(github.ref, 'refs/tags/odbc-v')
+    needs: smoke
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download tested Windows packages
+        uses: actions/download-artifact@v8
+        with:
+          pattern: cubesql-odbc-windows-*
+          path: dist
+
+      - name: Create versioned release archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#odbc-v}"
+          for arch in x86 x64; do
+              package="dist/cubesql-odbc-windows-$arch"
+              test -f "$package/cubesqlodbc.dll"
+              archive="cubesql-odbc-${version}-windows-${arch}.zip"
+              (cd "$package" && zip -9 -r "../../$archive" .)
+          done
+          sha256sum cubesql-odbc-*-windows-*.zip > SHA256SUMS.txt
+
+      - name: Publish GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          tag="$GITHUB_REF_NAME"
+          version="${tag#odbc-v}"
+          assets=(
+              "cubesql-odbc-${version}-windows-x86.zip"
+              "cubesql-odbc-${version}-windows-x64.zip"
+              "SHA256SUMS.txt"
+          )
+          if gh release view "$tag" >/dev/null 2>&1; then
+              gh release upload "$tag" "${assets[@]}" --clobber
+          else
+              gh release create "$tag" "${assets[@]}" \
+                  --verify-tag \
+                  --generate-notes \
+                  --title "CubeSQL ODBC ${version}"
+          fi
