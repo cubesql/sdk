@@ -48,6 +48,7 @@ if(MSVC)
 else()
     target_compile_options(cubesqlodbc PRIVATE -Wall -Wextra -Wno-misleading-indentation
         -Wno-multichar -Wno-attributes -Wno-macro-redefined)
+    target_sources(cubesqlodbc PRIVATE windows/cubesqlodbc.def)
     target_link_options(cubesqlodbc PRIVATE -Wl,--kill-at)
 endif()
 

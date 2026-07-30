@@ -17,7 +17,8 @@
 #include "cubesql.h"
 
 #ifdef _WIN32
-#define CSODBC_EXPORT __declspec(dllexport)
+/* Windows exports are declared in windows/cubesqlodbc.def. */
+#define CSODBC_EXPORT
 #else
 #define CSODBC_EXPORT __attribute__((visibility("default")))
 #endif

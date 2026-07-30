@@ -80,8 +80,8 @@ static BOOL write_options(const char *driver, const setup_options *o) {
     return TRUE;
 }
 
-__declspec(dllexport) BOOL INSTAPI ConfigDSN(HWND parent, WORD request,
-                                             LPCSTR driver, LPCSTR attributes) {
+BOOL INSTAPI ConfigDSN(HWND parent, WORD request,
+                       LPCSTR driver, LPCSTR attributes) {
     setup_options o;
     memset(&o, 0, sizeof(o));
     parse_attributes(&o, attributes);
@@ -108,8 +108,9 @@ __declspec(dllexport) BOOL INSTAPI ConfigDSN(HWND parent, WORD request,
     return write_options(driver && *driver ? driver : CS_DRIVER_NAME, &o);
 }
 
-__declspec(dllexport) BOOL INSTAPI ConfigDriver(HWND parent, WORD request,
-    LPCSTR driver, LPCSTR args, LPSTR message, WORD capacity, WORD *length) {
+BOOL INSTAPI ConfigDriver(HWND parent, WORD request, LPCSTR driver,
+                          LPCSTR args, LPSTR message, WORD capacity,
+                          WORD *length) {
     const char *result = "CubeSQL ODBC Driver 1.0";
     size_t n = strlen(result);
     (void)parent; (void)driver; (void)args;

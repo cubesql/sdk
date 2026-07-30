@@ -21,15 +21,20 @@ EXPORTS
     SQLColumns
     SQLColumnsW
     SQLConnect
+    SQLConnectA
     SQLConnectW
     SQLDescribeCol
     SQLDescribeColW
     SQLDescribeParam
     SQLDisconnect
+    SQLDriverConnect
+    SQLDriverConnectA
+    SQLDriverConnectW
     SQLEndTran
     SQLError
     SQLErrorW
     SQLExecDirect
+    SQLExecDirectA
     SQLExecDirectW
     SQLExecute
     SQLExtendedFetch
@@ -42,31 +47,38 @@ EXPORTS
     SQLFreeHandle
     SQLFreeStmt
     SQLGetConnectAttr
+    SQLGetConnectAttrA
     SQLGetConnectAttrW
     SQLGetConnectOption
     SQLGetCursorName
     SQLGetCursorNameW
     SQLGetData
     SQLGetDiagField
+    SQLGetDiagFieldA
     SQLGetDiagFieldW
     SQLGetDiagRec
+    SQLGetDiagRecA
     SQLGetDiagRecW
     SQLGetEnvAttr
     SQLGetFunctions
     SQLGetInfo
+    SQLGetInfoA
     SQLGetInfoW
     SQLGetStmtAttr
+    SQLGetStmtAttrA
     SQLGetStmtOption
     SQLGetTypeInfo
     SQLGetTypeInfoW
     SQLMoreResults
     SQLNativeSql
+    SQLNativeSqlA
     SQLNativeSqlW
     SQLNumParams
     SQLNumResultCols
     SQLParamData
     SQLParamOptions
     SQLPrepare
+    SQLPrepareA
     SQLPrepareW
     SQLPrimaryKeys
     SQLPrimaryKeysW
@@ -77,6 +89,7 @@ EXPORTS
     SQLPutData
     SQLRowCount
     SQLSetConnectAttr
+    SQLSetConnectAttrA
     SQLSetConnectAttrW
     SQLSetConnectOption
     SQLSetCursorName
