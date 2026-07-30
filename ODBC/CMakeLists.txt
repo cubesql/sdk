@@ -43,6 +43,7 @@ else()
 endif()
 
 if(MSVC)
+    set_property(TARGET cubesqlodbc PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
     target_compile_options(cubesqlodbc PRIVATE /W4 /wd4005 /wd4068 /wd4244 /wd4267)
     target_link_options(cubesqlodbc PRIVATE /DEF:${CMAKE_CURRENT_SOURCE_DIR}/windows/cubesqlodbc.def)
 else()
