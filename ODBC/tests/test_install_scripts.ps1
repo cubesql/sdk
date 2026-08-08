@@ -88,8 +88,20 @@ function Test-Arch($dll, $stagingName, $expectNative, $label) {
     Check (-not (Test-Path $native)) "$label : il ramo nativo non e' pulito prima della prova"
     Check (-not (Test-Path $wow))    "$label : il ramo WOW6432Node non e' pulito prima della prova"
 
-    & $install -DriverPath (Join-Path $staging "cubesqlodbc.dll") -Encryption NONE *>$null
-    if ($LASTEXITCODE -ne 0) { Fail "$label : install.ps1 e' uscito con codice $LASTEXITCODE" }
+    # $LASTEXITCODE lo imposta solo un eseguibile nativo, e install.ps1 ne lancia
+    # uno soltanto quando deve cambiare vista del registro: registrando un driver
+    # della stessa architettura del processo non parte nulla di nativo e la
+    # variabile resta quella di prima, cioe' $null in una sessione appena nata.
+    # Confrontarla con 0 faceva fallire il ramo x64 e passare quello x86, dove il
+    # rilancio in SysWOW64 la valorizza. Azzerarla prima rende valido il
+    # controllo in entrambi i casi; gli errori veri arrivano come eccezioni,
+    # perche' install.ps1 gira con $ErrorActionPreference = "Stop".
+    $global:LASTEXITCODE = 0
+    $why = $null
+    try { & $install -DriverPath (Join-Path $staging "cubesqlodbc.dll") -Encryption NONE *>$null }
+    catch { $why = $_.Exception.Message }
+    if (-not $why -and $LASTEXITCODE -ne 0) { $why = "codice di uscita $LASTEXITCODE" }
+    if ($why) { Fail "$label : install.ps1 non ha completato: $why" }
 
     $gotNative = Test-Path $native
     $gotWow    = Test-Path $wow
