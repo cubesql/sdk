@@ -7,7 +7,11 @@ SOURCES := test_integration.c ../src/driver.c $(SDK)/cubesql.c \
 	$(SDK)/crypt/aestab.c $(SDK)/crypt/base64.c $(SDK)/crypt/sha1.c
 
 .PHONY: all clean run
-all: test_odbc_core test_odbc_integration
+all: test_odbc_core test_odbc_integration test_odbc_conformance
+
+test_odbc_conformance: test_conformance.c ../src/driver.c $(filter-out test_integration.c ../src/driver.c,$(SOURCES))
+	$(CC) $(CFLAGS) $(INCLUDES) test_conformance.c ../src/driver.c \
+		$(filter-out test_integration.c ../src/driver.c,$(SOURCES)) -lz -lpthread -o $@
 
 test_odbc_core: test_core.c ../src/driver.c $(filter-out test_integration.c ../src/driver.c,$(SOURCES))
 	$(CC) $(CFLAGS) $(INCLUDES) test_core.c ../src/driver.c \
@@ -20,4 +24,4 @@ run: test_odbc_integration
 	./test_odbc_integration
 
 clean:
-	/bin/rm -f test_odbc_core test_odbc_integration
+	/bin/rm -f test_odbc_core test_odbc_integration test_odbc_conformance

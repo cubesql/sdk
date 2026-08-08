@@ -1,0 +1,4283 @@
+/*
+ * Generated from the Windows ODBC headers (sql.h, sqlext.h, sqlucode.h) so the
+ * native test build sees exactly the constant values the production Windows
+ * build sees. Regenerate rather than edit; see include/odbc_compat.h for the
+ * hand-written types.
+ */
+#ifndef CUBESQL_ODBC_COMPAT_CONSTANTS_H
+#define CUBESQL_ODBC_COMPAT_CONSTANTS_H
+
+#ifndef SQL_NULL_DATA
+#define SQL_NULL_DATA (-1)
+#endif
+#ifndef SQL_DATA_AT_EXEC
+#define SQL_DATA_AT_EXEC (-2)
+#endif
+#ifndef SQL_SUCCESS
+#define SQL_SUCCESS 0
+#endif
+#ifndef SQL_SUCCESS_WITH_INFO
+#define SQL_SUCCESS_WITH_INFO 1
+#endif
+#ifndef SQL_NO_DATA
+#define SQL_NO_DATA 100
+#endif
+#ifndef SQL_PARAM_DATA_AVAILABLE
+#define SQL_PARAM_DATA_AVAILABLE 101
+#endif
+#ifndef SQL_ERROR
+#define SQL_ERROR (-1)
+#endif
+#ifndef SQL_INVALID_HANDLE
+#define SQL_INVALID_HANDLE (-2)
+#endif
+#ifndef SQL_STILL_EXECUTING
+#define SQL_STILL_EXECUTING 2
+#endif
+#ifndef SQL_NEED_DATA
+#define SQL_NEED_DATA 99
+#endif
+#ifndef SQL_NTS
+#define SQL_NTS (-3)
+#endif
+#ifndef SQL_NTSL
+#define SQL_NTSL (-3)
+#endif
+#ifndef SQL_MAX_MESSAGE_LENGTH
+#define SQL_MAX_MESSAGE_LENGTH 512
+#endif
+#ifndef SQL_DATE_LEN
+#define SQL_DATE_LEN 10
+#endif
+#ifndef SQL_TIME_LEN
+#define SQL_TIME_LEN 8
+#endif
+#ifndef SQL_TIMESTAMP_LEN
+#define SQL_TIMESTAMP_LEN 19
+#endif
+#ifndef SQL_HANDLE_ENV
+#define SQL_HANDLE_ENV 1
+#endif
+#ifndef SQL_HANDLE_DBC
+#define SQL_HANDLE_DBC 2
+#endif
+#ifndef SQL_HANDLE_STMT
+#define SQL_HANDLE_STMT 3
+#endif
+#ifndef SQL_HANDLE_DESC
+#define SQL_HANDLE_DESC 4
+#endif
+#ifndef SQL_ATTR_OUTPUT_NTS
+#define SQL_ATTR_OUTPUT_NTS 10001
+#endif
+#ifndef SQL_ATTR_AUTO_IPD
+#define SQL_ATTR_AUTO_IPD 10001
+#endif
+#ifndef SQL_ATTR_METADATA_ID
+#define SQL_ATTR_METADATA_ID 10014
+#endif
+#ifndef SQL_ATTR_APP_ROW_DESC
+#define SQL_ATTR_APP_ROW_DESC 10010
+#endif
+#ifndef SQL_ATTR_APP_PARAM_DESC
+#define SQL_ATTR_APP_PARAM_DESC 10011
+#endif
+#ifndef SQL_ATTR_IMP_ROW_DESC
+#define SQL_ATTR_IMP_ROW_DESC 10012
+#endif
+#ifndef SQL_ATTR_IMP_PARAM_DESC
+#define SQL_ATTR_IMP_PARAM_DESC 10013
+#endif
+#ifndef SQL_ATTR_CURSOR_SCROLLABLE
+#define SQL_ATTR_CURSOR_SCROLLABLE (-1)
+#endif
+#ifndef SQL_ATTR_CURSOR_SENSITIVITY
+#define SQL_ATTR_CURSOR_SENSITIVITY (-2)
+#endif
+#ifndef SQL_NONSCROLLABLE
+#define SQL_NONSCROLLABLE 0
+#endif
+#ifndef SQL_SCROLLABLE
+#define SQL_SCROLLABLE 1
+#endif
+#ifndef SQL_DESC_COUNT
+#define SQL_DESC_COUNT 1001
+#endif
+#ifndef SQL_DESC_TYPE
+#define SQL_DESC_TYPE 1002
+#endif
+#ifndef SQL_DESC_LENGTH
+#define SQL_DESC_LENGTH 1003
+#endif
+#ifndef SQL_DESC_OCTET_LENGTH_PTR
+#define SQL_DESC_OCTET_LENGTH_PTR 1004
+#endif
+#ifndef SQL_DESC_PRECISION
+#define SQL_DESC_PRECISION 1005
+#endif
+#ifndef SQL_DESC_SCALE
+#define SQL_DESC_SCALE 1006
+#endif
+#ifndef SQL_DESC_DATETIME_INTERVAL_CODE
+#define SQL_DESC_DATETIME_INTERVAL_CODE 1007
+#endif
+#ifndef SQL_DESC_NULLABLE
+#define SQL_DESC_NULLABLE 1008
+#endif
+#ifndef SQL_DESC_INDICATOR_PTR
+#define SQL_DESC_INDICATOR_PTR 1009
+#endif
+#ifndef SQL_DESC_DATA_PTR
+#define SQL_DESC_DATA_PTR 1010
+#endif
+#ifndef SQL_DESC_NAME
+#define SQL_DESC_NAME 1011
+#endif
+#ifndef SQL_DESC_UNNAMED
+#define SQL_DESC_UNNAMED 1012
+#endif
+#ifndef SQL_DESC_OCTET_LENGTH
+#define SQL_DESC_OCTET_LENGTH 1013
+#endif
+#ifndef SQL_DESC_ALLOC_TYPE
+#define SQL_DESC_ALLOC_TYPE 1099
+#endif
+#ifndef SQL_DIAG_RETURNCODE
+#define SQL_DIAG_RETURNCODE 1
+#endif
+#ifndef SQL_DIAG_NUMBER
+#define SQL_DIAG_NUMBER 2
+#endif
+#ifndef SQL_DIAG_ROW_COUNT
+#define SQL_DIAG_ROW_COUNT 3
+#endif
+#ifndef SQL_DIAG_SQLSTATE
+#define SQL_DIAG_SQLSTATE 4
+#endif
+#ifndef SQL_DIAG_NATIVE
+#define SQL_DIAG_NATIVE 5
+#endif
+#ifndef SQL_DIAG_MESSAGE_TEXT
+#define SQL_DIAG_MESSAGE_TEXT 6
+#endif
+#ifndef SQL_DIAG_DYNAMIC_FUNCTION
+#define SQL_DIAG_DYNAMIC_FUNCTION 7
+#endif
+#ifndef SQL_DIAG_CLASS_ORIGIN
+#define SQL_DIAG_CLASS_ORIGIN 8
+#endif
+#ifndef SQL_DIAG_SUBCLASS_ORIGIN
+#define SQL_DIAG_SUBCLASS_ORIGIN 9
+#endif
+#ifndef SQL_DIAG_CONNECTION_NAME
+#define SQL_DIAG_CONNECTION_NAME 10
+#endif
+#ifndef SQL_DIAG_SERVER_NAME
+#define SQL_DIAG_SERVER_NAME 11
+#endif
+#ifndef SQL_DIAG_DYNAMIC_FUNCTION_CODE
+#define SQL_DIAG_DYNAMIC_FUNCTION_CODE 12
+#endif
+#ifndef SQL_DIAG_ALTER_DOMAIN
+#define SQL_DIAG_ALTER_DOMAIN 3
+#endif
+#ifndef SQL_DIAG_ALTER_TABLE
+#define SQL_DIAG_ALTER_TABLE 4
+#endif
+#ifndef SQL_DIAG_CALL
+#define SQL_DIAG_CALL 7
+#endif
+#ifndef SQL_DIAG_CREATE_ASSERTION
+#define SQL_DIAG_CREATE_ASSERTION 6
+#endif
+#ifndef SQL_DIAG_CREATE_CHARACTER_SET
+#define SQL_DIAG_CREATE_CHARACTER_SET 8
+#endif
+#ifndef SQL_DIAG_CREATE_COLLATION
+#define SQL_DIAG_CREATE_COLLATION 10
+#endif
+#ifndef SQL_DIAG_CREATE_DOMAIN
+#define SQL_DIAG_CREATE_DOMAIN 23
+#endif
+#ifndef SQL_DIAG_CREATE_INDEX
+#define SQL_DIAG_CREATE_INDEX (-1)
+#endif
+#ifndef SQL_DIAG_CREATE_SCHEMA
+#define SQL_DIAG_CREATE_SCHEMA 64
+#endif
+#ifndef SQL_DIAG_CREATE_TABLE
+#define SQL_DIAG_CREATE_TABLE 77
+#endif
+#ifndef SQL_DIAG_CREATE_TRANSLATION
+#define SQL_DIAG_CREATE_TRANSLATION 79
+#endif
+#ifndef SQL_DIAG_CREATE_VIEW
+#define SQL_DIAG_CREATE_VIEW 84
+#endif
+#ifndef SQL_DIAG_DELETE_WHERE
+#define SQL_DIAG_DELETE_WHERE 19
+#endif
+#ifndef SQL_DIAG_DROP_ASSERTION
+#define SQL_DIAG_DROP_ASSERTION 24
+#endif
+#ifndef SQL_DIAG_DROP_CHARACTER_SET
+#define SQL_DIAG_DROP_CHARACTER_SET 25
+#endif
+#ifndef SQL_DIAG_DROP_COLLATION
+#define SQL_DIAG_DROP_COLLATION 26
+#endif
+#ifndef SQL_DIAG_DROP_DOMAIN
+#define SQL_DIAG_DROP_DOMAIN 27
+#endif
+#ifndef SQL_DIAG_DROP_INDEX
+#define SQL_DIAG_DROP_INDEX (-2)
+#endif
+#ifndef SQL_DIAG_DROP_SCHEMA
+#define SQL_DIAG_DROP_SCHEMA 31
+#endif
+#ifndef SQL_DIAG_DROP_TABLE
+#define SQL_DIAG_DROP_TABLE 32
+#endif
+#ifndef SQL_DIAG_DROP_TRANSLATION
+#define SQL_DIAG_DROP_TRANSLATION 33
+#endif
+#ifndef SQL_DIAG_DROP_VIEW
+#define SQL_DIAG_DROP_VIEW 36
+#endif
+#ifndef SQL_DIAG_DYNAMIC_DELETE_CURSOR
+#define SQL_DIAG_DYNAMIC_DELETE_CURSOR 38
+#endif
+#ifndef SQL_DIAG_DYNAMIC_UPDATE_CURSOR
+#define SQL_DIAG_DYNAMIC_UPDATE_CURSOR 81
+#endif
+#ifndef SQL_DIAG_GRANT
+#define SQL_DIAG_GRANT 48
+#endif
+#ifndef SQL_DIAG_INSERT
+#define SQL_DIAG_INSERT 50
+#endif
+#ifndef SQL_DIAG_REVOKE
+#define SQL_DIAG_REVOKE 59
+#endif
+#ifndef SQL_DIAG_SELECT_CURSOR
+#define SQL_DIAG_SELECT_CURSOR 85
+#endif
+#ifndef SQL_DIAG_UNKNOWN_STATEMENT
+#define SQL_DIAG_UNKNOWN_STATEMENT 0
+#endif
+#ifndef SQL_DIAG_UPDATE_WHERE
+#define SQL_DIAG_UPDATE_WHERE 82
+#endif
+#ifndef SQL_UNKNOWN_TYPE
+#define SQL_UNKNOWN_TYPE 0
+#endif
+#ifndef SQL_CHAR
+#define SQL_CHAR 1
+#endif
+#ifndef SQL_NUMERIC
+#define SQL_NUMERIC 2
+#endif
+#ifndef SQL_DECIMAL
+#define SQL_DECIMAL 3
+#endif
+#ifndef SQL_INTEGER
+#define SQL_INTEGER 4
+#endif
+#ifndef SQL_SMALLINT
+#define SQL_SMALLINT 5
+#endif
+#ifndef SQL_FLOAT
+#define SQL_FLOAT 6
+#endif
+#ifndef SQL_REAL
+#define SQL_REAL 7
+#endif
+#ifndef SQL_DOUBLE
+#define SQL_DOUBLE 8
+#endif
+#ifndef SQL_DATETIME
+#define SQL_DATETIME 9
+#endif
+#ifndef SQL_VARCHAR
+#define SQL_VARCHAR 12
+#endif
+#ifndef SQL_TYPE_DATE
+#define SQL_TYPE_DATE 91
+#endif
+#ifndef SQL_TYPE_TIME
+#define SQL_TYPE_TIME 92
+#endif
+#ifndef SQL_TYPE_TIMESTAMP
+#define SQL_TYPE_TIMESTAMP 93
+#endif
+#ifndef SQL_UNSPECIFIED
+#define SQL_UNSPECIFIED 0
+#endif
+#ifndef SQL_INSENSITIVE
+#define SQL_INSENSITIVE 1
+#endif
+#ifndef SQL_SENSITIVE
+#define SQL_SENSITIVE 2
+#endif
+#ifndef SQL_ALL_TYPES
+#define SQL_ALL_TYPES 0
+#endif
+#ifndef SQL_DEFAULT
+#define SQL_DEFAULT 99
+#endif
+#ifndef SQL_ARD_TYPE
+#define SQL_ARD_TYPE (-99)
+#endif
+#ifndef SQL_APD_TYPE
+#define SQL_APD_TYPE (-100)
+#endif
+#ifndef SQL_CODE_DATE
+#define SQL_CODE_DATE 1
+#endif
+#ifndef SQL_CODE_TIME
+#define SQL_CODE_TIME 2
+#endif
+#ifndef SQL_CODE_TIMESTAMP
+#define SQL_CODE_TIMESTAMP 3
+#endif
+#ifndef SQL_FALSE
+#define SQL_FALSE 0
+#endif
+#ifndef SQL_TRUE
+#define SQL_TRUE 1
+#endif
+#ifndef SQL_NO_NULLS
+#define SQL_NO_NULLS 0
+#endif
+#ifndef SQL_NULLABLE
+#define SQL_NULLABLE 1
+#endif
+#ifndef SQL_NULLABLE_UNKNOWN
+#define SQL_NULLABLE_UNKNOWN 2
+#endif
+#ifndef SQL_PRED_NONE
+#define SQL_PRED_NONE 0
+#endif
+#ifndef SQL_PRED_CHAR
+#define SQL_PRED_CHAR 1
+#endif
+#ifndef SQL_PRED_BASIC
+#define SQL_PRED_BASIC 2
+#endif
+#ifndef SQL_NAMED
+#define SQL_NAMED 0
+#endif
+#ifndef SQL_UNNAMED
+#define SQL_UNNAMED 1
+#endif
+#ifndef SQL_DESC_ALLOC_AUTO
+#define SQL_DESC_ALLOC_AUTO 1
+#endif
+#ifndef SQL_DESC_ALLOC_USER
+#define SQL_DESC_ALLOC_USER 2
+#endif
+#ifndef SQL_CLOSE
+#define SQL_CLOSE 0
+#endif
+#ifndef SQL_DROP
+#define SQL_DROP 1
+#endif
+#ifndef SQL_UNBIND
+#define SQL_UNBIND 2
+#endif
+#ifndef SQL_RESET_PARAMS
+#define SQL_RESET_PARAMS 3
+#endif
+#ifndef SQL_FETCH_NEXT
+#define SQL_FETCH_NEXT 1
+#endif
+#ifndef SQL_FETCH_FIRST
+#define SQL_FETCH_FIRST 2
+#endif
+#ifndef SQL_FETCH_LAST
+#define SQL_FETCH_LAST 3
+#endif
+#ifndef SQL_FETCH_PRIOR
+#define SQL_FETCH_PRIOR 4
+#endif
+#ifndef SQL_FETCH_ABSOLUTE
+#define SQL_FETCH_ABSOLUTE 5
+#endif
+#ifndef SQL_FETCH_RELATIVE
+#define SQL_FETCH_RELATIVE 6
+#endif
+#ifndef SQL_COMMIT
+#define SQL_COMMIT 0
+#endif
+#ifndef SQL_ROLLBACK
+#define SQL_ROLLBACK 1
+#endif
+#ifndef SQL_NULL_HENV
+#define SQL_NULL_HENV 0
+#endif
+#ifndef SQL_NULL_HDBC
+#define SQL_NULL_HDBC 0
+#endif
+#ifndef SQL_NULL_HSTMT
+#define SQL_NULL_HSTMT 0
+#endif
+#ifndef SQL_NULL_HDESC
+#define SQL_NULL_HDESC 0
+#endif
+#ifndef SQL_NULL_HANDLE
+#define SQL_NULL_HANDLE 0
+#endif
+#ifndef SQL_SCOPE_CURROW
+#define SQL_SCOPE_CURROW 0
+#endif
+#ifndef SQL_SCOPE_TRANSACTION
+#define SQL_SCOPE_TRANSACTION 1
+#endif
+#ifndef SQL_SCOPE_SESSION
+#define SQL_SCOPE_SESSION 2
+#endif
+#ifndef SQL_PC_UNKNOWN
+#define SQL_PC_UNKNOWN 0
+#endif
+#ifndef SQL_PC_NON_PSEUDO
+#define SQL_PC_NON_PSEUDO 1
+#endif
+#ifndef SQL_PC_PSEUDO
+#define SQL_PC_PSEUDO 2
+#endif
+#ifndef SQL_ROW_IDENTIFIER
+#define SQL_ROW_IDENTIFIER 1
+#endif
+#ifndef SQL_INDEX_UNIQUE
+#define SQL_INDEX_UNIQUE 0
+#endif
+#ifndef SQL_INDEX_ALL
+#define SQL_INDEX_ALL 1
+#endif
+#ifndef SQL_INDEX_CLUSTERED
+#define SQL_INDEX_CLUSTERED 1
+#endif
+#ifndef SQL_INDEX_HASHED
+#define SQL_INDEX_HASHED 2
+#endif
+#ifndef SQL_INDEX_OTHER
+#define SQL_INDEX_OTHER 3
+#endif
+#ifndef SQL_API_SQLALLOCCONNECT
+#define SQL_API_SQLALLOCCONNECT 1
+#endif
+#ifndef SQL_API_SQLALLOCENV
+#define SQL_API_SQLALLOCENV 2
+#endif
+#ifndef SQL_API_SQLALLOCHANDLE
+#define SQL_API_SQLALLOCHANDLE 1001
+#endif
+#ifndef SQL_API_SQLALLOCSTMT
+#define SQL_API_SQLALLOCSTMT 3
+#endif
+#ifndef SQL_API_SQLBINDCOL
+#define SQL_API_SQLBINDCOL 4
+#endif
+#ifndef SQL_API_SQLBINDPARAM
+#define SQL_API_SQLBINDPARAM 1002
+#endif
+#ifndef SQL_API_SQLCANCEL
+#define SQL_API_SQLCANCEL 5
+#endif
+#ifndef SQL_API_SQLCLOSECURSOR
+#define SQL_API_SQLCLOSECURSOR 1003
+#endif
+#ifndef SQL_API_SQLCOLATTRIBUTE
+#define SQL_API_SQLCOLATTRIBUTE 6
+#endif
+#ifndef SQL_API_SQLCOLUMNS
+#define SQL_API_SQLCOLUMNS 40
+#endif
+#ifndef SQL_API_SQLCONNECT
+#define SQL_API_SQLCONNECT 7
+#endif
+#ifndef SQL_API_SQLCOPYDESC
+#define SQL_API_SQLCOPYDESC 1004
+#endif
+#ifndef SQL_API_SQLDATASOURCES
+#define SQL_API_SQLDATASOURCES 57
+#endif
+#ifndef SQL_API_SQLDESCRIBECOL
+#define SQL_API_SQLDESCRIBECOL 8
+#endif
+#ifndef SQL_API_SQLDISCONNECT
+#define SQL_API_SQLDISCONNECT 9
+#endif
+#ifndef SQL_API_SQLENDTRAN
+#define SQL_API_SQLENDTRAN 1005
+#endif
+#ifndef SQL_API_SQLERROR
+#define SQL_API_SQLERROR 10
+#endif
+#ifndef SQL_API_SQLEXECDIRECT
+#define SQL_API_SQLEXECDIRECT 11
+#endif
+#ifndef SQL_API_SQLEXECUTE
+#define SQL_API_SQLEXECUTE 12
+#endif
+#ifndef SQL_API_SQLFETCH
+#define SQL_API_SQLFETCH 13
+#endif
+#ifndef SQL_API_SQLFETCHSCROLL
+#define SQL_API_SQLFETCHSCROLL 1021
+#endif
+#ifndef SQL_API_SQLFREECONNECT
+#define SQL_API_SQLFREECONNECT 14
+#endif
+#ifndef SQL_API_SQLFREEENV
+#define SQL_API_SQLFREEENV 15
+#endif
+#ifndef SQL_API_SQLFREEHANDLE
+#define SQL_API_SQLFREEHANDLE 1006
+#endif
+#ifndef SQL_API_SQLFREESTMT
+#define SQL_API_SQLFREESTMT 16
+#endif
+#ifndef SQL_API_SQLGETCONNECTATTR
+#define SQL_API_SQLGETCONNECTATTR 1007
+#endif
+#ifndef SQL_API_SQLGETCONNECTOPTION
+#define SQL_API_SQLGETCONNECTOPTION 42
+#endif
+#ifndef SQL_API_SQLGETCURSORNAME
+#define SQL_API_SQLGETCURSORNAME 17
+#endif
+#ifndef SQL_API_SQLGETDATA
+#define SQL_API_SQLGETDATA 43
+#endif
+#ifndef SQL_API_SQLGETDESCFIELD
+#define SQL_API_SQLGETDESCFIELD 1008
+#endif
+#ifndef SQL_API_SQLGETDESCREC
+#define SQL_API_SQLGETDESCREC 1009
+#endif
+#ifndef SQL_API_SQLGETDIAGFIELD
+#define SQL_API_SQLGETDIAGFIELD 1010
+#endif
+#ifndef SQL_API_SQLGETDIAGREC
+#define SQL_API_SQLGETDIAGREC 1011
+#endif
+#ifndef SQL_API_SQLGETENVATTR
+#define SQL_API_SQLGETENVATTR 1012
+#endif
+#ifndef SQL_API_SQLGETFUNCTIONS
+#define SQL_API_SQLGETFUNCTIONS 44
+#endif
+#ifndef SQL_API_SQLGETINFO
+#define SQL_API_SQLGETINFO 45
+#endif
+#ifndef SQL_API_SQLGETSTMTATTR
+#define SQL_API_SQLGETSTMTATTR 1014
+#endif
+#ifndef SQL_API_SQLGETSTMTOPTION
+#define SQL_API_SQLGETSTMTOPTION 46
+#endif
+#ifndef SQL_API_SQLGETTYPEINFO
+#define SQL_API_SQLGETTYPEINFO 47
+#endif
+#ifndef SQL_API_SQLNUMRESULTCOLS
+#define SQL_API_SQLNUMRESULTCOLS 18
+#endif
+#ifndef SQL_API_SQLPARAMDATA
+#define SQL_API_SQLPARAMDATA 48
+#endif
+#ifndef SQL_API_SQLPREPARE
+#define SQL_API_SQLPREPARE 19
+#endif
+#ifndef SQL_API_SQLPUTDATA
+#define SQL_API_SQLPUTDATA 49
+#endif
+#ifndef SQL_API_SQLROWCOUNT
+#define SQL_API_SQLROWCOUNT 20
+#endif
+#ifndef SQL_API_SQLSETCONNECTATTR
+#define SQL_API_SQLSETCONNECTATTR 1016
+#endif
+#ifndef SQL_API_SQLSETCONNECTOPTION
+#define SQL_API_SQLSETCONNECTOPTION 50
+#endif
+#ifndef SQL_API_SQLSETCURSORNAME
+#define SQL_API_SQLSETCURSORNAME 21
+#endif
+#ifndef SQL_API_SQLSETDESCFIELD
+#define SQL_API_SQLSETDESCFIELD 1017
+#endif
+#ifndef SQL_API_SQLSETDESCREC
+#define SQL_API_SQLSETDESCREC 1018
+#endif
+#ifndef SQL_API_SQLSETENVATTR
+#define SQL_API_SQLSETENVATTR 1019
+#endif
+#ifndef SQL_API_SQLSETPARAM
+#define SQL_API_SQLSETPARAM 22
+#endif
+#ifndef SQL_API_SQLSETSTMTATTR
+#define SQL_API_SQLSETSTMTATTR 1020
+#endif
+#ifndef SQL_API_SQLSETSTMTOPTION
+#define SQL_API_SQLSETSTMTOPTION 51
+#endif
+#ifndef SQL_API_SQLSPECIALCOLUMNS
+#define SQL_API_SQLSPECIALCOLUMNS 52
+#endif
+#ifndef SQL_API_SQLSTATISTICS
+#define SQL_API_SQLSTATISTICS 53
+#endif
+#ifndef SQL_API_SQLTABLES
+#define SQL_API_SQLTABLES 54
+#endif
+#ifndef SQL_API_SQLTRANSACT
+#define SQL_API_SQLTRANSACT 23
+#endif
+#ifndef SQL_API_SQLCANCELHANDLE
+#define SQL_API_SQLCANCELHANDLE 1550
+#endif
+#ifndef SQL_API_SQLCOMPLETEASYNC
+#define SQL_API_SQLCOMPLETEASYNC 1551
+#endif
+#ifndef SQL_MAX_DRIVER_CONNECTIONS
+#define SQL_MAX_DRIVER_CONNECTIONS 0
+#endif
+#ifndef SQL_MAXIMUM_DRIVER_CONNECTIONS
+#define SQL_MAXIMUM_DRIVER_CONNECTIONS 0
+#endif
+#ifndef SQL_MAX_CONCURRENT_ACTIVITIES
+#define SQL_MAX_CONCURRENT_ACTIVITIES 1
+#endif
+#ifndef SQL_MAXIMUM_CONCURRENT_ACTIVITIES
+#define SQL_MAXIMUM_CONCURRENT_ACTIVITIES 1
+#endif
+#ifndef SQL_DATA_SOURCE_NAME
+#define SQL_DATA_SOURCE_NAME 2
+#endif
+#ifndef SQL_FETCH_DIRECTION
+#define SQL_FETCH_DIRECTION 8
+#endif
+#ifndef SQL_SERVER_NAME
+#define SQL_SERVER_NAME 13
+#endif
+#ifndef SQL_SEARCH_PATTERN_ESCAPE
+#define SQL_SEARCH_PATTERN_ESCAPE 14
+#endif
+#ifndef SQL_DBMS_NAME
+#define SQL_DBMS_NAME 17
+#endif
+#ifndef SQL_DBMS_VER
+#define SQL_DBMS_VER 18
+#endif
+#ifndef SQL_ACCESSIBLE_TABLES
+#define SQL_ACCESSIBLE_TABLES 19
+#endif
+#ifndef SQL_ACCESSIBLE_PROCEDURES
+#define SQL_ACCESSIBLE_PROCEDURES 20
+#endif
+#ifndef SQL_CURSOR_COMMIT_BEHAVIOR
+#define SQL_CURSOR_COMMIT_BEHAVIOR 23
+#endif
+#ifndef SQL_DATA_SOURCE_READ_ONLY
+#define SQL_DATA_SOURCE_READ_ONLY 25
+#endif
+#ifndef SQL_DEFAULT_TXN_ISOLATION
+#define SQL_DEFAULT_TXN_ISOLATION 26
+#endif
+#ifndef SQL_IDENTIFIER_CASE
+#define SQL_IDENTIFIER_CASE 28
+#endif
+#ifndef SQL_IDENTIFIER_QUOTE_CHAR
+#define SQL_IDENTIFIER_QUOTE_CHAR 29
+#endif
+#ifndef SQL_MAX_COLUMN_NAME_LEN
+#define SQL_MAX_COLUMN_NAME_LEN 30
+#endif
+#ifndef SQL_MAXIMUM_COLUMN_NAME_LENGTH
+#define SQL_MAXIMUM_COLUMN_NAME_LENGTH 30
+#endif
+#ifndef SQL_MAX_CURSOR_NAME_LEN
+#define SQL_MAX_CURSOR_NAME_LEN 31
+#endif
+#ifndef SQL_MAXIMUM_CURSOR_NAME_LENGTH
+#define SQL_MAXIMUM_CURSOR_NAME_LENGTH 31
+#endif
+#ifndef SQL_MAX_SCHEMA_NAME_LEN
+#define SQL_MAX_SCHEMA_NAME_LEN 32
+#endif
+#ifndef SQL_MAXIMUM_SCHEMA_NAME_LENGTH
+#define SQL_MAXIMUM_SCHEMA_NAME_LENGTH 32
+#endif
+#ifndef SQL_MAX_CATALOG_NAME_LEN
+#define SQL_MAX_CATALOG_NAME_LEN 34
+#endif
+#ifndef SQL_MAXIMUM_CATALOG_NAME_LENGTH
+#define SQL_MAXIMUM_CATALOG_NAME_LENGTH 34
+#endif
+#ifndef SQL_MAX_TABLE_NAME_LEN
+#define SQL_MAX_TABLE_NAME_LEN 35
+#endif
+#ifndef SQL_SCROLL_CONCURRENCY
+#define SQL_SCROLL_CONCURRENCY 43
+#endif
+#ifndef SQL_TXN_CAPABLE
+#define SQL_TXN_CAPABLE 46
+#endif
+#ifndef SQL_TRANSACTION_CAPABLE
+#define SQL_TRANSACTION_CAPABLE 46
+#endif
+#ifndef SQL_USER_NAME
+#define SQL_USER_NAME 47
+#endif
+#ifndef SQL_TXN_ISOLATION_OPTION
+#define SQL_TXN_ISOLATION_OPTION 72
+#endif
+#ifndef SQL_TRANSACTION_ISOLATION_OPTION
+#define SQL_TRANSACTION_ISOLATION_OPTION 72
+#endif
+#ifndef SQL_INTEGRITY
+#define SQL_INTEGRITY 73
+#endif
+#ifndef SQL_GETDATA_EXTENSIONS
+#define SQL_GETDATA_EXTENSIONS 81
+#endif
+#ifndef SQL_NULL_COLLATION
+#define SQL_NULL_COLLATION 85
+#endif
+#ifndef SQL_ALTER_TABLE
+#define SQL_ALTER_TABLE 86
+#endif
+#ifndef SQL_ORDER_BY_COLUMNS_IN_SELECT
+#define SQL_ORDER_BY_COLUMNS_IN_SELECT 90
+#endif
+#ifndef SQL_SPECIAL_CHARACTERS
+#define SQL_SPECIAL_CHARACTERS 94
+#endif
+#ifndef SQL_MAX_COLUMNS_IN_GROUP_BY
+#define SQL_MAX_COLUMNS_IN_GROUP_BY 97
+#endif
+#ifndef SQL_MAXIMUM_COLUMNS_IN_GROUP_BY
+#define SQL_MAXIMUM_COLUMNS_IN_GROUP_BY 97
+#endif
+#ifndef SQL_MAX_COLUMNS_IN_INDEX
+#define SQL_MAX_COLUMNS_IN_INDEX 98
+#endif
+#ifndef SQL_MAXIMUM_COLUMNS_IN_INDEX
+#define SQL_MAXIMUM_COLUMNS_IN_INDEX 98
+#endif
+#ifndef SQL_MAX_COLUMNS_IN_ORDER_BY
+#define SQL_MAX_COLUMNS_IN_ORDER_BY 99
+#endif
+#ifndef SQL_MAXIMUM_COLUMNS_IN_ORDER_BY
+#define SQL_MAXIMUM_COLUMNS_IN_ORDER_BY 99
+#endif
+#ifndef SQL_MAX_COLUMNS_IN_SELECT
+#define SQL_MAX_COLUMNS_IN_SELECT 100
+#endif
+#ifndef SQL_MAXIMUM_COLUMNS_IN_SELECT
+#define SQL_MAXIMUM_COLUMNS_IN_SELECT 100
+#endif
+#ifndef SQL_MAX_COLUMNS_IN_TABLE
+#define SQL_MAX_COLUMNS_IN_TABLE 101
+#endif
+#ifndef SQL_MAX_INDEX_SIZE
+#define SQL_MAX_INDEX_SIZE 102
+#endif
+#ifndef SQL_MAXIMUM_INDEX_SIZE
+#define SQL_MAXIMUM_INDEX_SIZE 102
+#endif
+#ifndef SQL_MAX_ROW_SIZE
+#define SQL_MAX_ROW_SIZE 104
+#endif
+#ifndef SQL_MAXIMUM_ROW_SIZE
+#define SQL_MAXIMUM_ROW_SIZE 104
+#endif
+#ifndef SQL_MAX_STATEMENT_LEN
+#define SQL_MAX_STATEMENT_LEN 105
+#endif
+#ifndef SQL_MAXIMUM_STATEMENT_LENGTH
+#define SQL_MAXIMUM_STATEMENT_LENGTH 105
+#endif
+#ifndef SQL_MAX_TABLES_IN_SELECT
+#define SQL_MAX_TABLES_IN_SELECT 106
+#endif
+#ifndef SQL_MAXIMUM_TABLES_IN_SELECT
+#define SQL_MAXIMUM_TABLES_IN_SELECT 106
+#endif
+#ifndef SQL_MAX_USER_NAME_LEN
+#define SQL_MAX_USER_NAME_LEN 107
+#endif
+#ifndef SQL_MAXIMUM_USER_NAME_LENGTH
+#define SQL_MAXIMUM_USER_NAME_LENGTH 107
+#endif
+#ifndef SQL_OJ_CAPABILITIES
+#define SQL_OJ_CAPABILITIES 115
+#endif
+#ifndef SQL_OUTER_JOIN_CAPABILITIES
+#define SQL_OUTER_JOIN_CAPABILITIES 115
+#endif
+#ifndef SQL_XOPEN_CLI_YEAR
+#define SQL_XOPEN_CLI_YEAR 10000
+#endif
+#ifndef SQL_CURSOR_SENSITIVITY
+#define SQL_CURSOR_SENSITIVITY 10001
+#endif
+#ifndef SQL_DESCRIBE_PARAMETER
+#define SQL_DESCRIBE_PARAMETER 10002
+#endif
+#ifndef SQL_CATALOG_NAME
+#define SQL_CATALOG_NAME 10003
+#endif
+#ifndef SQL_COLLATION_SEQ
+#define SQL_COLLATION_SEQ 10004
+#endif
+#ifndef SQL_MAX_IDENTIFIER_LEN
+#define SQL_MAX_IDENTIFIER_LEN 10005
+#endif
+#ifndef SQL_MAXIMUM_IDENTIFIER_LENGTH
+#define SQL_MAXIMUM_IDENTIFIER_LENGTH 10005
+#endif
+#ifndef SQL_AT_ADD_COLUMN
+#define SQL_AT_ADD_COLUMN 1
+#endif
+#ifndef SQL_AT_DROP_COLUMN
+#define SQL_AT_DROP_COLUMN 2
+#endif
+#ifndef SQL_AT_ADD_CONSTRAINT
+#define SQL_AT_ADD_CONSTRAINT 8
+#endif
+#ifndef SQL_AM_NONE
+#define SQL_AM_NONE 0
+#endif
+#ifndef SQL_AM_CONNECTION
+#define SQL_AM_CONNECTION 1
+#endif
+#ifndef SQL_AM_STATEMENT
+#define SQL_AM_STATEMENT 2
+#endif
+#ifndef SQL_CB_DELETE
+#define SQL_CB_DELETE 0
+#endif
+#ifndef SQL_CB_CLOSE
+#define SQL_CB_CLOSE 1
+#endif
+#ifndef SQL_CB_PRESERVE
+#define SQL_CB_PRESERVE 2
+#endif
+#ifndef SQL_FD_FETCH_NEXT
+#define SQL_FD_FETCH_NEXT 1
+#endif
+#ifndef SQL_FD_FETCH_FIRST
+#define SQL_FD_FETCH_FIRST 2
+#endif
+#ifndef SQL_FD_FETCH_LAST
+#define SQL_FD_FETCH_LAST 4
+#endif
+#ifndef SQL_FD_FETCH_PRIOR
+#define SQL_FD_FETCH_PRIOR 8
+#endif
+#ifndef SQL_FD_FETCH_ABSOLUTE
+#define SQL_FD_FETCH_ABSOLUTE 16
+#endif
+#ifndef SQL_FD_FETCH_RELATIVE
+#define SQL_FD_FETCH_RELATIVE 32
+#endif
+#ifndef SQL_GD_ANY_COLUMN
+#define SQL_GD_ANY_COLUMN 1
+#endif
+#ifndef SQL_GD_ANY_ORDER
+#define SQL_GD_ANY_ORDER 2
+#endif
+#ifndef SQL_IC_UPPER
+#define SQL_IC_UPPER 1
+#endif
+#ifndef SQL_IC_LOWER
+#define SQL_IC_LOWER 2
+#endif
+#ifndef SQL_IC_SENSITIVE
+#define SQL_IC_SENSITIVE 3
+#endif
+#ifndef SQL_IC_MIXED
+#define SQL_IC_MIXED 4
+#endif
+#ifndef SQL_OJ_LEFT
+#define SQL_OJ_LEFT 1
+#endif
+#ifndef SQL_OJ_RIGHT
+#define SQL_OJ_RIGHT 2
+#endif
+#ifndef SQL_OJ_FULL
+#define SQL_OJ_FULL 4
+#endif
+#ifndef SQL_OJ_NESTED
+#define SQL_OJ_NESTED 8
+#endif
+#ifndef SQL_OJ_NOT_ORDERED
+#define SQL_OJ_NOT_ORDERED 16
+#endif
+#ifndef SQL_OJ_INNER
+#define SQL_OJ_INNER 32
+#endif
+#ifndef SQL_OJ_ALL_COMPARISON_OPS
+#define SQL_OJ_ALL_COMPARISON_OPS 64
+#endif
+#ifndef SQL_SCCO_READ_ONLY
+#define SQL_SCCO_READ_ONLY 1
+#endif
+#ifndef SQL_SCCO_LOCK
+#define SQL_SCCO_LOCK 2
+#endif
+#ifndef SQL_SCCO_OPT_ROWVER
+#define SQL_SCCO_OPT_ROWVER 4
+#endif
+#ifndef SQL_SCCO_OPT_VALUES
+#define SQL_SCCO_OPT_VALUES 8
+#endif
+#ifndef SQL_TC_NONE
+#define SQL_TC_NONE 0
+#endif
+#ifndef SQL_TC_DML
+#define SQL_TC_DML 1
+#endif
+#ifndef SQL_TC_ALL
+#define SQL_TC_ALL 2
+#endif
+#ifndef SQL_TC_DDL_COMMIT
+#define SQL_TC_DDL_COMMIT 3
+#endif
+#ifndef SQL_TC_DDL_IGNORE
+#define SQL_TC_DDL_IGNORE 4
+#endif
+#ifndef SQL_TXN_READ_UNCOMMITTED
+#define SQL_TXN_READ_UNCOMMITTED 1
+#endif
+#ifndef SQL_TRANSACTION_READ_UNCOMMITTED
+#define SQL_TRANSACTION_READ_UNCOMMITTED 1
+#endif
+#ifndef SQL_TXN_READ_COMMITTED
+#define SQL_TXN_READ_COMMITTED 2
+#endif
+#ifndef SQL_TRANSACTION_READ_COMMITTED
+#define SQL_TRANSACTION_READ_COMMITTED 2
+#endif
+#ifndef SQL_TXN_REPEATABLE_READ
+#define SQL_TXN_REPEATABLE_READ 4
+#endif
+#ifndef SQL_TRANSACTION_REPEATABLE_READ
+#define SQL_TRANSACTION_REPEATABLE_READ 4
+#endif
+#ifndef SQL_TXN_SERIALIZABLE
+#define SQL_TXN_SERIALIZABLE 8
+#endif
+#ifndef SQL_TRANSACTION_SERIALIZABLE
+#define SQL_TRANSACTION_SERIALIZABLE 8
+#endif
+#ifndef SQL_NC_HIGH
+#define SQL_NC_HIGH 0
+#endif
+#ifndef SQL_NC_LOW
+#define SQL_NC_LOW 1
+#endif
+#ifndef SQL_SPEC_MAJOR
+#define SQL_SPEC_MAJOR 3
+#endif
+#ifndef SQL_SPEC_MINOR
+#define SQL_SPEC_MINOR 80
+#endif
+#ifndef SQL_SQLSTATE_SIZE
+#define SQL_SQLSTATE_SIZE 5
+#endif
+#ifndef SQL_MAX_DSN_LENGTH
+#define SQL_MAX_DSN_LENGTH 32
+#endif
+#ifndef SQL_MAX_OPTION_STRING_LENGTH
+#define SQL_MAX_OPTION_STRING_LENGTH 256
+#endif
+#ifndef SQL_NO_DATA_FOUND
+#define SQL_NO_DATA_FOUND 100
+#endif
+#ifndef SQL_HANDLE_SENV
+#define SQL_HANDLE_SENV 5
+#endif
+#ifndef SQL_ATTR_ODBC_VERSION
+#define SQL_ATTR_ODBC_VERSION 200
+#endif
+#ifndef SQL_ATTR_CONNECTION_POOLING
+#define SQL_ATTR_CONNECTION_POOLING 201
+#endif
+#ifndef SQL_ATTR_CP_MATCH
+#define SQL_ATTR_CP_MATCH 202
+#endif
+#ifndef SQL_ATTR_APPLICATION_KEY
+#define SQL_ATTR_APPLICATION_KEY 203
+#endif
+#ifndef SQL_CP_OFF
+#define SQL_CP_OFF 0
+#endif
+#ifndef SQL_CP_ONE_PER_DRIVER
+#define SQL_CP_ONE_PER_DRIVER 1
+#endif
+#ifndef SQL_CP_ONE_PER_HENV
+#define SQL_CP_ONE_PER_HENV 2
+#endif
+#ifndef SQL_CP_DRIVER_AWARE
+#define SQL_CP_DRIVER_AWARE 3
+#endif
+#ifndef SQL_CP_DEFAULT
+#define SQL_CP_DEFAULT 0
+#endif
+#ifndef SQL_CP_STRICT_MATCH
+#define SQL_CP_STRICT_MATCH 0
+#endif
+#ifndef SQL_CP_RELAXED_MATCH
+#define SQL_CP_RELAXED_MATCH 1
+#endif
+#ifndef SQL_CP_MATCH_DEFAULT
+#define SQL_CP_MATCH_DEFAULT 0
+#endif
+#ifndef SQL_OV_ODBC2
+#define SQL_OV_ODBC2 2
+#endif
+#ifndef SQL_OV_ODBC3
+#define SQL_OV_ODBC3 3
+#endif
+#ifndef SQL_OV_ODBC3_80
+#define SQL_OV_ODBC3_80 380
+#endif
+#ifndef SQL_ACCESS_MODE
+#define SQL_ACCESS_MODE 101
+#endif
+#ifndef SQL_AUTOCOMMIT
+#define SQL_AUTOCOMMIT 102
+#endif
+#ifndef SQL_LOGIN_TIMEOUT
+#define SQL_LOGIN_TIMEOUT 103
+#endif
+#ifndef SQL_OPT_TRACE
+#define SQL_OPT_TRACE 104
+#endif
+#ifndef SQL_OPT_TRACEFILE
+#define SQL_OPT_TRACEFILE 105
+#endif
+#ifndef SQL_TRANSLATE_DLL
+#define SQL_TRANSLATE_DLL 106
+#endif
+#ifndef SQL_TRANSLATE_OPTION
+#define SQL_TRANSLATE_OPTION 107
+#endif
+#ifndef SQL_TXN_ISOLATION
+#define SQL_TXN_ISOLATION 108
+#endif
+#ifndef SQL_CURRENT_QUALIFIER
+#define SQL_CURRENT_QUALIFIER 109
+#endif
+#ifndef SQL_ODBC_CURSORS
+#define SQL_ODBC_CURSORS 110
+#endif
+#ifndef SQL_QUIET_MODE
+#define SQL_QUIET_MODE 111
+#endif
+#ifndef SQL_PACKET_SIZE
+#define SQL_PACKET_SIZE 112
+#endif
+#ifndef SQL_ATTR_ACCESS_MODE
+#define SQL_ATTR_ACCESS_MODE 101
+#endif
+#ifndef SQL_ATTR_AUTOCOMMIT
+#define SQL_ATTR_AUTOCOMMIT 102
+#endif
+#ifndef SQL_ATTR_CONNECTION_TIMEOUT
+#define SQL_ATTR_CONNECTION_TIMEOUT 113
+#endif
+#ifndef SQL_ATTR_CURRENT_CATALOG
+#define SQL_ATTR_CURRENT_CATALOG 109
+#endif
+#ifndef SQL_ATTR_DISCONNECT_BEHAVIOR
+#define SQL_ATTR_DISCONNECT_BEHAVIOR 114
+#endif
+#ifndef SQL_ATTR_ENLIST_IN_DTC
+#define SQL_ATTR_ENLIST_IN_DTC 1207
+#endif
+#ifndef SQL_ATTR_ENLIST_IN_XA
+#define SQL_ATTR_ENLIST_IN_XA 1208
+#endif
+#ifndef SQL_ATTR_LOGIN_TIMEOUT
+#define SQL_ATTR_LOGIN_TIMEOUT 103
+#endif
+#ifndef SQL_ATTR_ODBC_CURSORS
+#define SQL_ATTR_ODBC_CURSORS 110
+#endif
+#ifndef SQL_ATTR_PACKET_SIZE
+#define SQL_ATTR_PACKET_SIZE 112
+#endif
+#ifndef SQL_ATTR_QUIET_MODE
+#define SQL_ATTR_QUIET_MODE 111
+#endif
+#ifndef SQL_ATTR_TRACE
+#define SQL_ATTR_TRACE 104
+#endif
+#ifndef SQL_ATTR_TRACEFILE
+#define SQL_ATTR_TRACEFILE 105
+#endif
+#ifndef SQL_ATTR_TRANSLATE_LIB
+#define SQL_ATTR_TRANSLATE_LIB 106
+#endif
+#ifndef SQL_ATTR_TRANSLATE_OPTION
+#define SQL_ATTR_TRANSLATE_OPTION 107
+#endif
+#ifndef SQL_ATTR_TXN_ISOLATION
+#define SQL_ATTR_TXN_ISOLATION 108
+#endif
+#ifndef SQL_ATTR_CONNECTION_DEAD
+#define SQL_ATTR_CONNECTION_DEAD 1209
+#endif
+#ifndef SQL_ATTR_ANSI_APP
+#define SQL_ATTR_ANSI_APP 115
+#endif
+#ifndef SQL_ATTR_RESET_CONNECTION
+#define SQL_ATTR_RESET_CONNECTION 116
+#endif
+#ifndef SQL_ATTR_ASYNC_DBC_FUNCTIONS_ENABLE
+#define SQL_ATTR_ASYNC_DBC_FUNCTIONS_ENABLE 117
+#endif
+#ifndef SQL_ATTR_ASYNC_DBC_EVENT
+#define SQL_ATTR_ASYNC_DBC_EVENT 119
+#endif
+#ifndef SQL_CONNECT_OPT_DRVR_START
+#define SQL_CONNECT_OPT_DRVR_START 1000
+#endif
+#ifndef SQL_CONN_OPT_MAX
+#define SQL_CONN_OPT_MAX 112
+#endif
+#ifndef SQL_CONN_OPT_MIN
+#define SQL_CONN_OPT_MIN 101
+#endif
+#ifndef SQL_MODE_READ_WRITE
+#define SQL_MODE_READ_WRITE 0
+#endif
+#ifndef SQL_MODE_READ_ONLY
+#define SQL_MODE_READ_ONLY 1
+#endif
+#ifndef SQL_MODE_DEFAULT
+#define SQL_MODE_DEFAULT 0
+#endif
+#ifndef SQL_AUTOCOMMIT_OFF
+#define SQL_AUTOCOMMIT_OFF 0
+#endif
+#ifndef SQL_AUTOCOMMIT_ON
+#define SQL_AUTOCOMMIT_ON 1
+#endif
+#ifndef SQL_AUTOCOMMIT_DEFAULT
+#define SQL_AUTOCOMMIT_DEFAULT 1
+#endif
+#ifndef SQL_LOGIN_TIMEOUT_DEFAULT
+#define SQL_LOGIN_TIMEOUT_DEFAULT 15
+#endif
+#ifndef SQL_OPT_TRACE_OFF
+#define SQL_OPT_TRACE_OFF 0
+#endif
+#ifndef SQL_OPT_TRACE_ON
+#define SQL_OPT_TRACE_ON 1
+#endif
+#ifndef SQL_OPT_TRACE_DEFAULT
+#define SQL_OPT_TRACE_DEFAULT 0
+#endif
+#ifndef SQL_CUR_USE_IF_NEEDED
+#define SQL_CUR_USE_IF_NEEDED 0
+#endif
+#ifndef SQL_CUR_USE_ODBC
+#define SQL_CUR_USE_ODBC 1
+#endif
+#ifndef SQL_CUR_USE_DRIVER
+#define SQL_CUR_USE_DRIVER 2
+#endif
+#ifndef SQL_CUR_DEFAULT
+#define SQL_CUR_DEFAULT 2
+#endif
+#ifndef SQL_DB_RETURN_TO_POOL
+#define SQL_DB_RETURN_TO_POOL 0
+#endif
+#ifndef SQL_DB_DISCONNECT
+#define SQL_DB_DISCONNECT 1
+#endif
+#ifndef SQL_DB_DEFAULT
+#define SQL_DB_DEFAULT 0
+#endif
+#ifndef SQL_DTC_DONE
+#define SQL_DTC_DONE 0
+#endif
+#ifndef SQL_CD_TRUE
+#define SQL_CD_TRUE 1
+#endif
+#ifndef SQL_CD_FALSE
+#define SQL_CD_FALSE 0
+#endif
+#ifndef SQL_AA_TRUE
+#define SQL_AA_TRUE 1
+#endif
+#ifndef SQL_AA_FALSE
+#define SQL_AA_FALSE 0
+#endif
+#ifndef SQL_RESET_CONNECTION_YES
+#define SQL_RESET_CONNECTION_YES 1
+#endif
+#ifndef SQL_ASYNC_DBC_ENABLE_ON
+#define SQL_ASYNC_DBC_ENABLE_ON 1
+#endif
+#ifndef SQL_ASYNC_DBC_ENABLE_OFF
+#define SQL_ASYNC_DBC_ENABLE_OFF 0
+#endif
+#ifndef SQL_ASYNC_DBC_ENABLE_DEFAULT
+#define SQL_ASYNC_DBC_ENABLE_DEFAULT 0
+#endif
+#ifndef SQL_QUERY_TIMEOUT
+#define SQL_QUERY_TIMEOUT 0
+#endif
+#ifndef SQL_MAX_ROWS
+#define SQL_MAX_ROWS 1
+#endif
+#ifndef SQL_NOSCAN
+#define SQL_NOSCAN 2
+#endif
+#ifndef SQL_MAX_LENGTH
+#define SQL_MAX_LENGTH 3
+#endif
+#ifndef SQL_ASYNC_ENABLE
+#define SQL_ASYNC_ENABLE 4
+#endif
+#ifndef SQL_BIND_TYPE
+#define SQL_BIND_TYPE 5
+#endif
+#ifndef SQL_CURSOR_TYPE
+#define SQL_CURSOR_TYPE 6
+#endif
+#ifndef SQL_CONCURRENCY
+#define SQL_CONCURRENCY 7
+#endif
+#ifndef SQL_KEYSET_SIZE
+#define SQL_KEYSET_SIZE 8
+#endif
+#ifndef SQL_ROWSET_SIZE
+#define SQL_ROWSET_SIZE 9
+#endif
+#ifndef SQL_SIMULATE_CURSOR
+#define SQL_SIMULATE_CURSOR 10
+#endif
+#ifndef SQL_RETRIEVE_DATA
+#define SQL_RETRIEVE_DATA 11
+#endif
+#ifndef SQL_USE_BOOKMARKS
+#define SQL_USE_BOOKMARKS 12
+#endif
+#ifndef SQL_GET_BOOKMARK
+#define SQL_GET_BOOKMARK 13
+#endif
+#ifndef SQL_ROW_NUMBER
+#define SQL_ROW_NUMBER 14
+#endif
+#ifndef SQL_ATTR_ASYNC_ENABLE
+#define SQL_ATTR_ASYNC_ENABLE 4
+#endif
+#ifndef SQL_ATTR_CONCURRENCY
+#define SQL_ATTR_CONCURRENCY 7
+#endif
+#ifndef SQL_ATTR_CURSOR_TYPE
+#define SQL_ATTR_CURSOR_TYPE 6
+#endif
+#ifndef SQL_ATTR_ENABLE_AUTO_IPD
+#define SQL_ATTR_ENABLE_AUTO_IPD 15
+#endif
+#ifndef SQL_ATTR_FETCH_BOOKMARK_PTR
+#define SQL_ATTR_FETCH_BOOKMARK_PTR 16
+#endif
+#ifndef SQL_ATTR_KEYSET_SIZE
+#define SQL_ATTR_KEYSET_SIZE 8
+#endif
+#ifndef SQL_ATTR_MAX_LENGTH
+#define SQL_ATTR_MAX_LENGTH 3
+#endif
+#ifndef SQL_ATTR_MAX_ROWS
+#define SQL_ATTR_MAX_ROWS 1
+#endif
+#ifndef SQL_ATTR_NOSCAN
+#define SQL_ATTR_NOSCAN 2
+#endif
+#ifndef SQL_ATTR_PARAM_BIND_OFFSET_PTR
+#define SQL_ATTR_PARAM_BIND_OFFSET_PTR 17
+#endif
+#ifndef SQL_ATTR_PARAM_BIND_TYPE
+#define SQL_ATTR_PARAM_BIND_TYPE 18
+#endif
+#ifndef SQL_ATTR_PARAM_OPERATION_PTR
+#define SQL_ATTR_PARAM_OPERATION_PTR 19
+#endif
+#ifndef SQL_ATTR_PARAM_STATUS_PTR
+#define SQL_ATTR_PARAM_STATUS_PTR 20
+#endif
+#ifndef SQL_ATTR_PARAMS_PROCESSED_PTR
+#define SQL_ATTR_PARAMS_PROCESSED_PTR 21
+#endif
+#ifndef SQL_ATTR_PARAMSET_SIZE
+#define SQL_ATTR_PARAMSET_SIZE 22
+#endif
+#ifndef SQL_ATTR_QUERY_TIMEOUT
+#define SQL_ATTR_QUERY_TIMEOUT 0
+#endif
+#ifndef SQL_ATTR_RETRIEVE_DATA
+#define SQL_ATTR_RETRIEVE_DATA 11
+#endif
+#ifndef SQL_ATTR_ROW_BIND_OFFSET_PTR
+#define SQL_ATTR_ROW_BIND_OFFSET_PTR 23
+#endif
+#ifndef SQL_ATTR_ROW_BIND_TYPE
+#define SQL_ATTR_ROW_BIND_TYPE 5
+#endif
+#ifndef SQL_ATTR_ROW_NUMBER
+#define SQL_ATTR_ROW_NUMBER 14
+#endif
+#ifndef SQL_ATTR_ROW_OPERATION_PTR
+#define SQL_ATTR_ROW_OPERATION_PTR 24
+#endif
+#ifndef SQL_ATTR_ROW_STATUS_PTR
+#define SQL_ATTR_ROW_STATUS_PTR 25
+#endif
+#ifndef SQL_ATTR_ROWS_FETCHED_PTR
+#define SQL_ATTR_ROWS_FETCHED_PTR 26
+#endif
+#ifndef SQL_ATTR_ROW_ARRAY_SIZE
+#define SQL_ATTR_ROW_ARRAY_SIZE 27
+#endif
+#ifndef SQL_ATTR_SIMULATE_CURSOR
+#define SQL_ATTR_SIMULATE_CURSOR 10
+#endif
+#ifndef SQL_ATTR_USE_BOOKMARKS
+#define SQL_ATTR_USE_BOOKMARKS 12
+#endif
+#ifndef SQL_ATTR_ASYNC_STMT_EVENT
+#define SQL_ATTR_ASYNC_STMT_EVENT 29
+#endif
+#ifndef SQL_STMT_OPT_MAX
+#define SQL_STMT_OPT_MAX 14
+#endif
+#ifndef SQL_STMT_OPT_MIN
+#define SQL_STMT_OPT_MIN 0
+#endif
+#ifndef SQL_COL_PRED_CHAR
+#define SQL_COL_PRED_CHAR 1
+#endif
+#ifndef SQL_COL_PRED_BASIC
+#define SQL_COL_PRED_BASIC 2
+#endif
+#ifndef SQL_IS_POINTER
+#define SQL_IS_POINTER (-4)
+#endif
+#ifndef SQL_IS_UINTEGER
+#define SQL_IS_UINTEGER (-5)
+#endif
+#ifndef SQL_IS_INTEGER
+#define SQL_IS_INTEGER (-6)
+#endif
+#ifndef SQL_IS_USMALLINT
+#define SQL_IS_USMALLINT (-7)
+#endif
+#ifndef SQL_IS_SMALLINT
+#define SQL_IS_SMALLINT (-8)
+#endif
+#ifndef SQL_PARAM_BIND_BY_COLUMN
+#define SQL_PARAM_BIND_BY_COLUMN 0
+#endif
+#ifndef SQL_PARAM_BIND_TYPE_DEFAULT
+#define SQL_PARAM_BIND_TYPE_DEFAULT 0
+#endif
+#ifndef SQL_QUERY_TIMEOUT_DEFAULT
+#define SQL_QUERY_TIMEOUT_DEFAULT 0
+#endif
+#ifndef SQL_MAX_ROWS_DEFAULT
+#define SQL_MAX_ROWS_DEFAULT 0
+#endif
+#ifndef SQL_NOSCAN_OFF
+#define SQL_NOSCAN_OFF 0
+#endif
+#ifndef SQL_NOSCAN_ON
+#define SQL_NOSCAN_ON 1
+#endif
+#ifndef SQL_NOSCAN_DEFAULT
+#define SQL_NOSCAN_DEFAULT 0
+#endif
+#ifndef SQL_MAX_LENGTH_DEFAULT
+#define SQL_MAX_LENGTH_DEFAULT 0
+#endif
+#ifndef SQL_ASYNC_ENABLE_OFF
+#define SQL_ASYNC_ENABLE_OFF 0
+#endif
+#ifndef SQL_ASYNC_ENABLE_ON
+#define SQL_ASYNC_ENABLE_ON 1
+#endif
+#ifndef SQL_ASYNC_ENABLE_DEFAULT
+#define SQL_ASYNC_ENABLE_DEFAULT 0
+#endif
+#ifndef SQL_BIND_BY_COLUMN
+#define SQL_BIND_BY_COLUMN 0
+#endif
+#ifndef SQL_BIND_TYPE_DEFAULT
+#define SQL_BIND_TYPE_DEFAULT 0
+#endif
+#ifndef SQL_CONCUR_READ_ONLY
+#define SQL_CONCUR_READ_ONLY 1
+#endif
+#ifndef SQL_CONCUR_LOCK
+#define SQL_CONCUR_LOCK 2
+#endif
+#ifndef SQL_CONCUR_ROWVER
+#define SQL_CONCUR_ROWVER 3
+#endif
+#ifndef SQL_CONCUR_VALUES
+#define SQL_CONCUR_VALUES 4
+#endif
+#ifndef SQL_CONCUR_DEFAULT
+#define SQL_CONCUR_DEFAULT 1
+#endif
+#ifndef SQL_CURSOR_FORWARD_ONLY
+#define SQL_CURSOR_FORWARD_ONLY 0
+#endif
+#ifndef SQL_CURSOR_KEYSET_DRIVEN
+#define SQL_CURSOR_KEYSET_DRIVEN 1
+#endif
+#ifndef SQL_CURSOR_DYNAMIC
+#define SQL_CURSOR_DYNAMIC 2
+#endif
+#ifndef SQL_CURSOR_STATIC
+#define SQL_CURSOR_STATIC 3
+#endif
+#ifndef SQL_CURSOR_TYPE_DEFAULT
+#define SQL_CURSOR_TYPE_DEFAULT 0
+#endif
+#ifndef SQL_ROWSET_SIZE_DEFAULT
+#define SQL_ROWSET_SIZE_DEFAULT 1
+#endif
+#ifndef SQL_KEYSET_SIZE_DEFAULT
+#define SQL_KEYSET_SIZE_DEFAULT 0
+#endif
+#ifndef SQL_SC_NON_UNIQUE
+#define SQL_SC_NON_UNIQUE 0
+#endif
+#ifndef SQL_SC_TRY_UNIQUE
+#define SQL_SC_TRY_UNIQUE 1
+#endif
+#ifndef SQL_SC_UNIQUE
+#define SQL_SC_UNIQUE 2
+#endif
+#ifndef SQL_RD_OFF
+#define SQL_RD_OFF 0
+#endif
+#ifndef SQL_RD_ON
+#define SQL_RD_ON 1
+#endif
+#ifndef SQL_RD_DEFAULT
+#define SQL_RD_DEFAULT 1
+#endif
+#ifndef SQL_UB_OFF
+#define SQL_UB_OFF 0
+#endif
+#ifndef SQL_UB_DEFAULT
+#define SQL_UB_DEFAULT 0
+#endif
+#ifndef SQL_UB_VARIABLE
+#define SQL_UB_VARIABLE 2
+#endif
+#ifndef SQL_DESC_ARRAY_SIZE
+#define SQL_DESC_ARRAY_SIZE 20
+#endif
+#ifndef SQL_DESC_ARRAY_STATUS_PTR
+#define SQL_DESC_ARRAY_STATUS_PTR 21
+#endif
+#ifndef SQL_DESC_AUTO_UNIQUE_VALUE
+#define SQL_DESC_AUTO_UNIQUE_VALUE 11
+#endif
+#ifndef SQL_DESC_BASE_COLUMN_NAME
+#define SQL_DESC_BASE_COLUMN_NAME 22
+#endif
+#ifndef SQL_DESC_BASE_TABLE_NAME
+#define SQL_DESC_BASE_TABLE_NAME 23
+#endif
+#ifndef SQL_DESC_BIND_OFFSET_PTR
+#define SQL_DESC_BIND_OFFSET_PTR 24
+#endif
+#ifndef SQL_DESC_BIND_TYPE
+#define SQL_DESC_BIND_TYPE 25
+#endif
+#ifndef SQL_DESC_CASE_SENSITIVE
+#define SQL_DESC_CASE_SENSITIVE 12
+#endif
+#ifndef SQL_DESC_CATALOG_NAME
+#define SQL_DESC_CATALOG_NAME 17
+#endif
+#ifndef SQL_DESC_CONCISE_TYPE
+#define SQL_DESC_CONCISE_TYPE 2
+#endif
+#ifndef SQL_DESC_DATETIME_INTERVAL_PRECISION
+#define SQL_DESC_DATETIME_INTERVAL_PRECISION 26
+#endif
+#ifndef SQL_DESC_DISPLAY_SIZE
+#define SQL_DESC_DISPLAY_SIZE 6
+#endif
+#ifndef SQL_DESC_FIXED_PREC_SCALE
+#define SQL_DESC_FIXED_PREC_SCALE 9
+#endif
+#ifndef SQL_DESC_LABEL
+#define SQL_DESC_LABEL 18
+#endif
+#ifndef SQL_DESC_LITERAL_PREFIX
+#define SQL_DESC_LITERAL_PREFIX 27
+#endif
+#ifndef SQL_DESC_LITERAL_SUFFIX
+#define SQL_DESC_LITERAL_SUFFIX 28
+#endif
+#ifndef SQL_DESC_LOCAL_TYPE_NAME
+#define SQL_DESC_LOCAL_TYPE_NAME 29
+#endif
+#ifndef SQL_DESC_MAXIMUM_SCALE
+#define SQL_DESC_MAXIMUM_SCALE 30
+#endif
+#ifndef SQL_DESC_MINIMUM_SCALE
+#define SQL_DESC_MINIMUM_SCALE 31
+#endif
+#ifndef SQL_DESC_NUM_PREC_RADIX
+#define SQL_DESC_NUM_PREC_RADIX 32
+#endif
+#ifndef SQL_DESC_PARAMETER_TYPE
+#define SQL_DESC_PARAMETER_TYPE 33
+#endif
+#ifndef SQL_DESC_ROWS_PROCESSED_PTR
+#define SQL_DESC_ROWS_PROCESSED_PTR 34
+#endif
+#ifndef SQL_DESC_ROWVER
+#define SQL_DESC_ROWVER 35
+#endif
+#ifndef SQL_DESC_SCHEMA_NAME
+#define SQL_DESC_SCHEMA_NAME 16
+#endif
+#ifndef SQL_DESC_SEARCHABLE
+#define SQL_DESC_SEARCHABLE 13
+#endif
+#ifndef SQL_DESC_TYPE_NAME
+#define SQL_DESC_TYPE_NAME 14
+#endif
+#ifndef SQL_DESC_TABLE_NAME
+#define SQL_DESC_TABLE_NAME 15
+#endif
+#ifndef SQL_DESC_UNSIGNED
+#define SQL_DESC_UNSIGNED 8
+#endif
+#ifndef SQL_DESC_UPDATABLE
+#define SQL_DESC_UPDATABLE 10
+#endif
+#ifndef SQL_DIAG_CURSOR_ROW_COUNT
+#define SQL_DIAG_CURSOR_ROW_COUNT (-1249)
+#endif
+#ifndef SQL_DIAG_ROW_NUMBER
+#define SQL_DIAG_ROW_NUMBER (-1248)
+#endif
+#ifndef SQL_DIAG_COLUMN_NUMBER
+#define SQL_DIAG_COLUMN_NUMBER (-1247)
+#endif
+#ifndef SQL_DATE
+#define SQL_DATE 9
+#endif
+#ifndef SQL_INTERVAL
+#define SQL_INTERVAL 10
+#endif
+#ifndef SQL_TIME
+#define SQL_TIME 10
+#endif
+#ifndef SQL_TIMESTAMP
+#define SQL_TIMESTAMP 11
+#endif
+#ifndef SQL_LONGVARCHAR
+#define SQL_LONGVARCHAR (-1)
+#endif
+#ifndef SQL_BINARY
+#define SQL_BINARY (-2)
+#endif
+#ifndef SQL_VARBINARY
+#define SQL_VARBINARY (-3)
+#endif
+#ifndef SQL_LONGVARBINARY
+#define SQL_LONGVARBINARY (-4)
+#endif
+#ifndef SQL_BIGINT
+#define SQL_BIGINT (-5)
+#endif
+#ifndef SQL_TINYINT
+#define SQL_TINYINT (-6)
+#endif
+#ifndef SQL_BIT
+#define SQL_BIT (-7)
+#endif
+#ifndef SQL_GUID
+#define SQL_GUID (-11)
+#endif
+#ifndef SQL_CODE_YEAR
+#define SQL_CODE_YEAR 1
+#endif
+#ifndef SQL_CODE_MONTH
+#define SQL_CODE_MONTH 2
+#endif
+#ifndef SQL_CODE_DAY
+#define SQL_CODE_DAY 3
+#endif
+#ifndef SQL_CODE_HOUR
+#define SQL_CODE_HOUR 4
+#endif
+#ifndef SQL_CODE_MINUTE
+#define SQL_CODE_MINUTE 5
+#endif
+#ifndef SQL_CODE_SECOND
+#define SQL_CODE_SECOND 6
+#endif
+#ifndef SQL_CODE_YEAR_TO_MONTH
+#define SQL_CODE_YEAR_TO_MONTH 7
+#endif
+#ifndef SQL_CODE_DAY_TO_HOUR
+#define SQL_CODE_DAY_TO_HOUR 8
+#endif
+#ifndef SQL_CODE_DAY_TO_MINUTE
+#define SQL_CODE_DAY_TO_MINUTE 9
+#endif
+#ifndef SQL_CODE_DAY_TO_SECOND
+#define SQL_CODE_DAY_TO_SECOND 10
+#endif
+#ifndef SQL_CODE_HOUR_TO_MINUTE
+#define SQL_CODE_HOUR_TO_MINUTE 11
+#endif
+#ifndef SQL_CODE_HOUR_TO_SECOND
+#define SQL_CODE_HOUR_TO_SECOND 12
+#endif
+#ifndef SQL_CODE_MINUTE_TO_SECOND
+#define SQL_CODE_MINUTE_TO_SECOND 13
+#endif
+#ifndef SQL_INTERVAL_YEAR
+#define SQL_INTERVAL_YEAR 101
+#endif
+#ifndef SQL_INTERVAL_MONTH
+#define SQL_INTERVAL_MONTH 102
+#endif
+#ifndef SQL_INTERVAL_DAY
+#define SQL_INTERVAL_DAY 103
+#endif
+#ifndef SQL_INTERVAL_HOUR
+#define SQL_INTERVAL_HOUR 104
+#endif
+#ifndef SQL_INTERVAL_MINUTE
+#define SQL_INTERVAL_MINUTE 105
+#endif
+#ifndef SQL_INTERVAL_SECOND
+#define SQL_INTERVAL_SECOND 106
+#endif
+#ifndef SQL_INTERVAL_YEAR_TO_MONTH
+#define SQL_INTERVAL_YEAR_TO_MONTH 107
+#endif
+#ifndef SQL_INTERVAL_DAY_TO_HOUR
+#define SQL_INTERVAL_DAY_TO_HOUR 108
+#endif
+#ifndef SQL_INTERVAL_DAY_TO_MINUTE
+#define SQL_INTERVAL_DAY_TO_MINUTE 109
+#endif
+#ifndef SQL_INTERVAL_DAY_TO_SECOND
+#define SQL_INTERVAL_DAY_TO_SECOND 110
+#endif
+#ifndef SQL_INTERVAL_HOUR_TO_MINUTE
+#define SQL_INTERVAL_HOUR_TO_MINUTE 111
+#endif
+#ifndef SQL_INTERVAL_HOUR_TO_SECOND
+#define SQL_INTERVAL_HOUR_TO_SECOND 112
+#endif
+#ifndef SQL_INTERVAL_MINUTE_TO_SECOND
+#define SQL_INTERVAL_MINUTE_TO_SECOND 113
+#endif
+#ifndef SQL_UNICODE
+#define SQL_UNICODE (-95)
+#endif
+#ifndef SQL_UNICODE_VARCHAR
+#define SQL_UNICODE_VARCHAR (-96)
+#endif
+#ifndef SQL_UNICODE_LONGVARCHAR
+#define SQL_UNICODE_LONGVARCHAR (-97)
+#endif
+#ifndef SQL_UNICODE_CHAR
+#define SQL_UNICODE_CHAR (-95)
+#endif
+#ifndef SQL_TYPE_DRIVER_START
+#define SQL_TYPE_DRIVER_START 101
+#endif
+#ifndef SQL_TYPE_DRIVER_END
+#define SQL_TYPE_DRIVER_END (-97)
+#endif
+#ifndef SQL_C_CHAR
+#define SQL_C_CHAR 1
+#endif
+#ifndef SQL_C_LONG
+#define SQL_C_LONG 4
+#endif
+#ifndef SQL_C_SHORT
+#define SQL_C_SHORT 5
+#endif
+#ifndef SQL_C_FLOAT
+#define SQL_C_FLOAT 7
+#endif
+#ifndef SQL_C_DOUBLE
+#define SQL_C_DOUBLE 8
+#endif
+#ifndef SQL_C_NUMERIC
+#define SQL_C_NUMERIC 2
+#endif
+#ifndef SQL_C_DEFAULT
+#define SQL_C_DEFAULT 99
+#endif
+#ifndef SQL_SIGNED_OFFSET
+#define SQL_SIGNED_OFFSET (-20)
+#endif
+#ifndef SQL_UNSIGNED_OFFSET
+#define SQL_UNSIGNED_OFFSET (-22)
+#endif
+#ifndef SQL_C_DATE
+#define SQL_C_DATE 9
+#endif
+#ifndef SQL_C_TIME
+#define SQL_C_TIME 10
+#endif
+#ifndef SQL_C_TIMESTAMP
+#define SQL_C_TIMESTAMP 11
+#endif
+#ifndef SQL_C_TYPE_DATE
+#define SQL_C_TYPE_DATE 91
+#endif
+#ifndef SQL_C_TYPE_TIME
+#define SQL_C_TYPE_TIME 92
+#endif
+#ifndef SQL_C_TYPE_TIMESTAMP
+#define SQL_C_TYPE_TIMESTAMP 93
+#endif
+#ifndef SQL_C_INTERVAL_YEAR
+#define SQL_C_INTERVAL_YEAR 101
+#endif
+#ifndef SQL_C_INTERVAL_MONTH
+#define SQL_C_INTERVAL_MONTH 102
+#endif
+#ifndef SQL_C_INTERVAL_DAY
+#define SQL_C_INTERVAL_DAY 103
+#endif
+#ifndef SQL_C_INTERVAL_HOUR
+#define SQL_C_INTERVAL_HOUR 104
+#endif
+#ifndef SQL_C_INTERVAL_MINUTE
+#define SQL_C_INTERVAL_MINUTE 105
+#endif
+#ifndef SQL_C_INTERVAL_SECOND
+#define SQL_C_INTERVAL_SECOND 106
+#endif
+#ifndef SQL_C_INTERVAL_YEAR_TO_MONTH
+#define SQL_C_INTERVAL_YEAR_TO_MONTH 107
+#endif
+#ifndef SQL_C_INTERVAL_DAY_TO_HOUR
+#define SQL_C_INTERVAL_DAY_TO_HOUR 108
+#endif
+#ifndef SQL_C_INTERVAL_DAY_TO_MINUTE
+#define SQL_C_INTERVAL_DAY_TO_MINUTE 109
+#endif
+#ifndef SQL_C_INTERVAL_DAY_TO_SECOND
+#define SQL_C_INTERVAL_DAY_TO_SECOND 110
+#endif
+#ifndef SQL_C_INTERVAL_HOUR_TO_MINUTE
+#define SQL_C_INTERVAL_HOUR_TO_MINUTE 111
+#endif
+#ifndef SQL_C_INTERVAL_HOUR_TO_SECOND
+#define SQL_C_INTERVAL_HOUR_TO_SECOND 112
+#endif
+#ifndef SQL_C_INTERVAL_MINUTE_TO_SECOND
+#define SQL_C_INTERVAL_MINUTE_TO_SECOND 113
+#endif
+#ifndef SQL_C_BINARY
+#define SQL_C_BINARY (-2)
+#endif
+#ifndef SQL_C_BIT
+#define SQL_C_BIT (-7)
+#endif
+#ifndef SQL_C_SBIGINT
+#define SQL_C_SBIGINT (-25)
+#endif
+#ifndef SQL_C_UBIGINT
+#define SQL_C_UBIGINT (-27)
+#endif
+#ifndef SQL_C_TINYINT
+#define SQL_C_TINYINT (-6)
+#endif
+#ifndef SQL_C_SLONG
+#define SQL_C_SLONG (-16)
+#endif
+#ifndef SQL_C_SSHORT
+#define SQL_C_SSHORT (-15)
+#endif
+#ifndef SQL_C_STINYINT
+#define SQL_C_STINYINT (-26)
+#endif
+#ifndef SQL_C_ULONG
+#define SQL_C_ULONG (-18)
+#endif
+#ifndef SQL_C_USHORT
+#define SQL_C_USHORT (-17)
+#endif
+#ifndef SQL_C_UTINYINT
+#define SQL_C_UTINYINT (-28)
+#endif
+#ifndef SQL_C_BOOKMARK
+#define SQL_C_BOOKMARK (-27)
+#endif
+#ifndef SQL_C_GUID
+#define SQL_C_GUID (-11)
+#endif
+#ifndef SQL_TYPE_NULL
+#define SQL_TYPE_NULL 0
+#endif
+#ifndef SQL_TYPE_MIN
+#define SQL_TYPE_MIN (-7)
+#endif
+#ifndef SQL_TYPE_MAX
+#define SQL_TYPE_MAX 12
+#endif
+#ifndef SQL_DRIVER_C_TYPE_BASE
+#define SQL_DRIVER_C_TYPE_BASE 16384
+#endif
+#ifndef SQL_DRIVER_SQL_TYPE_BASE
+#define SQL_DRIVER_SQL_TYPE_BASE 16384
+#endif
+#ifndef SQL_DRIVER_DESC_FIELD_BASE
+#define SQL_DRIVER_DESC_FIELD_BASE 16384
+#endif
+#ifndef SQL_DRIVER_DIAG_FIELD_BASE
+#define SQL_DRIVER_DIAG_FIELD_BASE 16384
+#endif
+#ifndef SQL_DRIVER_INFO_TYPE_BASE
+#define SQL_DRIVER_INFO_TYPE_BASE 16384
+#endif
+#ifndef SQL_DRIVER_CONN_ATTR_BASE
+#define SQL_DRIVER_CONN_ATTR_BASE 16384
+#endif
+#ifndef SQL_DRIVER_STMT_ATTR_BASE
+#define SQL_DRIVER_STMT_ATTR_BASE 16384
+#endif
+#ifndef SQL_C_VARBOOKMARK
+#define SQL_C_VARBOOKMARK (-2)
+#endif
+#ifndef SQL_NO_ROW_NUMBER
+#define SQL_NO_ROW_NUMBER (-1)
+#endif
+#ifndef SQL_NO_COLUMN_NUMBER
+#define SQL_NO_COLUMN_NUMBER (-1)
+#endif
+#ifndef SQL_ROW_NUMBER_UNKNOWN
+#define SQL_ROW_NUMBER_UNKNOWN (-2)
+#endif
+#ifndef SQL_COLUMN_NUMBER_UNKNOWN
+#define SQL_COLUMN_NUMBER_UNKNOWN (-2)
+#endif
+#ifndef SQL_DEFAULT_PARAM
+#define SQL_DEFAULT_PARAM (-5)
+#endif
+#ifndef SQL_IGNORE
+#define SQL_IGNORE (-6)
+#endif
+#ifndef SQL_COLUMN_IGNORE
+#define SQL_COLUMN_IGNORE (-6)
+#endif
+#ifndef SQL_LEN_DATA_AT_EXEC_OFFSET
+#define SQL_LEN_DATA_AT_EXEC_OFFSET (-100)
+#endif
+#ifndef SQL_LEN_BINARY_ATTR_OFFSET
+#define SQL_LEN_BINARY_ATTR_OFFSET (-100)
+#endif
+#ifndef SQL_PARAM_TYPE_DEFAULT
+#define SQL_PARAM_TYPE_DEFAULT 2
+#endif
+#ifndef SQL_SETPARAM_VALUE_MAX
+#define SQL_SETPARAM_VALUE_MAX (-1)
+#endif
+#ifndef SQL_COLUMN_COUNT
+#define SQL_COLUMN_COUNT 0
+#endif
+#ifndef SQL_COLUMN_NAME
+#define SQL_COLUMN_NAME 1
+#endif
+#ifndef SQL_COLUMN_TYPE
+#define SQL_COLUMN_TYPE 2
+#endif
+#ifndef SQL_COLUMN_LENGTH
+#define SQL_COLUMN_LENGTH 3
+#endif
+#ifndef SQL_COLUMN_PRECISION
+#define SQL_COLUMN_PRECISION 4
+#endif
+#ifndef SQL_COLUMN_SCALE
+#define SQL_COLUMN_SCALE 5
+#endif
+#ifndef SQL_COLUMN_DISPLAY_SIZE
+#define SQL_COLUMN_DISPLAY_SIZE 6
+#endif
+#ifndef SQL_COLUMN_NULLABLE
+#define SQL_COLUMN_NULLABLE 7
+#endif
+#ifndef SQL_COLUMN_UNSIGNED
+#define SQL_COLUMN_UNSIGNED 8
+#endif
+#ifndef SQL_COLUMN_MONEY
+#define SQL_COLUMN_MONEY 9
+#endif
+#ifndef SQL_COLUMN_UPDATABLE
+#define SQL_COLUMN_UPDATABLE 10
+#endif
+#ifndef SQL_COLUMN_AUTO_INCREMENT
+#define SQL_COLUMN_AUTO_INCREMENT 11
+#endif
+#ifndef SQL_COLUMN_CASE_SENSITIVE
+#define SQL_COLUMN_CASE_SENSITIVE 12
+#endif
+#ifndef SQL_COLUMN_SEARCHABLE
+#define SQL_COLUMN_SEARCHABLE 13
+#endif
+#ifndef SQL_COLUMN_TYPE_NAME
+#define SQL_COLUMN_TYPE_NAME 14
+#endif
+#ifndef SQL_COLUMN_TABLE_NAME
+#define SQL_COLUMN_TABLE_NAME 15
+#endif
+#ifndef SQL_COLUMN_OWNER_NAME
+#define SQL_COLUMN_OWNER_NAME 16
+#endif
+#ifndef SQL_COLUMN_QUALIFIER_NAME
+#define SQL_COLUMN_QUALIFIER_NAME 17
+#endif
+#ifndef SQL_COLUMN_LABEL
+#define SQL_COLUMN_LABEL 18
+#endif
+#ifndef SQL_COLATT_OPT_MAX
+#define SQL_COLATT_OPT_MAX 18
+#endif
+#ifndef SQL_COLUMN_DRIVER_START
+#define SQL_COLUMN_DRIVER_START 1000
+#endif
+#ifndef SQL_COLATT_OPT_MIN
+#define SQL_COLATT_OPT_MIN 0
+#endif
+#ifndef SQL_ATTR_READONLY
+#define SQL_ATTR_READONLY 0
+#endif
+#ifndef SQL_ATTR_WRITE
+#define SQL_ATTR_WRITE 1
+#endif
+#ifndef SQL_ATTR_READWRITE_UNKNOWN
+#define SQL_ATTR_READWRITE_UNKNOWN 2
+#endif
+#ifndef SQL_UNSEARCHABLE
+#define SQL_UNSEARCHABLE 0
+#endif
+#ifndef SQL_LIKE_ONLY
+#define SQL_LIKE_ONLY 1
+#endif
+#ifndef SQL_ALL_EXCEPT_LIKE
+#define SQL_ALL_EXCEPT_LIKE 2
+#endif
+#ifndef SQL_SEARCHABLE
+#define SQL_SEARCHABLE 3
+#endif
+#ifndef SQL_PRED_SEARCHABLE
+#define SQL_PRED_SEARCHABLE 3
+#endif
+#ifndef SQL_NO_TOTAL
+#define SQL_NO_TOTAL (-4)
+#endif
+#ifndef SQL_API_SQLALLOCHANDLESTD
+#define SQL_API_SQLALLOCHANDLESTD 73
+#endif
+#ifndef SQL_API_SQLBULKOPERATIONS
+#define SQL_API_SQLBULKOPERATIONS 24
+#endif
+#ifndef SQL_API_SQLBINDPARAMETER
+#define SQL_API_SQLBINDPARAMETER 72
+#endif
+#ifndef SQL_API_SQLBROWSECONNECT
+#define SQL_API_SQLBROWSECONNECT 55
+#endif
+#ifndef SQL_API_SQLCOLATTRIBUTES
+#define SQL_API_SQLCOLATTRIBUTES 6
+#endif
+#ifndef SQL_API_SQLCOLUMNPRIVILEGES
+#define SQL_API_SQLCOLUMNPRIVILEGES 56
+#endif
+#ifndef SQL_API_SQLDESCRIBEPARAM
+#define SQL_API_SQLDESCRIBEPARAM 58
+#endif
+#ifndef SQL_API_SQLDRIVERCONNECT
+#define SQL_API_SQLDRIVERCONNECT 41
+#endif
+#ifndef SQL_API_SQLDRIVERS
+#define SQL_API_SQLDRIVERS 71
+#endif
+#ifndef SQL_API_SQLPRIVATEDRIVERS
+#define SQL_API_SQLPRIVATEDRIVERS 79
+#endif
+#ifndef SQL_API_SQLEXTENDEDFETCH
+#define SQL_API_SQLEXTENDEDFETCH 59
+#endif
+#ifndef SQL_API_SQLFOREIGNKEYS
+#define SQL_API_SQLFOREIGNKEYS 60
+#endif
+#ifndef SQL_API_SQLMORERESULTS
+#define SQL_API_SQLMORERESULTS 61
+#endif
+#ifndef SQL_API_SQLNATIVESQL
+#define SQL_API_SQLNATIVESQL 62
+#endif
+#ifndef SQL_API_SQLNUMPARAMS
+#define SQL_API_SQLNUMPARAMS 63
+#endif
+#ifndef SQL_API_SQLPARAMOPTIONS
+#define SQL_API_SQLPARAMOPTIONS 64
+#endif
+#ifndef SQL_API_SQLPRIMARYKEYS
+#define SQL_API_SQLPRIMARYKEYS 65
+#endif
+#ifndef SQL_API_SQLPROCEDURECOLUMNS
+#define SQL_API_SQLPROCEDURECOLUMNS 66
+#endif
+#ifndef SQL_API_SQLPROCEDURES
+#define SQL_API_SQLPROCEDURES 67
+#endif
+#ifndef SQL_API_SQLSETPOS
+#define SQL_API_SQLSETPOS 68
+#endif
+#ifndef SQL_API_SQLSETSCROLLOPTIONS
+#define SQL_API_SQLSETSCROLLOPTIONS 69
+#endif
+#ifndef SQL_API_SQLTABLEPRIVILEGES
+#define SQL_API_SQLTABLEPRIVILEGES 70
+#endif
+#ifndef SQL_EXT_API_LAST
+#define SQL_EXT_API_LAST 72
+#endif
+#ifndef SQL_NUM_FUNCTIONS
+#define SQL_NUM_FUNCTIONS 23
+#endif
+#ifndef SQL_EXT_API_START
+#define SQL_EXT_API_START 40
+#endif
+#ifndef SQL_NUM_EXTENSIONS
+#define SQL_NUM_EXTENSIONS 33
+#endif
+#ifndef SQL_API_ALL_FUNCTIONS
+#define SQL_API_ALL_FUNCTIONS 0
+#endif
+#ifndef SQL_API_LOADBYORDINAL
+#define SQL_API_LOADBYORDINAL 199
+#endif
+#ifndef SQL_API_ODBC3_ALL_FUNCTIONS
+#define SQL_API_ODBC3_ALL_FUNCTIONS 999
+#endif
+#ifndef SQL_API_ODBC3_ALL_FUNCTIONS_SIZE
+#define SQL_API_ODBC3_ALL_FUNCTIONS_SIZE 250
+#endif
+#ifndef SQL_INFO_FIRST
+#define SQL_INFO_FIRST 0
+#endif
+#ifndef SQL_ACTIVE_CONNECTIONS
+#define SQL_ACTIVE_CONNECTIONS 0
+#endif
+#ifndef SQL_ACTIVE_STATEMENTS
+#define SQL_ACTIVE_STATEMENTS 1
+#endif
+#ifndef SQL_DRIVER_HDBC
+#define SQL_DRIVER_HDBC 3
+#endif
+#ifndef SQL_DRIVER_HENV
+#define SQL_DRIVER_HENV 4
+#endif
+#ifndef SQL_DRIVER_HSTMT
+#define SQL_DRIVER_HSTMT 5
+#endif
+#ifndef SQL_DRIVER_NAME
+#define SQL_DRIVER_NAME 6
+#endif
+#ifndef SQL_DRIVER_VER
+#define SQL_DRIVER_VER 7
+#endif
+#ifndef SQL_ODBC_API_CONFORMANCE
+#define SQL_ODBC_API_CONFORMANCE 9
+#endif
+#ifndef SQL_ODBC_VER
+#define SQL_ODBC_VER 10
+#endif
+#ifndef SQL_ROW_UPDATES
+#define SQL_ROW_UPDATES 11
+#endif
+#ifndef SQL_ODBC_SAG_CLI_CONFORMANCE
+#define SQL_ODBC_SAG_CLI_CONFORMANCE 12
+#endif
+#ifndef SQL_ODBC_SQL_CONFORMANCE
+#define SQL_ODBC_SQL_CONFORMANCE 15
+#endif
+#ifndef SQL_PROCEDURES
+#define SQL_PROCEDURES 21
+#endif
+#ifndef SQL_CONCAT_NULL_BEHAVIOR
+#define SQL_CONCAT_NULL_BEHAVIOR 22
+#endif
+#ifndef SQL_CURSOR_ROLLBACK_BEHAVIOR
+#define SQL_CURSOR_ROLLBACK_BEHAVIOR 24
+#endif
+#ifndef SQL_EXPRESSIONS_IN_ORDERBY
+#define SQL_EXPRESSIONS_IN_ORDERBY 27
+#endif
+#ifndef SQL_MAX_OWNER_NAME_LEN
+#define SQL_MAX_OWNER_NAME_LEN 32
+#endif
+#ifndef SQL_MAX_PROCEDURE_NAME_LEN
+#define SQL_MAX_PROCEDURE_NAME_LEN 33
+#endif
+#ifndef SQL_MAX_QUALIFIER_NAME_LEN
+#define SQL_MAX_QUALIFIER_NAME_LEN 34
+#endif
+#ifndef SQL_MULT_RESULT_SETS
+#define SQL_MULT_RESULT_SETS 36
+#endif
+#ifndef SQL_MULTIPLE_ACTIVE_TXN
+#define SQL_MULTIPLE_ACTIVE_TXN 37
+#endif
+#ifndef SQL_OUTER_JOINS
+#define SQL_OUTER_JOINS 38
+#endif
+#ifndef SQL_OWNER_TERM
+#define SQL_OWNER_TERM 39
+#endif
+#ifndef SQL_PROCEDURE_TERM
+#define SQL_PROCEDURE_TERM 40
+#endif
+#ifndef SQL_QUALIFIER_NAME_SEPARATOR
+#define SQL_QUALIFIER_NAME_SEPARATOR 41
+#endif
+#ifndef SQL_QUALIFIER_TERM
+#define SQL_QUALIFIER_TERM 42
+#endif
+#ifndef SQL_SCROLL_OPTIONS
+#define SQL_SCROLL_OPTIONS 44
+#endif
+#ifndef SQL_TABLE_TERM
+#define SQL_TABLE_TERM 45
+#endif
+#ifndef SQL_CONVERT_FUNCTIONS
+#define SQL_CONVERT_FUNCTIONS 48
+#endif
+#ifndef SQL_NUMERIC_FUNCTIONS
+#define SQL_NUMERIC_FUNCTIONS 49
+#endif
+#ifndef SQL_STRING_FUNCTIONS
+#define SQL_STRING_FUNCTIONS 50
+#endif
+#ifndef SQL_SYSTEM_FUNCTIONS
+#define SQL_SYSTEM_FUNCTIONS 51
+#endif
+#ifndef SQL_TIMEDATE_FUNCTIONS
+#define SQL_TIMEDATE_FUNCTIONS 52
+#endif
+#ifndef SQL_CONVERT_BIGINT
+#define SQL_CONVERT_BIGINT 53
+#endif
+#ifndef SQL_CONVERT_BINARY
+#define SQL_CONVERT_BINARY 54
+#endif
+#ifndef SQL_CONVERT_BIT
+#define SQL_CONVERT_BIT 55
+#endif
+#ifndef SQL_CONVERT_CHAR
+#define SQL_CONVERT_CHAR 56
+#endif
+#ifndef SQL_CONVERT_DATE
+#define SQL_CONVERT_DATE 57
+#endif
+#ifndef SQL_CONVERT_DECIMAL
+#define SQL_CONVERT_DECIMAL 58
+#endif
+#ifndef SQL_CONVERT_DOUBLE
+#define SQL_CONVERT_DOUBLE 59
+#endif
+#ifndef SQL_CONVERT_FLOAT
+#define SQL_CONVERT_FLOAT 60
+#endif
+#ifndef SQL_CONVERT_INTEGER
+#define SQL_CONVERT_INTEGER 61
+#endif
+#ifndef SQL_CONVERT_LONGVARCHAR
+#define SQL_CONVERT_LONGVARCHAR 62
+#endif
+#ifndef SQL_CONVERT_NUMERIC
+#define SQL_CONVERT_NUMERIC 63
+#endif
+#ifndef SQL_CONVERT_REAL
+#define SQL_CONVERT_REAL 64
+#endif
+#ifndef SQL_CONVERT_SMALLINT
+#define SQL_CONVERT_SMALLINT 65
+#endif
+#ifndef SQL_CONVERT_TIME
+#define SQL_CONVERT_TIME 66
+#endif
+#ifndef SQL_CONVERT_TIMESTAMP
+#define SQL_CONVERT_TIMESTAMP 67
+#endif
+#ifndef SQL_CONVERT_TINYINT
+#define SQL_CONVERT_TINYINT 68
+#endif
+#ifndef SQL_CONVERT_VARBINARY
+#define SQL_CONVERT_VARBINARY 69
+#endif
+#ifndef SQL_CONVERT_VARCHAR
+#define SQL_CONVERT_VARCHAR 70
+#endif
+#ifndef SQL_CONVERT_LONGVARBINARY
+#define SQL_CONVERT_LONGVARBINARY 71
+#endif
+#ifndef SQL_ODBC_SQL_OPT_IEF
+#define SQL_ODBC_SQL_OPT_IEF 73
+#endif
+#ifndef SQL_CORRELATION_NAME
+#define SQL_CORRELATION_NAME 74
+#endif
+#ifndef SQL_NON_NULLABLE_COLUMNS
+#define SQL_NON_NULLABLE_COLUMNS 75
+#endif
+#ifndef SQL_DRIVER_HLIB
+#define SQL_DRIVER_HLIB 76
+#endif
+#ifndef SQL_DRIVER_ODBC_VER
+#define SQL_DRIVER_ODBC_VER 77
+#endif
+#ifndef SQL_LOCK_TYPES
+#define SQL_LOCK_TYPES 78
+#endif
+#ifndef SQL_POS_OPERATIONS
+#define SQL_POS_OPERATIONS 79
+#endif
+#ifndef SQL_POSITIONED_STATEMENTS
+#define SQL_POSITIONED_STATEMENTS 80
+#endif
+#ifndef SQL_BOOKMARK_PERSISTENCE
+#define SQL_BOOKMARK_PERSISTENCE 82
+#endif
+#ifndef SQL_STATIC_SENSITIVITY
+#define SQL_STATIC_SENSITIVITY 83
+#endif
+#ifndef SQL_FILE_USAGE
+#define SQL_FILE_USAGE 84
+#endif
+#ifndef SQL_COLUMN_ALIAS
+#define SQL_COLUMN_ALIAS 87
+#endif
+#ifndef SQL_GROUP_BY
+#define SQL_GROUP_BY 88
+#endif
+#ifndef SQL_KEYWORDS
+#define SQL_KEYWORDS 89
+#endif
+#ifndef SQL_OWNER_USAGE
+#define SQL_OWNER_USAGE 91
+#endif
+#ifndef SQL_QUALIFIER_USAGE
+#define SQL_QUALIFIER_USAGE 92
+#endif
+#ifndef SQL_QUOTED_IDENTIFIER_CASE
+#define SQL_QUOTED_IDENTIFIER_CASE 93
+#endif
+#ifndef SQL_SUBQUERIES
+#define SQL_SUBQUERIES 95
+#endif
+#ifndef SQL_UNION
+#define SQL_UNION 96
+#endif
+#ifndef SQL_MAX_ROW_SIZE_INCLUDES_LONG
+#define SQL_MAX_ROW_SIZE_INCLUDES_LONG 103
+#endif
+#ifndef SQL_MAX_CHAR_LITERAL_LEN
+#define SQL_MAX_CHAR_LITERAL_LEN 108
+#endif
+#ifndef SQL_TIMEDATE_ADD_INTERVALS
+#define SQL_TIMEDATE_ADD_INTERVALS 109
+#endif
+#ifndef SQL_TIMEDATE_DIFF_INTERVALS
+#define SQL_TIMEDATE_DIFF_INTERVALS 110
+#endif
+#ifndef SQL_NEED_LONG_DATA_LEN
+#define SQL_NEED_LONG_DATA_LEN 111
+#endif
+#ifndef SQL_MAX_BINARY_LITERAL_LEN
+#define SQL_MAX_BINARY_LITERAL_LEN 112
+#endif
+#ifndef SQL_LIKE_ESCAPE_CLAUSE
+#define SQL_LIKE_ESCAPE_CLAUSE 113
+#endif
+#ifndef SQL_QUALIFIER_LOCATION
+#define SQL_QUALIFIER_LOCATION 114
+#endif
+#ifndef SQL_INFO_LAST
+#define SQL_INFO_LAST 114
+#endif
+#ifndef SQL_INFO_DRIVER_START
+#define SQL_INFO_DRIVER_START 1000
+#endif
+#ifndef SQL_ACTIVE_ENVIRONMENTS
+#define SQL_ACTIVE_ENVIRONMENTS 116
+#endif
+#ifndef SQL_ALTER_DOMAIN
+#define SQL_ALTER_DOMAIN 117
+#endif
+#ifndef SQL_SQL_CONFORMANCE
+#define SQL_SQL_CONFORMANCE 118
+#endif
+#ifndef SQL_DATETIME_LITERALS
+#define SQL_DATETIME_LITERALS 119
+#endif
+#ifndef SQL_ASYNC_MODE
+#define SQL_ASYNC_MODE 10021
+#endif
+#ifndef SQL_BATCH_ROW_COUNT
+#define SQL_BATCH_ROW_COUNT 120
+#endif
+#ifndef SQL_BATCH_SUPPORT
+#define SQL_BATCH_SUPPORT 121
+#endif
+#ifndef SQL_CATALOG_LOCATION
+#define SQL_CATALOG_LOCATION 114
+#endif
+#ifndef SQL_CATALOG_NAME_SEPARATOR
+#define SQL_CATALOG_NAME_SEPARATOR 41
+#endif
+#ifndef SQL_CATALOG_TERM
+#define SQL_CATALOG_TERM 42
+#endif
+#ifndef SQL_CATALOG_USAGE
+#define SQL_CATALOG_USAGE 92
+#endif
+#ifndef SQL_CONVERT_WCHAR
+#define SQL_CONVERT_WCHAR 122
+#endif
+#ifndef SQL_CONVERT_INTERVAL_DAY_TIME
+#define SQL_CONVERT_INTERVAL_DAY_TIME 123
+#endif
+#ifndef SQL_CONVERT_INTERVAL_YEAR_MONTH
+#define SQL_CONVERT_INTERVAL_YEAR_MONTH 124
+#endif
+#ifndef SQL_CONVERT_WLONGVARCHAR
+#define SQL_CONVERT_WLONGVARCHAR 125
+#endif
+#ifndef SQL_CONVERT_WVARCHAR
+#define SQL_CONVERT_WVARCHAR 126
+#endif
+#ifndef SQL_CREATE_ASSERTION
+#define SQL_CREATE_ASSERTION 127
+#endif
+#ifndef SQL_CREATE_CHARACTER_SET
+#define SQL_CREATE_CHARACTER_SET 128
+#endif
+#ifndef SQL_CREATE_COLLATION
+#define SQL_CREATE_COLLATION 129
+#endif
+#ifndef SQL_CREATE_DOMAIN
+#define SQL_CREATE_DOMAIN 130
+#endif
+#ifndef SQL_CREATE_SCHEMA
+#define SQL_CREATE_SCHEMA 131
+#endif
+#ifndef SQL_CREATE_TABLE
+#define SQL_CREATE_TABLE 132
+#endif
+#ifndef SQL_CREATE_TRANSLATION
+#define SQL_CREATE_TRANSLATION 133
+#endif
+#ifndef SQL_CREATE_VIEW
+#define SQL_CREATE_VIEW 134
+#endif
+#ifndef SQL_DRIVER_HDESC
+#define SQL_DRIVER_HDESC 135
+#endif
+#ifndef SQL_DROP_ASSERTION
+#define SQL_DROP_ASSERTION 136
+#endif
+#ifndef SQL_DROP_CHARACTER_SET
+#define SQL_DROP_CHARACTER_SET 137
+#endif
+#ifndef SQL_DROP_COLLATION
+#define SQL_DROP_COLLATION 138
+#endif
+#ifndef SQL_DROP_DOMAIN
+#define SQL_DROP_DOMAIN 139
+#endif
+#ifndef SQL_DROP_SCHEMA
+#define SQL_DROP_SCHEMA 140
+#endif
+#ifndef SQL_DROP_TABLE
+#define SQL_DROP_TABLE 141
+#endif
+#ifndef SQL_DROP_TRANSLATION
+#define SQL_DROP_TRANSLATION 142
+#endif
+#ifndef SQL_DROP_VIEW
+#define SQL_DROP_VIEW 143
+#endif
+#ifndef SQL_DYNAMIC_CURSOR_ATTRIBUTES1
+#define SQL_DYNAMIC_CURSOR_ATTRIBUTES1 144
+#endif
+#ifndef SQL_DYNAMIC_CURSOR_ATTRIBUTES2
+#define SQL_DYNAMIC_CURSOR_ATTRIBUTES2 145
+#endif
+#ifndef SQL_FORWARD_ONLY_CURSOR_ATTRIBUTES1
+#define SQL_FORWARD_ONLY_CURSOR_ATTRIBUTES1 146
+#endif
+#ifndef SQL_FORWARD_ONLY_CURSOR_ATTRIBUTES2
+#define SQL_FORWARD_ONLY_CURSOR_ATTRIBUTES2 147
+#endif
+#ifndef SQL_INDEX_KEYWORDS
+#define SQL_INDEX_KEYWORDS 148
+#endif
+#ifndef SQL_INFO_SCHEMA_VIEWS
+#define SQL_INFO_SCHEMA_VIEWS 149
+#endif
+#ifndef SQL_KEYSET_CURSOR_ATTRIBUTES1
+#define SQL_KEYSET_CURSOR_ATTRIBUTES1 150
+#endif
+#ifndef SQL_KEYSET_CURSOR_ATTRIBUTES2
+#define SQL_KEYSET_CURSOR_ATTRIBUTES2 151
+#endif
+#ifndef SQL_MAX_ASYNC_CONCURRENT_STATEMENTS
+#define SQL_MAX_ASYNC_CONCURRENT_STATEMENTS 10022
+#endif
+#ifndef SQL_ODBC_INTERFACE_CONFORMANCE
+#define SQL_ODBC_INTERFACE_CONFORMANCE 152
+#endif
+#ifndef SQL_PARAM_ARRAY_ROW_COUNTS
+#define SQL_PARAM_ARRAY_ROW_COUNTS 153
+#endif
+#ifndef SQL_PARAM_ARRAY_SELECTS
+#define SQL_PARAM_ARRAY_SELECTS 154
+#endif
+#ifndef SQL_SCHEMA_TERM
+#define SQL_SCHEMA_TERM 39
+#endif
+#ifndef SQL_SCHEMA_USAGE
+#define SQL_SCHEMA_USAGE 91
+#endif
+#ifndef SQL_SQL92_DATETIME_FUNCTIONS
+#define SQL_SQL92_DATETIME_FUNCTIONS 155
+#endif
+#ifndef SQL_SQL92_FOREIGN_KEY_DELETE_RULE
+#define SQL_SQL92_FOREIGN_KEY_DELETE_RULE 156
+#endif
+#ifndef SQL_SQL92_FOREIGN_KEY_UPDATE_RULE
+#define SQL_SQL92_FOREIGN_KEY_UPDATE_RULE 157
+#endif
+#ifndef SQL_SQL92_GRANT
+#define SQL_SQL92_GRANT 158
+#endif
+#ifndef SQL_SQL92_NUMERIC_VALUE_FUNCTIONS
+#define SQL_SQL92_NUMERIC_VALUE_FUNCTIONS 159
+#endif
+#ifndef SQL_SQL92_PREDICATES
+#define SQL_SQL92_PREDICATES 160
+#endif
+#ifndef SQL_SQL92_RELATIONAL_JOIN_OPERATORS
+#define SQL_SQL92_RELATIONAL_JOIN_OPERATORS 161
+#endif
+#ifndef SQL_SQL92_REVOKE
+#define SQL_SQL92_REVOKE 162
+#endif
+#ifndef SQL_SQL92_ROW_VALUE_CONSTRUCTOR
+#define SQL_SQL92_ROW_VALUE_CONSTRUCTOR 163
+#endif
+#ifndef SQL_SQL92_STRING_FUNCTIONS
+#define SQL_SQL92_STRING_FUNCTIONS 164
+#endif
+#ifndef SQL_SQL92_VALUE_EXPRESSIONS
+#define SQL_SQL92_VALUE_EXPRESSIONS 165
+#endif
+#ifndef SQL_STANDARD_CLI_CONFORMANCE
+#define SQL_STANDARD_CLI_CONFORMANCE 166
+#endif
+#ifndef SQL_STATIC_CURSOR_ATTRIBUTES1
+#define SQL_STATIC_CURSOR_ATTRIBUTES1 167
+#endif
+#ifndef SQL_STATIC_CURSOR_ATTRIBUTES2
+#define SQL_STATIC_CURSOR_ATTRIBUTES2 168
+#endif
+#ifndef SQL_AGGREGATE_FUNCTIONS
+#define SQL_AGGREGATE_FUNCTIONS 169
+#endif
+#ifndef SQL_DDL_INDEX
+#define SQL_DDL_INDEX 170
+#endif
+#ifndef SQL_DM_VER
+#define SQL_DM_VER 171
+#endif
+#ifndef SQL_INSERT_STATEMENT
+#define SQL_INSERT_STATEMENT 172
+#endif
+#ifndef SQL_CONVERT_GUID
+#define SQL_CONVERT_GUID 173
+#endif
+#ifndef SQL_UNION_STATEMENT
+#define SQL_UNION_STATEMENT 96
+#endif
+#ifndef SQL_ASYNC_DBC_FUNCTIONS
+#define SQL_ASYNC_DBC_FUNCTIONS 10023
+#endif
+#ifndef SQL_DRIVER_AWARE_POOLING_SUPPORTED
+#define SQL_DRIVER_AWARE_POOLING_SUPPORTED 10024
+#endif
+#ifndef SQL_ASYNC_NOTIFICATION
+#define SQL_ASYNC_NOTIFICATION 10025
+#endif
+#ifndef SQL_ASYNC_NOTIFICATION_NOT_CAPABLE
+#define SQL_ASYNC_NOTIFICATION_NOT_CAPABLE 0
+#endif
+#ifndef SQL_ASYNC_NOTIFICATION_CAPABLE
+#define SQL_ASYNC_NOTIFICATION_CAPABLE 1
+#endif
+#ifndef SQL_DTC_TRANSITION_COST
+#define SQL_DTC_TRANSITION_COST 1750
+#endif
+#ifndef SQL_AT_ADD_COLUMN_SINGLE
+#define SQL_AT_ADD_COLUMN_SINGLE 32
+#endif
+#ifndef SQL_AT_ADD_COLUMN_DEFAULT
+#define SQL_AT_ADD_COLUMN_DEFAULT 64
+#endif
+#ifndef SQL_AT_ADD_COLUMN_COLLATION
+#define SQL_AT_ADD_COLUMN_COLLATION 128
+#endif
+#ifndef SQL_AT_SET_COLUMN_DEFAULT
+#define SQL_AT_SET_COLUMN_DEFAULT 256
+#endif
+#ifndef SQL_AT_DROP_COLUMN_DEFAULT
+#define SQL_AT_DROP_COLUMN_DEFAULT 512
+#endif
+#ifndef SQL_AT_DROP_COLUMN_CASCADE
+#define SQL_AT_DROP_COLUMN_CASCADE 1024
+#endif
+#ifndef SQL_AT_DROP_COLUMN_RESTRICT
+#define SQL_AT_DROP_COLUMN_RESTRICT 2048
+#endif
+#ifndef SQL_AT_ADD_TABLE_CONSTRAINT
+#define SQL_AT_ADD_TABLE_CONSTRAINT 4096
+#endif
+#ifndef SQL_AT_DROP_TABLE_CONSTRAINT_CASCADE
+#define SQL_AT_DROP_TABLE_CONSTRAINT_CASCADE 8192
+#endif
+#ifndef SQL_AT_DROP_TABLE_CONSTRAINT_RESTRICT
+#define SQL_AT_DROP_TABLE_CONSTRAINT_RESTRICT 16384
+#endif
+#ifndef SQL_AT_CONSTRAINT_NAME_DEFINITION
+#define SQL_AT_CONSTRAINT_NAME_DEFINITION 32768
+#endif
+#ifndef SQL_AT_CONSTRAINT_INITIALLY_DEFERRED
+#define SQL_AT_CONSTRAINT_INITIALLY_DEFERRED 65536
+#endif
+#ifndef SQL_AT_CONSTRAINT_INITIALLY_IMMEDIATE
+#define SQL_AT_CONSTRAINT_INITIALLY_IMMEDIATE 131072
+#endif
+#ifndef SQL_AT_CONSTRAINT_DEFERRABLE
+#define SQL_AT_CONSTRAINT_DEFERRABLE 262144
+#endif
+#ifndef SQL_AT_CONSTRAINT_NON_DEFERRABLE
+#define SQL_AT_CONSTRAINT_NON_DEFERRABLE 524288
+#endif
+#ifndef SQL_CVT_CHAR
+#define SQL_CVT_CHAR 1
+#endif
+#ifndef SQL_CVT_NUMERIC
+#define SQL_CVT_NUMERIC 2
+#endif
+#ifndef SQL_CVT_DECIMAL
+#define SQL_CVT_DECIMAL 4
+#endif
+#ifndef SQL_CVT_INTEGER
+#define SQL_CVT_INTEGER 8
+#endif
+#ifndef SQL_CVT_SMALLINT
+#define SQL_CVT_SMALLINT 16
+#endif
+#ifndef SQL_CVT_FLOAT
+#define SQL_CVT_FLOAT 32
+#endif
+#ifndef SQL_CVT_REAL
+#define SQL_CVT_REAL 64
+#endif
+#ifndef SQL_CVT_DOUBLE
+#define SQL_CVT_DOUBLE 128
+#endif
+#ifndef SQL_CVT_VARCHAR
+#define SQL_CVT_VARCHAR 256
+#endif
+#ifndef SQL_CVT_LONGVARCHAR
+#define SQL_CVT_LONGVARCHAR 512
+#endif
+#ifndef SQL_CVT_BINARY
+#define SQL_CVT_BINARY 1024
+#endif
+#ifndef SQL_CVT_VARBINARY
+#define SQL_CVT_VARBINARY 2048
+#endif
+#ifndef SQL_CVT_BIT
+#define SQL_CVT_BIT 4096
+#endif
+#ifndef SQL_CVT_TINYINT
+#define SQL_CVT_TINYINT 8192
+#endif
+#ifndef SQL_CVT_BIGINT
+#define SQL_CVT_BIGINT 16384
+#endif
+#ifndef SQL_CVT_DATE
+#define SQL_CVT_DATE 32768
+#endif
+#ifndef SQL_CVT_TIME
+#define SQL_CVT_TIME 65536
+#endif
+#ifndef SQL_CVT_TIMESTAMP
+#define SQL_CVT_TIMESTAMP 131072
+#endif
+#ifndef SQL_CVT_LONGVARBINARY
+#define SQL_CVT_LONGVARBINARY 262144
+#endif
+#ifndef SQL_CVT_INTERVAL_YEAR_MONTH
+#define SQL_CVT_INTERVAL_YEAR_MONTH 524288
+#endif
+#ifndef SQL_CVT_INTERVAL_DAY_TIME
+#define SQL_CVT_INTERVAL_DAY_TIME 1048576
+#endif
+#ifndef SQL_CVT_WCHAR
+#define SQL_CVT_WCHAR 2097152
+#endif
+#ifndef SQL_CVT_WLONGVARCHAR
+#define SQL_CVT_WLONGVARCHAR 4194304
+#endif
+#ifndef SQL_CVT_WVARCHAR
+#define SQL_CVT_WVARCHAR 8388608
+#endif
+#ifndef SQL_CVT_GUID
+#define SQL_CVT_GUID 16777216
+#endif
+#ifndef SQL_FN_CVT_CONVERT
+#define SQL_FN_CVT_CONVERT 1
+#endif
+#ifndef SQL_FN_CVT_CAST
+#define SQL_FN_CVT_CAST 2
+#endif
+#ifndef SQL_FN_STR_CONCAT
+#define SQL_FN_STR_CONCAT 1
+#endif
+#ifndef SQL_FN_STR_INSERT
+#define SQL_FN_STR_INSERT 2
+#endif
+#ifndef SQL_FN_STR_LEFT
+#define SQL_FN_STR_LEFT 4
+#endif
+#ifndef SQL_FN_STR_LTRIM
+#define SQL_FN_STR_LTRIM 8
+#endif
+#ifndef SQL_FN_STR_LENGTH
+#define SQL_FN_STR_LENGTH 16
+#endif
+#ifndef SQL_FN_STR_LOCATE
+#define SQL_FN_STR_LOCATE 32
+#endif
+#ifndef SQL_FN_STR_LCASE
+#define SQL_FN_STR_LCASE 64
+#endif
+#ifndef SQL_FN_STR_REPEAT
+#define SQL_FN_STR_REPEAT 128
+#endif
+#ifndef SQL_FN_STR_REPLACE
+#define SQL_FN_STR_REPLACE 256
+#endif
+#ifndef SQL_FN_STR_RIGHT
+#define SQL_FN_STR_RIGHT 512
+#endif
+#ifndef SQL_FN_STR_RTRIM
+#define SQL_FN_STR_RTRIM 1024
+#endif
+#ifndef SQL_FN_STR_SUBSTRING
+#define SQL_FN_STR_SUBSTRING 2048
+#endif
+#ifndef SQL_FN_STR_UCASE
+#define SQL_FN_STR_UCASE 4096
+#endif
+#ifndef SQL_FN_STR_ASCII
+#define SQL_FN_STR_ASCII 8192
+#endif
+#ifndef SQL_FN_STR_CHAR
+#define SQL_FN_STR_CHAR 16384
+#endif
+#ifndef SQL_FN_STR_DIFFERENCE
+#define SQL_FN_STR_DIFFERENCE 32768
+#endif
+#ifndef SQL_FN_STR_LOCATE_2
+#define SQL_FN_STR_LOCATE_2 65536
+#endif
+#ifndef SQL_FN_STR_SOUNDEX
+#define SQL_FN_STR_SOUNDEX 131072
+#endif
+#ifndef SQL_FN_STR_SPACE
+#define SQL_FN_STR_SPACE 262144
+#endif
+#ifndef SQL_FN_STR_BIT_LENGTH
+#define SQL_FN_STR_BIT_LENGTH 524288
+#endif
+#ifndef SQL_FN_STR_CHAR_LENGTH
+#define SQL_FN_STR_CHAR_LENGTH 1048576
+#endif
+#ifndef SQL_FN_STR_CHARACTER_LENGTH
+#define SQL_FN_STR_CHARACTER_LENGTH 2097152
+#endif
+#ifndef SQL_FN_STR_OCTET_LENGTH
+#define SQL_FN_STR_OCTET_LENGTH 4194304
+#endif
+#ifndef SQL_FN_STR_POSITION
+#define SQL_FN_STR_POSITION 8388608
+#endif
+#ifndef SQL_SSF_CONVERT
+#define SQL_SSF_CONVERT 1
+#endif
+#ifndef SQL_SSF_LOWER
+#define SQL_SSF_LOWER 2
+#endif
+#ifndef SQL_SSF_UPPER
+#define SQL_SSF_UPPER 4
+#endif
+#ifndef SQL_SSF_SUBSTRING
+#define SQL_SSF_SUBSTRING 8
+#endif
+#ifndef SQL_SSF_TRANSLATE
+#define SQL_SSF_TRANSLATE 16
+#endif
+#ifndef SQL_SSF_TRIM_BOTH
+#define SQL_SSF_TRIM_BOTH 32
+#endif
+#ifndef SQL_SSF_TRIM_LEADING
+#define SQL_SSF_TRIM_LEADING 64
+#endif
+#ifndef SQL_SSF_TRIM_TRAILING
+#define SQL_SSF_TRIM_TRAILING 128
+#endif
+#ifndef SQL_FN_NUM_ABS
+#define SQL_FN_NUM_ABS 1
+#endif
+#ifndef SQL_FN_NUM_ACOS
+#define SQL_FN_NUM_ACOS 2
+#endif
+#ifndef SQL_FN_NUM_ASIN
+#define SQL_FN_NUM_ASIN 4
+#endif
+#ifndef SQL_FN_NUM_ATAN
+#define SQL_FN_NUM_ATAN 8
+#endif
+#ifndef SQL_FN_NUM_ATAN2
+#define SQL_FN_NUM_ATAN2 16
+#endif
+#ifndef SQL_FN_NUM_CEILING
+#define SQL_FN_NUM_CEILING 32
+#endif
+#ifndef SQL_FN_NUM_COS
+#define SQL_FN_NUM_COS 64
+#endif
+#ifndef SQL_FN_NUM_COT
+#define SQL_FN_NUM_COT 128
+#endif
+#ifndef SQL_FN_NUM_EXP
+#define SQL_FN_NUM_EXP 256
+#endif
+#ifndef SQL_FN_NUM_FLOOR
+#define SQL_FN_NUM_FLOOR 512
+#endif
+#ifndef SQL_FN_NUM_LOG
+#define SQL_FN_NUM_LOG 1024
+#endif
+#ifndef SQL_FN_NUM_MOD
+#define SQL_FN_NUM_MOD 2048
+#endif
+#ifndef SQL_FN_NUM_SIGN
+#define SQL_FN_NUM_SIGN 4096
+#endif
+#ifndef SQL_FN_NUM_SIN
+#define SQL_FN_NUM_SIN 8192
+#endif
+#ifndef SQL_FN_NUM_SQRT
+#define SQL_FN_NUM_SQRT 16384
+#endif
+#ifndef SQL_FN_NUM_TAN
+#define SQL_FN_NUM_TAN 32768
+#endif
+#ifndef SQL_FN_NUM_PI
+#define SQL_FN_NUM_PI 65536
+#endif
+#ifndef SQL_FN_NUM_RAND
+#define SQL_FN_NUM_RAND 131072
+#endif
+#ifndef SQL_FN_NUM_DEGREES
+#define SQL_FN_NUM_DEGREES 262144
+#endif
+#ifndef SQL_FN_NUM_LOG10
+#define SQL_FN_NUM_LOG10 524288
+#endif
+#ifndef SQL_FN_NUM_POWER
+#define SQL_FN_NUM_POWER 1048576
+#endif
+#ifndef SQL_FN_NUM_RADIANS
+#define SQL_FN_NUM_RADIANS 2097152
+#endif
+#ifndef SQL_FN_NUM_ROUND
+#define SQL_FN_NUM_ROUND 4194304
+#endif
+#ifndef SQL_FN_NUM_TRUNCATE
+#define SQL_FN_NUM_TRUNCATE 8388608
+#endif
+#ifndef SQL_SNVF_BIT_LENGTH
+#define SQL_SNVF_BIT_LENGTH 1
+#endif
+#ifndef SQL_SNVF_CHAR_LENGTH
+#define SQL_SNVF_CHAR_LENGTH 2
+#endif
+#ifndef SQL_SNVF_CHARACTER_LENGTH
+#define SQL_SNVF_CHARACTER_LENGTH 4
+#endif
+#ifndef SQL_SNVF_EXTRACT
+#define SQL_SNVF_EXTRACT 8
+#endif
+#ifndef SQL_SNVF_OCTET_LENGTH
+#define SQL_SNVF_OCTET_LENGTH 16
+#endif
+#ifndef SQL_SNVF_POSITION
+#define SQL_SNVF_POSITION 32
+#endif
+#ifndef SQL_FN_TD_NOW
+#define SQL_FN_TD_NOW 1
+#endif
+#ifndef SQL_FN_TD_CURDATE
+#define SQL_FN_TD_CURDATE 2
+#endif
+#ifndef SQL_FN_TD_DAYOFMONTH
+#define SQL_FN_TD_DAYOFMONTH 4
+#endif
+#ifndef SQL_FN_TD_DAYOFWEEK
+#define SQL_FN_TD_DAYOFWEEK 8
+#endif
+#ifndef SQL_FN_TD_DAYOFYEAR
+#define SQL_FN_TD_DAYOFYEAR 16
+#endif
+#ifndef SQL_FN_TD_MONTH
+#define SQL_FN_TD_MONTH 32
+#endif
+#ifndef SQL_FN_TD_QUARTER
+#define SQL_FN_TD_QUARTER 64
+#endif
+#ifndef SQL_FN_TD_WEEK
+#define SQL_FN_TD_WEEK 128
+#endif
+#ifndef SQL_FN_TD_YEAR
+#define SQL_FN_TD_YEAR 256
+#endif
+#ifndef SQL_FN_TD_CURTIME
+#define SQL_FN_TD_CURTIME 512
+#endif
+#ifndef SQL_FN_TD_HOUR
+#define SQL_FN_TD_HOUR 1024
+#endif
+#ifndef SQL_FN_TD_MINUTE
+#define SQL_FN_TD_MINUTE 2048
+#endif
+#ifndef SQL_FN_TD_SECOND
+#define SQL_FN_TD_SECOND 4096
+#endif
+#ifndef SQL_FN_TD_TIMESTAMPADD
+#define SQL_FN_TD_TIMESTAMPADD 8192
+#endif
+#ifndef SQL_FN_TD_TIMESTAMPDIFF
+#define SQL_FN_TD_TIMESTAMPDIFF 16384
+#endif
+#ifndef SQL_FN_TD_DAYNAME
+#define SQL_FN_TD_DAYNAME 32768
+#endif
+#ifndef SQL_FN_TD_MONTHNAME
+#define SQL_FN_TD_MONTHNAME 65536
+#endif
+#ifndef SQL_FN_TD_CURRENT_DATE
+#define SQL_FN_TD_CURRENT_DATE 131072
+#endif
+#ifndef SQL_FN_TD_CURRENT_TIME
+#define SQL_FN_TD_CURRENT_TIME 262144
+#endif
+#ifndef SQL_FN_TD_CURRENT_TIMESTAMP
+#define SQL_FN_TD_CURRENT_TIMESTAMP 524288
+#endif
+#ifndef SQL_FN_TD_EXTRACT
+#define SQL_FN_TD_EXTRACT 1048576
+#endif
+#ifndef SQL_SDF_CURRENT_DATE
+#define SQL_SDF_CURRENT_DATE 1
+#endif
+#ifndef SQL_SDF_CURRENT_TIME
+#define SQL_SDF_CURRENT_TIME 2
+#endif
+#ifndef SQL_SDF_CURRENT_TIMESTAMP
+#define SQL_SDF_CURRENT_TIMESTAMP 4
+#endif
+#ifndef SQL_FN_SYS_USERNAME
+#define SQL_FN_SYS_USERNAME 1
+#endif
+#ifndef SQL_FN_SYS_DBNAME
+#define SQL_FN_SYS_DBNAME 2
+#endif
+#ifndef SQL_FN_SYS_IFNULL
+#define SQL_FN_SYS_IFNULL 4
+#endif
+#ifndef SQL_FN_TSI_FRAC_SECOND
+#define SQL_FN_TSI_FRAC_SECOND 1
+#endif
+#ifndef SQL_FN_TSI_SECOND
+#define SQL_FN_TSI_SECOND 2
+#endif
+#ifndef SQL_FN_TSI_MINUTE
+#define SQL_FN_TSI_MINUTE 4
+#endif
+#ifndef SQL_FN_TSI_HOUR
+#define SQL_FN_TSI_HOUR 8
+#endif
+#ifndef SQL_FN_TSI_DAY
+#define SQL_FN_TSI_DAY 16
+#endif
+#ifndef SQL_FN_TSI_WEEK
+#define SQL_FN_TSI_WEEK 32
+#endif
+#ifndef SQL_FN_TSI_MONTH
+#define SQL_FN_TSI_MONTH 64
+#endif
+#ifndef SQL_FN_TSI_QUARTER
+#define SQL_FN_TSI_QUARTER 128
+#endif
+#ifndef SQL_FN_TSI_YEAR
+#define SQL_FN_TSI_YEAR 256
+#endif
+#ifndef SQL_CA1_NEXT
+#define SQL_CA1_NEXT 1
+#endif
+#ifndef SQL_CA1_ABSOLUTE
+#define SQL_CA1_ABSOLUTE 2
+#endif
+#ifndef SQL_CA1_RELATIVE
+#define SQL_CA1_RELATIVE 4
+#endif
+#ifndef SQL_CA1_BOOKMARK
+#define SQL_CA1_BOOKMARK 8
+#endif
+#ifndef SQL_CA1_LOCK_NO_CHANGE
+#define SQL_CA1_LOCK_NO_CHANGE 64
+#endif
+#ifndef SQL_CA1_LOCK_EXCLUSIVE
+#define SQL_CA1_LOCK_EXCLUSIVE 128
+#endif
+#ifndef SQL_CA1_LOCK_UNLOCK
+#define SQL_CA1_LOCK_UNLOCK 256
+#endif
+#ifndef SQL_CA1_POS_POSITION
+#define SQL_CA1_POS_POSITION 512
+#endif
+#ifndef SQL_CA1_POS_UPDATE
+#define SQL_CA1_POS_UPDATE 1024
+#endif
+#ifndef SQL_CA1_POS_DELETE
+#define SQL_CA1_POS_DELETE 2048
+#endif
+#ifndef SQL_CA1_POS_REFRESH
+#define SQL_CA1_POS_REFRESH 4096
+#endif
+#ifndef SQL_CA1_POSITIONED_UPDATE
+#define SQL_CA1_POSITIONED_UPDATE 8192
+#endif
+#ifndef SQL_CA1_POSITIONED_DELETE
+#define SQL_CA1_POSITIONED_DELETE 16384
+#endif
+#ifndef SQL_CA1_SELECT_FOR_UPDATE
+#define SQL_CA1_SELECT_FOR_UPDATE 32768
+#endif
+#ifndef SQL_CA1_BULK_ADD
+#define SQL_CA1_BULK_ADD 65536
+#endif
+#ifndef SQL_CA1_BULK_UPDATE_BY_BOOKMARK
+#define SQL_CA1_BULK_UPDATE_BY_BOOKMARK 131072
+#endif
+#ifndef SQL_CA1_BULK_DELETE_BY_BOOKMARK
+#define SQL_CA1_BULK_DELETE_BY_BOOKMARK 262144
+#endif
+#ifndef SQL_CA1_BULK_FETCH_BY_BOOKMARK
+#define SQL_CA1_BULK_FETCH_BY_BOOKMARK 524288
+#endif
+#ifndef SQL_CA2_READ_ONLY_CONCURRENCY
+#define SQL_CA2_READ_ONLY_CONCURRENCY 1
+#endif
+#ifndef SQL_CA2_LOCK_CONCURRENCY
+#define SQL_CA2_LOCK_CONCURRENCY 2
+#endif
+#ifndef SQL_CA2_OPT_ROWVER_CONCURRENCY
+#define SQL_CA2_OPT_ROWVER_CONCURRENCY 4
+#endif
+#ifndef SQL_CA2_OPT_VALUES_CONCURRENCY
+#define SQL_CA2_OPT_VALUES_CONCURRENCY 8
+#endif
+#ifndef SQL_CA2_SENSITIVITY_ADDITIONS
+#define SQL_CA2_SENSITIVITY_ADDITIONS 16
+#endif
+#ifndef SQL_CA2_SENSITIVITY_DELETIONS
+#define SQL_CA2_SENSITIVITY_DELETIONS 32
+#endif
+#ifndef SQL_CA2_SENSITIVITY_UPDATES
+#define SQL_CA2_SENSITIVITY_UPDATES 64
+#endif
+#ifndef SQL_CA2_MAX_ROWS_SELECT
+#define SQL_CA2_MAX_ROWS_SELECT 128
+#endif
+#ifndef SQL_CA2_MAX_ROWS_INSERT
+#define SQL_CA2_MAX_ROWS_INSERT 256
+#endif
+#ifndef SQL_CA2_MAX_ROWS_DELETE
+#define SQL_CA2_MAX_ROWS_DELETE 512
+#endif
+#ifndef SQL_CA2_MAX_ROWS_UPDATE
+#define SQL_CA2_MAX_ROWS_UPDATE 1024
+#endif
+#ifndef SQL_CA2_MAX_ROWS_CATALOG
+#define SQL_CA2_MAX_ROWS_CATALOG 2048
+#endif
+#ifndef SQL_CA2_MAX_ROWS_AFFECTS_ALL
+#define SQL_CA2_MAX_ROWS_AFFECTS_ALL 3968
+#endif
+#ifndef SQL_CA2_CRC_EXACT
+#define SQL_CA2_CRC_EXACT 4096
+#endif
+#ifndef SQL_CA2_CRC_APPROXIMATE
+#define SQL_CA2_CRC_APPROXIMATE 8192
+#endif
+#ifndef SQL_CA2_SIMULATE_NON_UNIQUE
+#define SQL_CA2_SIMULATE_NON_UNIQUE 16384
+#endif
+#ifndef SQL_CA2_SIMULATE_TRY_UNIQUE
+#define SQL_CA2_SIMULATE_TRY_UNIQUE 32768
+#endif
+#ifndef SQL_CA2_SIMULATE_UNIQUE
+#define SQL_CA2_SIMULATE_UNIQUE 65536
+#endif
+#ifndef SQL_OAC_NONE
+#define SQL_OAC_NONE 0
+#endif
+#ifndef SQL_OAC_LEVEL1
+#define SQL_OAC_LEVEL1 1
+#endif
+#ifndef SQL_OAC_LEVEL2
+#define SQL_OAC_LEVEL2 2
+#endif
+#ifndef SQL_OSCC_NOT_COMPLIANT
+#define SQL_OSCC_NOT_COMPLIANT 0
+#endif
+#ifndef SQL_OSCC_COMPLIANT
+#define SQL_OSCC_COMPLIANT 1
+#endif
+#ifndef SQL_OSC_MINIMUM
+#define SQL_OSC_MINIMUM 0
+#endif
+#ifndef SQL_OSC_CORE
+#define SQL_OSC_CORE 1
+#endif
+#ifndef SQL_OSC_EXTENDED
+#define SQL_OSC_EXTENDED 2
+#endif
+#ifndef SQL_CB_NULL
+#define SQL_CB_NULL 0
+#endif
+#ifndef SQL_CB_NON_NULL
+#define SQL_CB_NON_NULL 1
+#endif
+#ifndef SQL_SO_FORWARD_ONLY
+#define SQL_SO_FORWARD_ONLY 1
+#endif
+#ifndef SQL_SO_KEYSET_DRIVEN
+#define SQL_SO_KEYSET_DRIVEN 2
+#endif
+#ifndef SQL_SO_DYNAMIC
+#define SQL_SO_DYNAMIC 4
+#endif
+#ifndef SQL_SO_MIXED
+#define SQL_SO_MIXED 8
+#endif
+#ifndef SQL_SO_STATIC
+#define SQL_SO_STATIC 16
+#endif
+#ifndef SQL_FD_FETCH_BOOKMARK
+#define SQL_FD_FETCH_BOOKMARK 128
+#endif
+#ifndef SQL_CN_NONE
+#define SQL_CN_NONE 0
+#endif
+#ifndef SQL_CN_DIFFERENT
+#define SQL_CN_DIFFERENT 1
+#endif
+#ifndef SQL_CN_ANY
+#define SQL_CN_ANY 2
+#endif
+#ifndef SQL_NNC_NULL
+#define SQL_NNC_NULL 0
+#endif
+#ifndef SQL_NNC_NON_NULL
+#define SQL_NNC_NON_NULL 1
+#endif
+#ifndef SQL_NC_START
+#define SQL_NC_START 2
+#endif
+#ifndef SQL_NC_END
+#define SQL_NC_END 4
+#endif
+#ifndef SQL_FILE_NOT_SUPPORTED
+#define SQL_FILE_NOT_SUPPORTED 0
+#endif
+#ifndef SQL_FILE_TABLE
+#define SQL_FILE_TABLE 1
+#endif
+#ifndef SQL_FILE_QUALIFIER
+#define SQL_FILE_QUALIFIER 2
+#endif
+#ifndef SQL_FILE_CATALOG
+#define SQL_FILE_CATALOG 2
+#endif
+#ifndef SQL_GD_BLOCK
+#define SQL_GD_BLOCK 4
+#endif
+#ifndef SQL_GD_BOUND
+#define SQL_GD_BOUND 8
+#endif
+#ifndef SQL_GD_OUTPUT_PARAMS
+#define SQL_GD_OUTPUT_PARAMS 16
+#endif
+#ifndef SQL_PS_POSITIONED_DELETE
+#define SQL_PS_POSITIONED_DELETE 1
+#endif
+#ifndef SQL_PS_POSITIONED_UPDATE
+#define SQL_PS_POSITIONED_UPDATE 2
+#endif
+#ifndef SQL_PS_SELECT_FOR_UPDATE
+#define SQL_PS_SELECT_FOR_UPDATE 4
+#endif
+#ifndef SQL_GB_NOT_SUPPORTED
+#define SQL_GB_NOT_SUPPORTED 0
+#endif
+#ifndef SQL_GB_GROUP_BY_EQUALS_SELECT
+#define SQL_GB_GROUP_BY_EQUALS_SELECT 1
+#endif
+#ifndef SQL_GB_GROUP_BY_CONTAINS_SELECT
+#define SQL_GB_GROUP_BY_CONTAINS_SELECT 2
+#endif
+#ifndef SQL_GB_NO_RELATION
+#define SQL_GB_NO_RELATION 3
+#endif
+#ifndef SQL_GB_COLLATE
+#define SQL_GB_COLLATE 4
+#endif
+#ifndef SQL_OU_DML_STATEMENTS
+#define SQL_OU_DML_STATEMENTS 1
+#endif
+#ifndef SQL_OU_PROCEDURE_INVOCATION
+#define SQL_OU_PROCEDURE_INVOCATION 2
+#endif
+#ifndef SQL_OU_TABLE_DEFINITION
+#define SQL_OU_TABLE_DEFINITION 4
+#endif
+#ifndef SQL_OU_INDEX_DEFINITION
+#define SQL_OU_INDEX_DEFINITION 8
+#endif
+#ifndef SQL_OU_PRIVILEGE_DEFINITION
+#define SQL_OU_PRIVILEGE_DEFINITION 16
+#endif
+#ifndef SQL_SU_DML_STATEMENTS
+#define SQL_SU_DML_STATEMENTS 1
+#endif
+#ifndef SQL_SU_PROCEDURE_INVOCATION
+#define SQL_SU_PROCEDURE_INVOCATION 2
+#endif
+#ifndef SQL_SU_TABLE_DEFINITION
+#define SQL_SU_TABLE_DEFINITION 4
+#endif
+#ifndef SQL_SU_INDEX_DEFINITION
+#define SQL_SU_INDEX_DEFINITION 8
+#endif
+#ifndef SQL_SU_PRIVILEGE_DEFINITION
+#define SQL_SU_PRIVILEGE_DEFINITION 16
+#endif
+#ifndef SQL_QU_DML_STATEMENTS
+#define SQL_QU_DML_STATEMENTS 1
+#endif
+#ifndef SQL_QU_PROCEDURE_INVOCATION
+#define SQL_QU_PROCEDURE_INVOCATION 2
+#endif
+#ifndef SQL_QU_TABLE_DEFINITION
+#define SQL_QU_TABLE_DEFINITION 4
+#endif
+#ifndef SQL_QU_INDEX_DEFINITION
+#define SQL_QU_INDEX_DEFINITION 8
+#endif
+#ifndef SQL_QU_PRIVILEGE_DEFINITION
+#define SQL_QU_PRIVILEGE_DEFINITION 16
+#endif
+#ifndef SQL_CU_DML_STATEMENTS
+#define SQL_CU_DML_STATEMENTS 1
+#endif
+#ifndef SQL_CU_PROCEDURE_INVOCATION
+#define SQL_CU_PROCEDURE_INVOCATION 2
+#endif
+#ifndef SQL_CU_TABLE_DEFINITION
+#define SQL_CU_TABLE_DEFINITION 4
+#endif
+#ifndef SQL_CU_INDEX_DEFINITION
+#define SQL_CU_INDEX_DEFINITION 8
+#endif
+#ifndef SQL_CU_PRIVILEGE_DEFINITION
+#define SQL_CU_PRIVILEGE_DEFINITION 16
+#endif
+#ifndef SQL_SQ_COMPARISON
+#define SQL_SQ_COMPARISON 1
+#endif
+#ifndef SQL_SQ_EXISTS
+#define SQL_SQ_EXISTS 2
+#endif
+#ifndef SQL_SQ_IN
+#define SQL_SQ_IN 4
+#endif
+#ifndef SQL_SQ_QUANTIFIED
+#define SQL_SQ_QUANTIFIED 8
+#endif
+#ifndef SQL_SQ_CORRELATED_SUBQUERIES
+#define SQL_SQ_CORRELATED_SUBQUERIES 16
+#endif
+#ifndef SQL_U_UNION
+#define SQL_U_UNION 1
+#endif
+#ifndef SQL_U_UNION_ALL
+#define SQL_U_UNION_ALL 2
+#endif
+#ifndef SQL_BP_CLOSE
+#define SQL_BP_CLOSE 1
+#endif
+#ifndef SQL_BP_DELETE
+#define SQL_BP_DELETE 2
+#endif
+#ifndef SQL_BP_DROP
+#define SQL_BP_DROP 4
+#endif
+#ifndef SQL_BP_TRANSACTION
+#define SQL_BP_TRANSACTION 8
+#endif
+#ifndef SQL_BP_UPDATE
+#define SQL_BP_UPDATE 16
+#endif
+#ifndef SQL_BP_OTHER_HSTMT
+#define SQL_BP_OTHER_HSTMT 32
+#endif
+#ifndef SQL_BP_SCROLL
+#define SQL_BP_SCROLL 64
+#endif
+#ifndef SQL_SS_ADDITIONS
+#define SQL_SS_ADDITIONS 1
+#endif
+#ifndef SQL_SS_DELETIONS
+#define SQL_SS_DELETIONS 2
+#endif
+#ifndef SQL_SS_UPDATES
+#define SQL_SS_UPDATES 4
+#endif
+#ifndef SQL_CV_CREATE_VIEW
+#define SQL_CV_CREATE_VIEW 1
+#endif
+#ifndef SQL_CV_CHECK_OPTION
+#define SQL_CV_CHECK_OPTION 2
+#endif
+#ifndef SQL_CV_CASCADED
+#define SQL_CV_CASCADED 4
+#endif
+#ifndef SQL_CV_LOCAL
+#define SQL_CV_LOCAL 8
+#endif
+#ifndef SQL_LCK_NO_CHANGE
+#define SQL_LCK_NO_CHANGE 1
+#endif
+#ifndef SQL_LCK_EXCLUSIVE
+#define SQL_LCK_EXCLUSIVE 2
+#endif
+#ifndef SQL_LCK_UNLOCK
+#define SQL_LCK_UNLOCK 4
+#endif
+#ifndef SQL_POS_POSITION
+#define SQL_POS_POSITION 1
+#endif
+#ifndef SQL_POS_REFRESH
+#define SQL_POS_REFRESH 2
+#endif
+#ifndef SQL_POS_UPDATE
+#define SQL_POS_UPDATE 4
+#endif
+#ifndef SQL_POS_DELETE
+#define SQL_POS_DELETE 8
+#endif
+#ifndef SQL_POS_ADD
+#define SQL_POS_ADD 16
+#endif
+#ifndef SQL_QL_START
+#define SQL_QL_START 1
+#endif
+#ifndef SQL_QL_END
+#define SQL_QL_END 2
+#endif
+#ifndef SQL_AF_AVG
+#define SQL_AF_AVG 1
+#endif
+#ifndef SQL_AF_COUNT
+#define SQL_AF_COUNT 2
+#endif
+#ifndef SQL_AF_MAX
+#define SQL_AF_MAX 4
+#endif
+#ifndef SQL_AF_MIN
+#define SQL_AF_MIN 8
+#endif
+#ifndef SQL_AF_SUM
+#define SQL_AF_SUM 16
+#endif
+#ifndef SQL_AF_DISTINCT
+#define SQL_AF_DISTINCT 32
+#endif
+#ifndef SQL_AF_ALL
+#define SQL_AF_ALL 64
+#endif
+#ifndef SQL_SC_SQL92_ENTRY
+#define SQL_SC_SQL92_ENTRY 1
+#endif
+#ifndef SQL_SC_FIPS127_2_TRANSITIONAL
+#define SQL_SC_FIPS127_2_TRANSITIONAL 2
+#endif
+#ifndef SQL_SC_SQL92_INTERMEDIATE
+#define SQL_SC_SQL92_INTERMEDIATE 4
+#endif
+#ifndef SQL_SC_SQL92_FULL
+#define SQL_SC_SQL92_FULL 8
+#endif
+#ifndef SQL_DL_SQL92_DATE
+#define SQL_DL_SQL92_DATE 1
+#endif
+#ifndef SQL_DL_SQL92_TIME
+#define SQL_DL_SQL92_TIME 2
+#endif
+#ifndef SQL_DL_SQL92_TIMESTAMP
+#define SQL_DL_SQL92_TIMESTAMP 4
+#endif
+#ifndef SQL_DL_SQL92_INTERVAL_YEAR
+#define SQL_DL_SQL92_INTERVAL_YEAR 8
+#endif
+#ifndef SQL_DL_SQL92_INTERVAL_MONTH
+#define SQL_DL_SQL92_INTERVAL_MONTH 16
+#endif
+#ifndef SQL_DL_SQL92_INTERVAL_DAY
+#define SQL_DL_SQL92_INTERVAL_DAY 32
+#endif
+#ifndef SQL_DL_SQL92_INTERVAL_HOUR
+#define SQL_DL_SQL92_INTERVAL_HOUR 64
+#endif
+#ifndef SQL_DL_SQL92_INTERVAL_MINUTE
+#define SQL_DL_SQL92_INTERVAL_MINUTE 128
+#endif
+#ifndef SQL_DL_SQL92_INTERVAL_SECOND
+#define SQL_DL_SQL92_INTERVAL_SECOND 256
+#endif
+#ifndef SQL_DL_SQL92_INTERVAL_YEAR_TO_MONTH
+#define SQL_DL_SQL92_INTERVAL_YEAR_TO_MONTH 512
+#endif
+#ifndef SQL_DL_SQL92_INTERVAL_DAY_TO_HOUR
+#define SQL_DL_SQL92_INTERVAL_DAY_TO_HOUR 1024
+#endif
+#ifndef SQL_DL_SQL92_INTERVAL_DAY_TO_MINUTE
+#define SQL_DL_SQL92_INTERVAL_DAY_TO_MINUTE 2048
+#endif
+#ifndef SQL_DL_SQL92_INTERVAL_DAY_TO_SECOND
+#define SQL_DL_SQL92_INTERVAL_DAY_TO_SECOND 4096
+#endif
+#ifndef SQL_DL_SQL92_INTERVAL_HOUR_TO_MINUTE
+#define SQL_DL_SQL92_INTERVAL_HOUR_TO_MINUTE 8192
+#endif
+#ifndef SQL_DL_SQL92_INTERVAL_HOUR_TO_SECOND
+#define SQL_DL_SQL92_INTERVAL_HOUR_TO_SECOND 16384
+#endif
+#ifndef SQL_DL_SQL92_INTERVAL_MINUTE_TO_SECOND
+#define SQL_DL_SQL92_INTERVAL_MINUTE_TO_SECOND 32768
+#endif
+#ifndef SQL_CL_START
+#define SQL_CL_START 1
+#endif
+#ifndef SQL_CL_END
+#define SQL_CL_END 2
+#endif
+#ifndef SQL_BRC_PROCEDURES
+#define SQL_BRC_PROCEDURES 1
+#endif
+#ifndef SQL_BRC_EXPLICIT
+#define SQL_BRC_EXPLICIT 2
+#endif
+#ifndef SQL_BRC_ROLLED_UP
+#define SQL_BRC_ROLLED_UP 4
+#endif
+#ifndef SQL_BS_SELECT_EXPLICIT
+#define SQL_BS_SELECT_EXPLICIT 1
+#endif
+#ifndef SQL_BS_ROW_COUNT_EXPLICIT
+#define SQL_BS_ROW_COUNT_EXPLICIT 2
+#endif
+#ifndef SQL_BS_SELECT_PROC
+#define SQL_BS_SELECT_PROC 4
+#endif
+#ifndef SQL_BS_ROW_COUNT_PROC
+#define SQL_BS_ROW_COUNT_PROC 8
+#endif
+#ifndef SQL_PARC_BATCH
+#define SQL_PARC_BATCH 1
+#endif
+#ifndef SQL_PARC_NO_BATCH
+#define SQL_PARC_NO_BATCH 2
+#endif
+#ifndef SQL_PAS_BATCH
+#define SQL_PAS_BATCH 1
+#endif
+#ifndef SQL_PAS_NO_BATCH
+#define SQL_PAS_NO_BATCH 2
+#endif
+#ifndef SQL_PAS_NO_SELECT
+#define SQL_PAS_NO_SELECT 3
+#endif
+#ifndef SQL_IK_NONE
+#define SQL_IK_NONE 0
+#endif
+#ifndef SQL_IK_ASC
+#define SQL_IK_ASC 1
+#endif
+#ifndef SQL_IK_DESC
+#define SQL_IK_DESC 2
+#endif
+#ifndef SQL_IK_ALL
+#define SQL_IK_ALL 3
+#endif
+#ifndef SQL_ISV_ASSERTIONS
+#define SQL_ISV_ASSERTIONS 1
+#endif
+#ifndef SQL_ISV_CHARACTER_SETS
+#define SQL_ISV_CHARACTER_SETS 2
+#endif
+#ifndef SQL_ISV_CHECK_CONSTRAINTS
+#define SQL_ISV_CHECK_CONSTRAINTS 4
+#endif
+#ifndef SQL_ISV_COLLATIONS
+#define SQL_ISV_COLLATIONS 8
+#endif
+#ifndef SQL_ISV_COLUMN_DOMAIN_USAGE
+#define SQL_ISV_COLUMN_DOMAIN_USAGE 16
+#endif
+#ifndef SQL_ISV_COLUMN_PRIVILEGES
+#define SQL_ISV_COLUMN_PRIVILEGES 32
+#endif
+#ifndef SQL_ISV_COLUMNS
+#define SQL_ISV_COLUMNS 64
+#endif
+#ifndef SQL_ISV_CONSTRAINT_COLUMN_USAGE
+#define SQL_ISV_CONSTRAINT_COLUMN_USAGE 128
+#endif
+#ifndef SQL_ISV_CONSTRAINT_TABLE_USAGE
+#define SQL_ISV_CONSTRAINT_TABLE_USAGE 256
+#endif
+#ifndef SQL_ISV_DOMAIN_CONSTRAINTS
+#define SQL_ISV_DOMAIN_CONSTRAINTS 512
+#endif
+#ifndef SQL_ISV_DOMAINS
+#define SQL_ISV_DOMAINS 1024
+#endif
+#ifndef SQL_ISV_KEY_COLUMN_USAGE
+#define SQL_ISV_KEY_COLUMN_USAGE 2048
+#endif
+#ifndef SQL_ISV_REFERENTIAL_CONSTRAINTS
+#define SQL_ISV_REFERENTIAL_CONSTRAINTS 4096
+#endif
+#ifndef SQL_ISV_SCHEMATA
+#define SQL_ISV_SCHEMATA 8192
+#endif
+#ifndef SQL_ISV_SQL_LANGUAGES
+#define SQL_ISV_SQL_LANGUAGES 16384
+#endif
+#ifndef SQL_ISV_TABLE_CONSTRAINTS
+#define SQL_ISV_TABLE_CONSTRAINTS 32768
+#endif
+#ifndef SQL_ISV_TABLE_PRIVILEGES
+#define SQL_ISV_TABLE_PRIVILEGES 65536
+#endif
+#ifndef SQL_ISV_TABLES
+#define SQL_ISV_TABLES 131072
+#endif
+#ifndef SQL_ISV_TRANSLATIONS
+#define SQL_ISV_TRANSLATIONS 262144
+#endif
+#ifndef SQL_ISV_USAGE_PRIVILEGES
+#define SQL_ISV_USAGE_PRIVILEGES 524288
+#endif
+#ifndef SQL_ISV_VIEW_COLUMN_USAGE
+#define SQL_ISV_VIEW_COLUMN_USAGE 1048576
+#endif
+#ifndef SQL_ISV_VIEW_TABLE_USAGE
+#define SQL_ISV_VIEW_TABLE_USAGE 2097152
+#endif
+#ifndef SQL_ISV_VIEWS
+#define SQL_ISV_VIEWS 4194304
+#endif
+#ifndef SQL_AD_CONSTRAINT_NAME_DEFINITION
+#define SQL_AD_CONSTRAINT_NAME_DEFINITION 1
+#endif
+#ifndef SQL_AD_ADD_DOMAIN_CONSTRAINT
+#define SQL_AD_ADD_DOMAIN_CONSTRAINT 2
+#endif
+#ifndef SQL_AD_DROP_DOMAIN_CONSTRAINT
+#define SQL_AD_DROP_DOMAIN_CONSTRAINT 4
+#endif
+#ifndef SQL_AD_ADD_DOMAIN_DEFAULT
+#define SQL_AD_ADD_DOMAIN_DEFAULT 8
+#endif
+#ifndef SQL_AD_DROP_DOMAIN_DEFAULT
+#define SQL_AD_DROP_DOMAIN_DEFAULT 16
+#endif
+#ifndef SQL_AD_ADD_CONSTRAINT_INITIALLY_DEFERRED
+#define SQL_AD_ADD_CONSTRAINT_INITIALLY_DEFERRED 32
+#endif
+#ifndef SQL_AD_ADD_CONSTRAINT_INITIALLY_IMMEDIATE
+#define SQL_AD_ADD_CONSTRAINT_INITIALLY_IMMEDIATE 64
+#endif
+#ifndef SQL_AD_ADD_CONSTRAINT_DEFERRABLE
+#define SQL_AD_ADD_CONSTRAINT_DEFERRABLE 128
+#endif
+#ifndef SQL_AD_ADD_CONSTRAINT_NON_DEFERRABLE
+#define SQL_AD_ADD_CONSTRAINT_NON_DEFERRABLE 256
+#endif
+#ifndef SQL_CS_CREATE_SCHEMA
+#define SQL_CS_CREATE_SCHEMA 1
+#endif
+#ifndef SQL_CS_AUTHORIZATION
+#define SQL_CS_AUTHORIZATION 2
+#endif
+#ifndef SQL_CS_DEFAULT_CHARACTER_SET
+#define SQL_CS_DEFAULT_CHARACTER_SET 4
+#endif
+#ifndef SQL_CTR_CREATE_TRANSLATION
+#define SQL_CTR_CREATE_TRANSLATION 1
+#endif
+#ifndef SQL_CA_CREATE_ASSERTION
+#define SQL_CA_CREATE_ASSERTION 1
+#endif
+#ifndef SQL_CA_CONSTRAINT_INITIALLY_DEFERRED
+#define SQL_CA_CONSTRAINT_INITIALLY_DEFERRED 16
+#endif
+#ifndef SQL_CA_CONSTRAINT_INITIALLY_IMMEDIATE
+#define SQL_CA_CONSTRAINT_INITIALLY_IMMEDIATE 32
+#endif
+#ifndef SQL_CA_CONSTRAINT_DEFERRABLE
+#define SQL_CA_CONSTRAINT_DEFERRABLE 64
+#endif
+#ifndef SQL_CA_CONSTRAINT_NON_DEFERRABLE
+#define SQL_CA_CONSTRAINT_NON_DEFERRABLE 128
+#endif
+#ifndef SQL_CCS_CREATE_CHARACTER_SET
+#define SQL_CCS_CREATE_CHARACTER_SET 1
+#endif
+#ifndef SQL_CCS_COLLATE_CLAUSE
+#define SQL_CCS_COLLATE_CLAUSE 2
+#endif
+#ifndef SQL_CCS_LIMITED_COLLATION
+#define SQL_CCS_LIMITED_COLLATION 4
+#endif
+#ifndef SQL_CCOL_CREATE_COLLATION
+#define SQL_CCOL_CREATE_COLLATION 1
+#endif
+#ifndef SQL_CDO_CREATE_DOMAIN
+#define SQL_CDO_CREATE_DOMAIN 1
+#endif
+#ifndef SQL_CDO_DEFAULT
+#define SQL_CDO_DEFAULT 2
+#endif
+#ifndef SQL_CDO_CONSTRAINT
+#define SQL_CDO_CONSTRAINT 4
+#endif
+#ifndef SQL_CDO_COLLATION
+#define SQL_CDO_COLLATION 8
+#endif
+#ifndef SQL_CDO_CONSTRAINT_NAME_DEFINITION
+#define SQL_CDO_CONSTRAINT_NAME_DEFINITION 16
+#endif
+#ifndef SQL_CDO_CONSTRAINT_INITIALLY_DEFERRED
+#define SQL_CDO_CONSTRAINT_INITIALLY_DEFERRED 32
+#endif
+#ifndef SQL_CDO_CONSTRAINT_INITIALLY_IMMEDIATE
+#define SQL_CDO_CONSTRAINT_INITIALLY_IMMEDIATE 64
+#endif
+#ifndef SQL_CDO_CONSTRAINT_DEFERRABLE
+#define SQL_CDO_CONSTRAINT_DEFERRABLE 128
+#endif
+#ifndef SQL_CDO_CONSTRAINT_NON_DEFERRABLE
+#define SQL_CDO_CONSTRAINT_NON_DEFERRABLE 256
+#endif
+#ifndef SQL_CT_CREATE_TABLE
+#define SQL_CT_CREATE_TABLE 1
+#endif
+#ifndef SQL_CT_COMMIT_PRESERVE
+#define SQL_CT_COMMIT_PRESERVE 2
+#endif
+#ifndef SQL_CT_COMMIT_DELETE
+#define SQL_CT_COMMIT_DELETE 4
+#endif
+#ifndef SQL_CT_GLOBAL_TEMPORARY
+#define SQL_CT_GLOBAL_TEMPORARY 8
+#endif
+#ifndef SQL_CT_LOCAL_TEMPORARY
+#define SQL_CT_LOCAL_TEMPORARY 16
+#endif
+#ifndef SQL_CT_CONSTRAINT_INITIALLY_DEFERRED
+#define SQL_CT_CONSTRAINT_INITIALLY_DEFERRED 32
+#endif
+#ifndef SQL_CT_CONSTRAINT_INITIALLY_IMMEDIATE
+#define SQL_CT_CONSTRAINT_INITIALLY_IMMEDIATE 64
+#endif
+#ifndef SQL_CT_CONSTRAINT_DEFERRABLE
+#define SQL_CT_CONSTRAINT_DEFERRABLE 128
+#endif
+#ifndef SQL_CT_CONSTRAINT_NON_DEFERRABLE
+#define SQL_CT_CONSTRAINT_NON_DEFERRABLE 256
+#endif
+#ifndef SQL_CT_COLUMN_CONSTRAINT
+#define SQL_CT_COLUMN_CONSTRAINT 512
+#endif
+#ifndef SQL_CT_COLUMN_DEFAULT
+#define SQL_CT_COLUMN_DEFAULT 1024
+#endif
+#ifndef SQL_CT_COLUMN_COLLATION
+#define SQL_CT_COLUMN_COLLATION 2048
+#endif
+#ifndef SQL_CT_TABLE_CONSTRAINT
+#define SQL_CT_TABLE_CONSTRAINT 4096
+#endif
+#ifndef SQL_CT_CONSTRAINT_NAME_DEFINITION
+#define SQL_CT_CONSTRAINT_NAME_DEFINITION 8192
+#endif
+#ifndef SQL_DI_CREATE_INDEX
+#define SQL_DI_CREATE_INDEX 1
+#endif
+#ifndef SQL_DI_DROP_INDEX
+#define SQL_DI_DROP_INDEX 2
+#endif
+#ifndef SQL_DC_DROP_COLLATION
+#define SQL_DC_DROP_COLLATION 1
+#endif
+#ifndef SQL_DD_DROP_DOMAIN
+#define SQL_DD_DROP_DOMAIN 1
+#endif
+#ifndef SQL_DD_RESTRICT
+#define SQL_DD_RESTRICT 2
+#endif
+#ifndef SQL_DD_CASCADE
+#define SQL_DD_CASCADE 4
+#endif
+#ifndef SQL_DS_DROP_SCHEMA
+#define SQL_DS_DROP_SCHEMA 1
+#endif
+#ifndef SQL_DS_RESTRICT
+#define SQL_DS_RESTRICT 2
+#endif
+#ifndef SQL_DS_CASCADE
+#define SQL_DS_CASCADE 4
+#endif
+#ifndef SQL_DCS_DROP_CHARACTER_SET
+#define SQL_DCS_DROP_CHARACTER_SET 1
+#endif
+#ifndef SQL_DA_DROP_ASSERTION
+#define SQL_DA_DROP_ASSERTION 1
+#endif
+#ifndef SQL_DT_DROP_TABLE
+#define SQL_DT_DROP_TABLE 1
+#endif
+#ifndef SQL_DT_RESTRICT
+#define SQL_DT_RESTRICT 2
+#endif
+#ifndef SQL_DT_CASCADE
+#define SQL_DT_CASCADE 4
+#endif
+#ifndef SQL_DTR_DROP_TRANSLATION
+#define SQL_DTR_DROP_TRANSLATION 1
+#endif
+#ifndef SQL_DV_DROP_VIEW
+#define SQL_DV_DROP_VIEW 1
+#endif
+#ifndef SQL_DV_RESTRICT
+#define SQL_DV_RESTRICT 2
+#endif
+#ifndef SQL_DV_CASCADE
+#define SQL_DV_CASCADE 4
+#endif
+#ifndef SQL_IS_INSERT_LITERALS
+#define SQL_IS_INSERT_LITERALS 1
+#endif
+#ifndef SQL_IS_INSERT_SEARCHED
+#define SQL_IS_INSERT_SEARCHED 2
+#endif
+#ifndef SQL_IS_SELECT_INTO
+#define SQL_IS_SELECT_INTO 4
+#endif
+#ifndef SQL_OIC_CORE
+#define SQL_OIC_CORE 1
+#endif
+#ifndef SQL_OIC_LEVEL1
+#define SQL_OIC_LEVEL1 2
+#endif
+#ifndef SQL_OIC_LEVEL2
+#define SQL_OIC_LEVEL2 3
+#endif
+#ifndef SQL_SFKD_CASCADE
+#define SQL_SFKD_CASCADE 1
+#endif
+#ifndef SQL_SFKD_NO_ACTION
+#define SQL_SFKD_NO_ACTION 2
+#endif
+#ifndef SQL_SFKD_SET_DEFAULT
+#define SQL_SFKD_SET_DEFAULT 4
+#endif
+#ifndef SQL_SFKD_SET_NULL
+#define SQL_SFKD_SET_NULL 8
+#endif
+#ifndef SQL_SFKU_CASCADE
+#define SQL_SFKU_CASCADE 1
+#endif
+#ifndef SQL_SFKU_NO_ACTION
+#define SQL_SFKU_NO_ACTION 2
+#endif
+#ifndef SQL_SFKU_SET_DEFAULT
+#define SQL_SFKU_SET_DEFAULT 4
+#endif
+#ifndef SQL_SFKU_SET_NULL
+#define SQL_SFKU_SET_NULL 8
+#endif
+#ifndef SQL_SG_USAGE_ON_DOMAIN
+#define SQL_SG_USAGE_ON_DOMAIN 1
+#endif
+#ifndef SQL_SG_USAGE_ON_CHARACTER_SET
+#define SQL_SG_USAGE_ON_CHARACTER_SET 2
+#endif
+#ifndef SQL_SG_USAGE_ON_COLLATION
+#define SQL_SG_USAGE_ON_COLLATION 4
+#endif
+#ifndef SQL_SG_USAGE_ON_TRANSLATION
+#define SQL_SG_USAGE_ON_TRANSLATION 8
+#endif
+#ifndef SQL_SG_WITH_GRANT_OPTION
+#define SQL_SG_WITH_GRANT_OPTION 16
+#endif
+#ifndef SQL_SG_DELETE_TABLE
+#define SQL_SG_DELETE_TABLE 32
+#endif
+#ifndef SQL_SG_INSERT_TABLE
+#define SQL_SG_INSERT_TABLE 64
+#endif
+#ifndef SQL_SG_INSERT_COLUMN
+#define SQL_SG_INSERT_COLUMN 128
+#endif
+#ifndef SQL_SG_REFERENCES_TABLE
+#define SQL_SG_REFERENCES_TABLE 256
+#endif
+#ifndef SQL_SG_REFERENCES_COLUMN
+#define SQL_SG_REFERENCES_COLUMN 512
+#endif
+#ifndef SQL_SG_SELECT_TABLE
+#define SQL_SG_SELECT_TABLE 1024
+#endif
+#ifndef SQL_SG_UPDATE_TABLE
+#define SQL_SG_UPDATE_TABLE 2048
+#endif
+#ifndef SQL_SG_UPDATE_COLUMN
+#define SQL_SG_UPDATE_COLUMN 4096
+#endif
+#ifndef SQL_SP_EXISTS
+#define SQL_SP_EXISTS 1
+#endif
+#ifndef SQL_SP_ISNOTNULL
+#define SQL_SP_ISNOTNULL 2
+#endif
+#ifndef SQL_SP_ISNULL
+#define SQL_SP_ISNULL 4
+#endif
+#ifndef SQL_SP_MATCH_FULL
+#define SQL_SP_MATCH_FULL 8
+#endif
+#ifndef SQL_SP_MATCH_PARTIAL
+#define SQL_SP_MATCH_PARTIAL 16
+#endif
+#ifndef SQL_SP_MATCH_UNIQUE_FULL
+#define SQL_SP_MATCH_UNIQUE_FULL 32
+#endif
+#ifndef SQL_SP_MATCH_UNIQUE_PARTIAL
+#define SQL_SP_MATCH_UNIQUE_PARTIAL 64
+#endif
+#ifndef SQL_SP_OVERLAPS
+#define SQL_SP_OVERLAPS 128
+#endif
+#ifndef SQL_SP_UNIQUE
+#define SQL_SP_UNIQUE 256
+#endif
+#ifndef SQL_SP_LIKE
+#define SQL_SP_LIKE 512
+#endif
+#ifndef SQL_SP_IN
+#define SQL_SP_IN 1024
+#endif
+#ifndef SQL_SP_BETWEEN
+#define SQL_SP_BETWEEN 2048
+#endif
+#ifndef SQL_SP_COMPARISON
+#define SQL_SP_COMPARISON 4096
+#endif
+#ifndef SQL_SP_QUANTIFIED_COMPARISON
+#define SQL_SP_QUANTIFIED_COMPARISON 8192
+#endif
+#ifndef SQL_SRJO_CORRESPONDING_CLAUSE
+#define SQL_SRJO_CORRESPONDING_CLAUSE 1
+#endif
+#ifndef SQL_SRJO_CROSS_JOIN
+#define SQL_SRJO_CROSS_JOIN 2
+#endif
+#ifndef SQL_SRJO_EXCEPT_JOIN
+#define SQL_SRJO_EXCEPT_JOIN 4
+#endif
+#ifndef SQL_SRJO_FULL_OUTER_JOIN
+#define SQL_SRJO_FULL_OUTER_JOIN 8
+#endif
+#ifndef SQL_SRJO_INNER_JOIN
+#define SQL_SRJO_INNER_JOIN 16
+#endif
+#ifndef SQL_SRJO_INTERSECT_JOIN
+#define SQL_SRJO_INTERSECT_JOIN 32
+#endif
+#ifndef SQL_SRJO_LEFT_OUTER_JOIN
+#define SQL_SRJO_LEFT_OUTER_JOIN 64
+#endif
+#ifndef SQL_SRJO_NATURAL_JOIN
+#define SQL_SRJO_NATURAL_JOIN 128
+#endif
+#ifndef SQL_SRJO_RIGHT_OUTER_JOIN
+#define SQL_SRJO_RIGHT_OUTER_JOIN 256
+#endif
+#ifndef SQL_SRJO_UNION_JOIN
+#define SQL_SRJO_UNION_JOIN 512
+#endif
+#ifndef SQL_SR_USAGE_ON_DOMAIN
+#define SQL_SR_USAGE_ON_DOMAIN 1
+#endif
+#ifndef SQL_SR_USAGE_ON_CHARACTER_SET
+#define SQL_SR_USAGE_ON_CHARACTER_SET 2
+#endif
+#ifndef SQL_SR_USAGE_ON_COLLATION
+#define SQL_SR_USAGE_ON_COLLATION 4
+#endif
+#ifndef SQL_SR_USAGE_ON_TRANSLATION
+#define SQL_SR_USAGE_ON_TRANSLATION 8
+#endif
+#ifndef SQL_SR_GRANT_OPTION_FOR
+#define SQL_SR_GRANT_OPTION_FOR 16
+#endif
+#ifndef SQL_SR_CASCADE
+#define SQL_SR_CASCADE 32
+#endif
+#ifndef SQL_SR_RESTRICT
+#define SQL_SR_RESTRICT 64
+#endif
+#ifndef SQL_SR_DELETE_TABLE
+#define SQL_SR_DELETE_TABLE 128
+#endif
+#ifndef SQL_SR_INSERT_TABLE
+#define SQL_SR_INSERT_TABLE 256
+#endif
+#ifndef SQL_SR_INSERT_COLUMN
+#define SQL_SR_INSERT_COLUMN 512
+#endif
+#ifndef SQL_SR_REFERENCES_TABLE
+#define SQL_SR_REFERENCES_TABLE 1024
+#endif
+#ifndef SQL_SR_REFERENCES_COLUMN
+#define SQL_SR_REFERENCES_COLUMN 2048
+#endif
+#ifndef SQL_SR_SELECT_TABLE
+#define SQL_SR_SELECT_TABLE 4096
+#endif
+#ifndef SQL_SR_UPDATE_TABLE
+#define SQL_SR_UPDATE_TABLE 8192
+#endif
+#ifndef SQL_SR_UPDATE_COLUMN
+#define SQL_SR_UPDATE_COLUMN 16384
+#endif
+#ifndef SQL_SRVC_VALUE_EXPRESSION
+#define SQL_SRVC_VALUE_EXPRESSION 1
+#endif
+#ifndef SQL_SRVC_NULL
+#define SQL_SRVC_NULL 2
+#endif
+#ifndef SQL_SRVC_DEFAULT
+#define SQL_SRVC_DEFAULT 4
+#endif
+#ifndef SQL_SRVC_ROW_SUBQUERY
+#define SQL_SRVC_ROW_SUBQUERY 8
+#endif
+#ifndef SQL_SVE_CASE
+#define SQL_SVE_CASE 1
+#endif
+#ifndef SQL_SVE_CAST
+#define SQL_SVE_CAST 2
+#endif
+#ifndef SQL_SVE_COALESCE
+#define SQL_SVE_COALESCE 4
+#endif
+#ifndef SQL_SVE_NULLIF
+#define SQL_SVE_NULLIF 8
+#endif
+#ifndef SQL_SCC_XOPEN_CLI_VERSION1
+#define SQL_SCC_XOPEN_CLI_VERSION1 1
+#endif
+#ifndef SQL_SCC_ISO92_CLI
+#define SQL_SCC_ISO92_CLI 2
+#endif
+#ifndef SQL_US_UNION
+#define SQL_US_UNION 1
+#endif
+#ifndef SQL_US_UNION_ALL
+#define SQL_US_UNION_ALL 2
+#endif
+#ifndef SQL_DRIVER_AWARE_POOLING_NOT_CAPABLE
+#define SQL_DRIVER_AWARE_POOLING_NOT_CAPABLE 0
+#endif
+#ifndef SQL_DRIVER_AWARE_POOLING_CAPABLE
+#define SQL_DRIVER_AWARE_POOLING_CAPABLE 1
+#endif
+#ifndef SQL_DTC_ENLIST_EXPENSIVE
+#define SQL_DTC_ENLIST_EXPENSIVE 1
+#endif
+#ifndef SQL_DTC_UNENLIST_EXPENSIVE
+#define SQL_DTC_UNENLIST_EXPENSIVE 2
+#endif
+#ifndef SQL_ASYNC_DBC_NOT_CAPABLE
+#define SQL_ASYNC_DBC_NOT_CAPABLE 0
+#endif
+#ifndef SQL_ASYNC_DBC_CAPABLE
+#define SQL_ASYNC_DBC_CAPABLE 1
+#endif
+#ifndef SQL_FETCH_FIRST_USER
+#define SQL_FETCH_FIRST_USER 31
+#endif
+#ifndef SQL_FETCH_FIRST_SYSTEM
+#define SQL_FETCH_FIRST_SYSTEM 32
+#endif
+#ifndef SQL_ENTIRE_ROWSET
+#define SQL_ENTIRE_ROWSET 0
+#endif
+#ifndef SQL_POSITION
+#define SQL_POSITION 0
+#endif
+#ifndef SQL_REFRESH
+#define SQL_REFRESH 1
+#endif
+#ifndef SQL_UPDATE
+#define SQL_UPDATE 2
+#endif
+#ifndef SQL_DELETE
+#define SQL_DELETE 3
+#endif
+#ifndef SQL_ADD
+#define SQL_ADD 4
+#endif
+#ifndef SQL_SETPOS_MAX_OPTION_VALUE
+#define SQL_SETPOS_MAX_OPTION_VALUE 4
+#endif
+#ifndef SQL_UPDATE_BY_BOOKMARK
+#define SQL_UPDATE_BY_BOOKMARK 5
+#endif
+#ifndef SQL_DELETE_BY_BOOKMARK
+#define SQL_DELETE_BY_BOOKMARK 6
+#endif
+#ifndef SQL_FETCH_BY_BOOKMARK
+#define SQL_FETCH_BY_BOOKMARK 7
+#endif
+#ifndef SQL_LOCK_NO_CHANGE
+#define SQL_LOCK_NO_CHANGE 0
+#endif
+#ifndef SQL_LOCK_EXCLUSIVE
+#define SQL_LOCK_EXCLUSIVE 1
+#endif
+#ifndef SQL_LOCK_UNLOCK
+#define SQL_LOCK_UNLOCK 2
+#endif
+#ifndef SQL_SETPOS_MAX_LOCK_VALUE
+#define SQL_SETPOS_MAX_LOCK_VALUE 2
+#endif
+#ifndef SQL_BEST_ROWID
+#define SQL_BEST_ROWID 1
+#endif
+#ifndef SQL_ROWVER
+#define SQL_ROWVER 2
+#endif
+#ifndef SQL_PC_NOT_PSEUDO
+#define SQL_PC_NOT_PSEUDO 1
+#endif
+#ifndef SQL_QUICK
+#define SQL_QUICK 0
+#endif
+#ifndef SQL_ENSURE
+#define SQL_ENSURE 1
+#endif
+#ifndef SQL_TABLE_STAT
+#define SQL_TABLE_STAT 0
+#endif
+#ifndef SQL_DRIVER_NOPROMPT
+#define SQL_DRIVER_NOPROMPT 0
+#endif
+#ifndef SQL_DRIVER_COMPLETE
+#define SQL_DRIVER_COMPLETE 1
+#endif
+#ifndef SQL_DRIVER_PROMPT
+#define SQL_DRIVER_PROMPT 2
+#endif
+#ifndef SQL_DRIVER_COMPLETE_REQUIRED
+#define SQL_DRIVER_COMPLETE_REQUIRED 3
+#endif
+#ifndef SQL_FETCH_BOOKMARK
+#define SQL_FETCH_BOOKMARK 8
+#endif
+#ifndef SQL_ROW_SUCCESS
+#define SQL_ROW_SUCCESS 0
+#endif
+#ifndef SQL_ROW_DELETED
+#define SQL_ROW_DELETED 1
+#endif
+#ifndef SQL_ROW_UPDATED
+#define SQL_ROW_UPDATED 2
+#endif
+#ifndef SQL_ROW_NOROW
+#define SQL_ROW_NOROW 3
+#endif
+#ifndef SQL_ROW_ADDED
+#define SQL_ROW_ADDED 4
+#endif
+#ifndef SQL_ROW_ERROR
+#define SQL_ROW_ERROR 5
+#endif
+#ifndef SQL_ROW_SUCCESS_WITH_INFO
+#define SQL_ROW_SUCCESS_WITH_INFO 6
+#endif
+#ifndef SQL_ROW_PROCEED
+#define SQL_ROW_PROCEED 0
+#endif
+#ifndef SQL_ROW_IGNORE
+#define SQL_ROW_IGNORE 1
+#endif
+#ifndef SQL_PARAM_SUCCESS
+#define SQL_PARAM_SUCCESS 0
+#endif
+#ifndef SQL_PARAM_SUCCESS_WITH_INFO
+#define SQL_PARAM_SUCCESS_WITH_INFO 6
+#endif
+#ifndef SQL_PARAM_ERROR
+#define SQL_PARAM_ERROR 5
+#endif
+#ifndef SQL_PARAM_UNUSED
+#define SQL_PARAM_UNUSED 7
+#endif
+#ifndef SQL_PARAM_DIAG_UNAVAILABLE
+#define SQL_PARAM_DIAG_UNAVAILABLE 1
+#endif
+#ifndef SQL_PARAM_PROCEED
+#define SQL_PARAM_PROCEED 0
+#endif
+#ifndef SQL_PARAM_IGNORE
+#define SQL_PARAM_IGNORE 1
+#endif
+#ifndef SQL_CASCADE
+#define SQL_CASCADE 0
+#endif
+#ifndef SQL_RESTRICT
+#define SQL_RESTRICT 1
+#endif
+#ifndef SQL_SET_NULL
+#define SQL_SET_NULL 2
+#endif
+#ifndef SQL_NO_ACTION
+#define SQL_NO_ACTION 3
+#endif
+#ifndef SQL_SET_DEFAULT
+#define SQL_SET_DEFAULT 4
+#endif
+#ifndef SQL_INITIALLY_DEFERRED
+#define SQL_INITIALLY_DEFERRED 5
+#endif
+#ifndef SQL_INITIALLY_IMMEDIATE
+#define SQL_INITIALLY_IMMEDIATE 6
+#endif
+#ifndef SQL_NOT_DEFERRABLE
+#define SQL_NOT_DEFERRABLE 7
+#endif
+#ifndef SQL_PARAM_TYPE_UNKNOWN
+#define SQL_PARAM_TYPE_UNKNOWN 0
+#endif
+#ifndef SQL_PARAM_INPUT
+#define SQL_PARAM_INPUT 1
+#endif
+#ifndef SQL_PARAM_INPUT_OUTPUT
+#define SQL_PARAM_INPUT_OUTPUT 2
+#endif
+#ifndef SQL_RESULT_COL
+#define SQL_RESULT_COL 3
+#endif
+#ifndef SQL_PARAM_OUTPUT
+#define SQL_PARAM_OUTPUT 4
+#endif
+#ifndef SQL_RETURN_VALUE
+#define SQL_RETURN_VALUE 5
+#endif
+#ifndef SQL_PARAM_INPUT_OUTPUT_STREAM
+#define SQL_PARAM_INPUT_OUTPUT_STREAM 8
+#endif
+#ifndef SQL_PARAM_OUTPUT_STREAM
+#define SQL_PARAM_OUTPUT_STREAM 16
+#endif
+#ifndef SQL_PT_UNKNOWN
+#define SQL_PT_UNKNOWN 0
+#endif
+#ifndef SQL_PT_PROCEDURE
+#define SQL_PT_PROCEDURE 1
+#endif
+#ifndef SQL_PT_FUNCTION
+#define SQL_PT_FUNCTION 2
+#endif
+#ifndef SQL_YEAR
+#define SQL_YEAR 1
+#endif
+#ifndef SQL_MONTH
+#define SQL_MONTH 2
+#endif
+#ifndef SQL_DAY
+#define SQL_DAY 3
+#endif
+#ifndef SQL_HOUR
+#define SQL_HOUR 4
+#endif
+#ifndef SQL_MINUTE
+#define SQL_MINUTE 5
+#endif
+#ifndef SQL_SECOND
+#define SQL_SECOND 6
+#endif
+#ifndef SQL_YEAR_TO_MONTH
+#define SQL_YEAR_TO_MONTH 7
+#endif
+#ifndef SQL_DAY_TO_HOUR
+#define SQL_DAY_TO_HOUR 8
+#endif
+#ifndef SQL_DAY_TO_MINUTE
+#define SQL_DAY_TO_MINUTE 9
+#endif
+#ifndef SQL_DAY_TO_SECOND
+#define SQL_DAY_TO_SECOND 10
+#endif
+#ifndef SQL_HOUR_TO_MINUTE
+#define SQL_HOUR_TO_MINUTE 11
+#endif
+#ifndef SQL_HOUR_TO_SECOND
+#define SQL_HOUR_TO_SECOND 12
+#endif
+#ifndef SQL_MINUTE_TO_SECOND
+#define SQL_MINUTE_TO_SECOND 13
+#endif
+#ifndef SQL_DATABASE_NAME
+#define SQL_DATABASE_NAME 16
+#endif
+#ifndef SQL_FD_FETCH_PREV
+#define SQL_FD_FETCH_PREV 8
+#endif
+#ifndef SQL_FETCH_PREV
+#define SQL_FETCH_PREV 4
+#endif
+#ifndef SQL_CONCUR_TIMESTAMP
+#define SQL_CONCUR_TIMESTAMP 3
+#endif
+#ifndef SQL_SCCO_OPT_TIMESTAMP
+#define SQL_SCCO_OPT_TIMESTAMP 4
+#endif
+#ifndef SQL_CC_DELETE
+#define SQL_CC_DELETE 0
+#endif
+#ifndef SQL_CR_DELETE
+#define SQL_CR_DELETE 0
+#endif
+#ifndef SQL_CC_CLOSE
+#define SQL_CC_CLOSE 1
+#endif
+#ifndef SQL_CR_CLOSE
+#define SQL_CR_CLOSE 1
+#endif
+#ifndef SQL_CC_PRESERVE
+#define SQL_CC_PRESERVE 2
+#endif
+#ifndef SQL_CR_PRESERVE
+#define SQL_CR_PRESERVE 2
+#endif
+#ifndef SQL_SCROLL_FORWARD_ONLY
+#define SQL_SCROLL_FORWARD_ONLY 0
+#endif
+#ifndef SQL_SCROLL_KEYSET_DRIVEN
+#define SQL_SCROLL_KEYSET_DRIVEN (-1)
+#endif
+#ifndef SQL_SCROLL_DYNAMIC
+#define SQL_SCROLL_DYNAMIC (-2)
+#endif
+#ifndef SQL_SCROLL_STATIC
+#define SQL_SCROLL_STATIC (-3)
+#endif
+#ifndef SQL_WCHAR
+#define SQL_WCHAR (-8)
+#endif
+#ifndef SQL_WVARCHAR
+#define SQL_WVARCHAR (-9)
+#endif
+#ifndef SQL_WLONGVARCHAR
+#define SQL_WLONGVARCHAR (-10)
+#endif
+#ifndef SQL_C_WCHAR
+#define SQL_C_WCHAR (-8)
+#endif
+#ifndef SQL_C_TCHAR
+#define SQL_C_TCHAR (-8)
+#endif
+#ifndef SQL_SQLSTATE_SIZEW
+#define SQL_SQLSTATE_SIZEW 10
+#endif
+
+#endif

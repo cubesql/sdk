@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Windows Installer package for the CubeSQL ODBC driver.
+
+  Registration goes through the ODBCDriver element, which drives the Windows
+  Installer InstallODBC action. That maintains the driver's usage count and
+  writes to the registry view matching the package platform, so the 32-bit
+  package can never register itself as a 64-bit driver.
+
+  Build with (see build-msi.ps1):
+    wix build cubesqlodbc.wxs -arch x64 -d DriverPath=... -d Version=... -o out.msi
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <?if $(sys.BUILDARCH) = x64 ?>
+    <?define UpgradeGuid = "74CA0ED7-27D7-5336-A5BF-3430EC3A0EE8" ?>
+    <?define DriverComponentGuid = "71CFAA40-D9A2-5801-97B8-F5B3292A3C37" ?>
+    <?define DocsComponentGuid = "1E4AC06C-25FD-53C8-B709-51B2F556CDCA" ?>
+    <?define ArchLabel = "64-bit" ?>
+  <?else?>
+    <?define UpgradeGuid = "8D53014E-4775-5F01-94CE-BFE8C1AD6375" ?>
+    <?define DriverComponentGuid = "A915E3BE-AA22-5332-B5D5-54A7F3DFDBD1" ?>
+    <?define DocsComponentGuid = "D80B4A05-3380-5E9F-B626-C7F66BB68915" ?>
+    <?define ArchLabel = "32-bit" ?>
+  <?endif?>
+
+  <Package
+      Name="CubeSQL ODBC Driver ($(ArchLabel))"
+      Manufacturer="SQLabs"
+      Version="$(Version)"
+      UpgradeCode="$(UpgradeGuid)"
+      Scope="perMachine"
+      Compressed="yes">
+
+    <SummaryInformation Description="ODBC driver for the CubeSQL server ($(ArchLabel))" />
+
+    <!-- Both architectures are routinely needed side by side, so each has its
+         own UpgradeCode and only replaces its own previous version. -->
+    <MajorUpgrade
+        AllowSameVersionUpgrades="yes"
+        DowngradeErrorMessage="A newer version of the CubeSQL ODBC Driver ($(ArchLabel)) is already installed." />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <Launch
+        Condition="Installed OR VersionNT &gt;= 601"
+        Message="The CubeSQL ODBC Driver requires Windows 7 or Windows Server 2008 R2 or later." />
+
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="COMPANYFOLDER" Name="SQLabs">
+        <Directory Id="INSTALLFOLDER" Name="CubeSQL ODBC Driver">
+
+          <Component Id="DriverComponent" Guid="$(DriverComponentGuid)">
+            <!--
+              The installed name is csqlodbc.dll, not cubesqlodbc.dll, and it
+              has to stay within 8.3.
+
+              Windows Installer stores a file name that is not 8.3 as the pair
+              "short|long" in the FileName column, and the InstallODBC standard
+              action writes that column into the registry without resolving it.
+              With the longer name the Driver and Setup values came out as
+
+                C:\...\CubeSQL ODBC Driver\-pmuqzlm.dll|cubesqlodbc.dll
+
+              which is not a path. The file itself was laid down correctly and
+              the driver appeared in the ODBC Data Source Administrator, so the
+              package looked healthy while no application could load the driver.
+              Verified: giving the file an 8.3 name removes the pair and the
+              registry gets the real path. Supplying ShortName explicitly does
+              not help - the pair is still formed.
+
+              Keep this name 8.3 (at most eight characters plus extension).
+            -->
+            <File Id="DriverDll" Name="csqlodbc.dll"
+                  Source="$(DriverPath)" KeyPath="yes" />
+            <ODBCDriver Id="CubeSQLODBCDriver"
+                        Name="CubeSQL ODBC Driver"
+                        File="DriverDll"
+                        SetupFile="DriverDll">
+              <!-- The driver is registered in ODBC 2.0 compatibility mode; see
+                   the note in README.md about explicit descriptors. -->
+              <Property Id="APILevel" Value="2" />
+              <Property Id="ConnectFunctions" Value="YYN" />
+              <Property Id="DriverODBCVer" Value="02.00" />
+              <Property Id="SQLLevel" Value="0" />
+              <Property Id="FileUsage" Value="0" />
+            </ODBCDriver>
+          </Component>
+
+          <Component Id="DocsComponent" Guid="$(DocsComponentGuid)">
+            <File Id="README.md" Name="README.md" Source="$(DocsPath)\README.md" KeyPath="yes" />
+            <File Id="LICENSE" Name="LICENSE" Source="$(DocsPath)\LICENSE" />
+          </Component>
+
+        </Directory>
+      </Directory>
+    </StandardDirectory>
+
+    <Feature Id="Main" Title="CubeSQL ODBC Driver" Level="1">
+      <ComponentRef Id="DriverComponent" />
+      <ComponentRef Id="DocsComponent" />
+    </Feature>
+
+  </Package>
+</Wix>

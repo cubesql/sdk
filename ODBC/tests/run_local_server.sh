@@ -41,19 +41,24 @@ while ! nc -z 127.0.0.1 "$server_port" 2>/dev/null; do
     sleep 0.1
 done
 
-set +e
-CUBESQL_ODBC_HOST=127.0.0.1 \
-CUBESQL_ODBC_PORT="$server_port" \
-CUBESQL_ODBC_USER=admin \
-CUBESQL_ODBC_PASSWORD=admin \
-CUBESQL_ODBC_REGISTER_TEST_SERVER=1 \
-    ./test_odbc_integration >"$integration_log" 2>&1
-test_status=$?
-set -e
+run_suite() {
+    suite=$1
+    set +e
+    CUBESQL_ODBC_HOST=127.0.0.1 \
+    CUBESQL_ODBC_PORT="$server_port" \
+    CUBESQL_ODBC_USER=admin \
+    CUBESQL_ODBC_PASSWORD=admin \
+    CUBESQL_ODBC_REGISTER_TEST_SERVER=1 \
+        "./$suite" >"$integration_log" 2>&1
+    test_status=$?
+    set -e
+    cat "$integration_log"
+    if [ "$test_status" -ne 0 ]; then
+        echo "$suite: FAILED (exit $test_status)" >&2
+        exit "$test_status"
+    fi
+}
 
-cat "$integration_log"
-if [ "$test_status" -ne 0 ]; then
-    echo "CubeSQL ODBC integration: FAILED (exit $test_status)" >&2
-    exit "$test_status"
-fi
-echo "CubeSQL ODBC live integration suite completed successfully."
+run_suite test_odbc_integration
+run_suite test_odbc_conformance
+echo "CubeSQL ODBC live test suites completed successfully."

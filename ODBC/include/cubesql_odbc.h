@@ -1,4 +1,4 @@
-#ifndef CUBESQL_ODBC_INTERNAL_H
+﻿#ifndef CUBESQL_ODBC_INTERNAL_H
 #define CUBESQL_ODBC_INTERNAL_H
 
 #define ODBCVER 0x0380
@@ -16,6 +16,10 @@
 #include <stdint.h>
 #include "cubesql.h"
 
+#ifndef _WIN32
+#include <pthread.h>
+#endif
+
 #ifdef _WIN32
 /* Windows exports are declared in windows/cubesqlodbc.def. */
 #define CSODBC_EXPORT
@@ -23,13 +27,62 @@
 #define CSODBC_EXPORT __attribute__((visibility("default")))
 #endif
 
-#define CSODBC_VERSION "01.00.0000"
+/*
+ * The version lives in cubesql_odbc_version.h so that the C sources and the
+ * Windows resource compiler cannot drift apart.
+ */
+#include "cubesql_odbc_version.h"
+
+/*
+ * The driver still registers as ODBC 2.0, but now handles the 2.x spellings the
+ * Driver Manager sends in that mode.
+ *
+ * Reporting "02.00" was assumed to make the Driver Manager supply the ODBC 3.x
+ * descriptor mappings. It does the opposite: in 2.0 mode the Driver Manager
+ * rewrites 3.x calls into their 2.x forms before the driver sees them, and the
+ * driver used to reject those forms:
+ *
+ *   - SQLColAttribute(SQL_DESC_NAME) arrives as SQL_COLUMN_NAME (1), which was
+ *     answered with HY091, so no consumer could read column metadata and
+ *     OdbcDataAdapter.Fill failed outright;
+ *   - SQLSetStmtAttr(SQL_ATTR_ROW_ARRAY_SIZE) arrives as SQL_ROWSET_SIZE (9),
+ *     answered with HYC00, which disabled block fetch.
+ *
+ * Both spellings are now accepted; see cs_i_SQLColAttribute and
+ * cs_i_SQLSetStmtAttr.
+ *
+ * Moving to "03.80" would additionally unblock SQL_ATTR_METADATA_ID and the
+ * fourteen ODBC 3.x InfoTypes that the Driver Manager currently refuses on the
+ * driver's behalf with HY092/HY096. It cannot be done yet: with a 3.x
+ * declaration the Driver Manager faults inside ODBC32.dll on the first
+ * SQLExecDirect, because this driver implements no descriptor handles
+ * (SQLGetDescField and friends are not exported at all). Implementing the
+ * implicit descriptors is the prerequisite for that change.
+ */
 #define CSODBC_ODBC_VERSION "03.80"
 #define CSODBC_DRIVER_ODBC_VERSION "02.00"
 #define CSODBC_MAX_DIAG 8
 #define CSODBC_MAX_COLS 1024
 #define CSODBC_MAX_PARAMS 1024
 #define CSODBC_MAGIC 0x43534f44u
+
+/*
+ * Per-connection recursive mutex. The Driver Manager does not serialise calls,
+ * so every entry point that touches a connection, its statements, or the
+ * underlying CubeSQL socket has to serialise on the owning connection.
+ */
+#ifdef _WIN32
+typedef CRITICAL_SECTION cs_mutex;
+#else
+typedef pthread_mutex_t cs_mutex;
+#endif
+
+void cs_mutex_init(cs_mutex *m);
+void cs_mutex_destroy(cs_mutex *m);
+void cs_mutex_lock(cs_mutex *m);
+void cs_mutex_unlock(cs_mutex *m);
+/* Non-zero when the lock was acquired. */
+int cs_mutex_trylock(cs_mutex *m);
 
 typedef struct cs_diag_record {
     char state[6];
@@ -42,6 +95,12 @@ typedef struct cs_handle {
     SQLSMALLINT type;
     SQLRETURN last_return;
     SQLSMALLINT diag_count;
+    /*
+     * How many records SQLError has already handed out. SQLError is the ODBC 2.x
+     * interface and is defined to walk the diagnostic records one call at a time,
+     * ending with SQL_NO_DATA; callers loop on it until that arrives.
+     */
+    SQLSMALLINT diag_next;
     cs_diag_record diag[CSODBC_MAX_DIAG];
 } cs_handle;
 
@@ -74,7 +133,10 @@ struct cs_env {
     cs_handle h;
     SQLINTEGER odbc_version;
     SQLINTEGER output_nts;
+    SQLULEN connection_pooling;
+    SQLULEN cp_match;
     cs_dbc *connections;
+    cs_mutex lock;
 };
 
 struct cs_dbc {
@@ -84,11 +146,28 @@ struct cs_dbc {
     csqldb *db;
     cs_stmt *statements;
     int connected;
+    int in_transaction;
+    /* Set when SQLCancel had to drop the socket to interrupt a call. */
+    int dead;
+    /* Non-zero when SQL_C_CHAR uses the ANSI code page rather than raw UTF-8. */
+    int ansi_charset;
     SQLULEN autocommit;
     SQLULEN access_mode;
     SQLULEN txn_isolation;
     SQLULEN login_timeout;
     SQLULEN connection_timeout;
+    /*
+     * Attributes the driver accepts and remembers but that do not change how it
+     * talks to CubeSQL. Rejecting them outright breaks common ODBC consumers.
+     */
+    SQLULEN metadata_id;
+    SQLULEN packet_size;
+    SQLULEN odbc_cursors;
+    SQLULEN async_enable;
+    SQLULEN trace;
+    SQLULEN translate_option;
+    SQLULEN auto_ipd;
+    SQLPOINTER quiet_mode;
     char host[256];
     char port[16];
     char user[256];
@@ -97,6 +176,7 @@ struct cs_dbc {
     char dsn[256];
     char encryption[32];
     char dbms_version[32];
+    cs_mutex lock;
 };
 
 struct cs_stmt {
@@ -122,19 +202,89 @@ struct cs_stmt {
     SQLULEN paramset_size;
     SQLULEN *params_processed;
     SQLUSMALLINT *param_status;
+    SQLUSMALLINT *param_operation;
+    SQLUSMALLINT *row_operation;
+    /* Rowset binding. row_bind_type is SQL_BIND_BY_COLUMN or a struct stride. */
+    SQLULEN row_bind_type;
+    SQLULEN param_bind_type;
+    SQLULEN *row_bind_offset;
+    SQLULEN *param_bind_offset;
+    SQLULEN rowset_start;
+    SQLULEN rowset_count;
+    /* Accepted-and-remembered statement attributes. */
+    SQLULEN metadata_id;
+    SQLULEN noscan;
+    SQLULEN async_enable;
+    SQLULEN cursor_scrollable;
+    SQLULEN cursor_sensitivity;
+    SQLULEN keyset_size;
+    SQLULEN simulate_cursor;
+    SQLULEN cursor_type;
+    SQLULEN concurrency;
+    SQLULEN retrieve_data;
+    SQLULEN use_bookmarks;
     char cursor_name[128];
     int prepared;
     int executed;
+    /*
+     * Column types taken from the catalogue, resolved once per result set.
+     *
+     * CubeSQL reports the runtime type of a column, and for a REAL column it
+     * reports text: the wire protocol carries a single type code per column and
+     * there is no declared type in it. Reporting every such column as VARCHAR
+     * makes consumers treat numbers as strings, so when the runtime type is text
+     * the driver asks the catalogue what the column was declared as.
+     * Zero means "no better answer than the runtime type".
+     */
+    SQLSMALLINT decl_type[CSODBC_MAX_COLS];
+    int types_resolved;
 };
 
 void cs_diag_clear(cs_handle *h);
 SQLRETURN cs_diag_add(cs_handle *h, const char *state, SQLINTEGER native,
                       const char *format, ...);
+SQLRETURN cs_diag_warn(cs_handle *h, const char *state, const char *format, ...);
 int cs_valid_handle(SQLHANDLE handle, SQLSMALLINT type);
 char *cs_utf16_to_utf8(const SQLWCHAR *input, SQLINTEGER length);
 SQLRETURN cs_copy_utf8(SQLCHAR *out, SQLLEN capacity, SQLLEN *length,
                        const char *value, cs_handle *diag);
+SQLRETURN cs_copy_ansi(SQLCHAR *out, SQLLEN capacity, SQLLEN *length,
+                       const char *value, cs_handle *diag, int ansi_charset);
 SQLRETURN cs_copy_utf16(SQLWCHAR *out, SQLLEN capacity, SQLLEN *length,
                         const char *value, cs_handle *diag);
+
+/*
+ * Connection options shared between the driver and the Windows setup dialog.
+ */
+/* Bits recording which keys the caller actually supplied. */
+#define CS_OPT_SEEN_DSN  0x01u
+#define CS_OPT_SEEN_UID  0x02u
+#define CS_OPT_SEEN_PWD  0x04u
+
+typedef struct cs_conn_options {
+    char dsn[256], host[256], port[16], user[256], password[256];
+    char database[512], encryption[32], timeout[16], charset[16];
+    unsigned seen;
+} cs_conn_options;
+
+char *cs_utf8_to_ansi(const char *utf8, size_t len, size_t *out_len);
+char *cs_ansi_to_utf8(const char *ansi, size_t len, size_t *out_len);
+
+int cs_parse_connection_string(cs_conn_options *o, const char *input);
+void cs_option_set(char *dst, size_t cap, const char *value);
+void cs_conn_apply_defaults(cs_conn_options *o);
+int cs_encryption_value(const char *value);
+
+#ifdef _WIN32
+/* Set by DllMain so the setup dialogs can locate their own resources. */
+extern HINSTANCE cs_dll_module;
+
+/*
+ * Implemented in setup.c. Shows the modal connection dialog and returns
+ * non-zero when the user confirmed. "connect_mode" drives the layout: the DSN
+ * editor shows the DSN name and description fields, the login prompt does not.
+ */
+int cs_prompt_dialog(HWND parent, cs_conn_options *o, int connect_mode);
+#endif
 
 #endif

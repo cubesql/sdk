@@ -1,4 +1,4 @@
-LIBRARY cubesqlodbc
+﻿LIBRARY cubesqlodbc
 EXPORTS
     SQLAllocConnect
     SQLAllocEnv
@@ -98,6 +98,7 @@ EXPORTS
     SQLSetParam
     SQLSetPos
     SQLSetStmtAttr
+    SQLSetScrollOptions
     SQLSetStmtOption
     SQLSpecialColumns
     SQLSpecialColumnsW
@@ -109,4 +110,5 @@ EXPORTS
     SQLTablesW
     SQLTransact
     ConfigDSN
+    ConfigDSNW
     ConfigDriver

@@ -1,0 +1,123 @@
+/*
+ * Version information and the setup dialogs for the CubeSQL ODBC driver.
+ *
+ * The VERSIONINFO block is what the ODBC Data Source Administrator shows in the
+ * Version and Company columns of its Drivers tab, and what Explorer shows in
+ * the file properties. A driver without it appears with those fields blank,
+ * which makes a 32-bit and a 64-bit build indistinguishable.
+ */
+#include <windows.h>
+#include "cubesql_odbc_version.h"
+#include "cubesql_odbc_resource.h"
+
+#ifndef VS_VERSION_INFO
+#define VS_VERSION_INFO 1
+#endif
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION    CSODBC_VERSION_MAJOR, CSODBC_VERSION_MINOR, CSODBC_VERSION_PATCH, CSODBC_VERSION_BUILD
+PRODUCTVERSION CSODBC_VERSION_MAJOR, CSODBC_VERSION_MINOR, CSODBC_VERSION_PATCH, CSODBC_VERSION_BUILD
+FILEFLAGSMASK  0x3fL
+#ifdef _DEBUG
+FILEFLAGS      VS_FF_DEBUG
+#else
+FILEFLAGS      0x0L
+#endif
+FILEOS         VOS_NT_WINDOWS32
+FILETYPE       VFT_DLL
+FILESUBTYPE    VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName",      CSODBC_COMPANY
+            VALUE "FileDescription",  CSODBC_PRODUCT " (" CSODBC_ARCH_STRING ")"
+            VALUE "FileVersion",      CSODBC_VERSION_STRING
+            VALUE "InternalName",     "cubesqlodbc"
+            VALUE "LegalCopyright",   CSODBC_COPYRIGHT
+            VALUE "OriginalFilename", "cubesqlodbc.dll"
+            VALUE "ProductName",      CSODBC_PRODUCT
+            VALUE "ProductVersion",   CSODBC_VERSION_STRING
+            VALUE "Comments",         "ODBC driver for the CubeSQL server, " CSODBC_ARCH_STRING
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+/*
+ * DSN editor, shown by the ODBC Data Source Administrator through ConfigDSN.
+ */
+IDD_CUBESQL_DSN DIALOGEX 0, 0, 268, 214
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "CubeSQL ODBC Data Source Configuration"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "Data source name:", IDC_STATIC, 10, 12, 74, 8
+    EDITTEXT        IDC_DSN, 90, 10, 168, 13, ES_AUTOHSCROLL
+    LTEXT           "Description:", IDC_STATIC, 10, 30, 74, 8
+    EDITTEXT        IDC_DESCRIPTION, 90, 28, 168, 13, ES_AUTOHSCROLL
+
+    GROUPBOX        "Server", IDC_STATIC, 6, 48, 256, 60
+    LTEXT           "Host:", IDC_STATIC, 14, 64, 70, 8
+    EDITTEXT        IDC_SERVER, 90, 62, 110, 13, ES_AUTOHSCROLL
+    LTEXT           "Port:", IDC_STATIC, 206, 64, 18, 8
+    EDITTEXT        IDC_PORT, 226, 62, 28, 13, ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Encryption:", IDC_STATIC, 14, 84, 70, 8
+    COMBOBOX        IDC_ENCRYPTION, 90, 82, 110, 100, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Timeout:", IDC_STATIC, 206, 84, 30, 8
+    EDITTEXT        IDC_TIMEOUT, 236, 82, 18, 13, ES_AUTOHSCROLL | ES_NUMBER
+
+    GROUPBOX        "Authentication", IDC_STATIC, 6, 114, 256, 46
+    LTEXT           "User name:", IDC_STATIC, 14, 130, 70, 8
+    EDITTEXT        IDC_USER, 90, 128, 110, 13, ES_AUTOHSCROLL
+    LTEXT           "Password:", IDC_STATIC, 14, 146, 70, 8
+    EDITTEXT        IDC_PASSWORD, 90, 144, 110, 13, ES_AUTOHSCROLL | ES_PASSWORD
+
+    LTEXT           "Database:", IDC_STATIC, 10, 170, 74, 8
+    COMBOBOX        IDC_DATABASE, 90, 168, 110, 120, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Refresh", IDC_REFRESH_DATABASES, 206, 167, 52, 14
+
+    LTEXT           "", IDC_STATUS, 10, 190, 120, 18
+    PUSHBUTTON      "&Test", IDC_TEST, 130, 192, 40, 14
+    DEFPUSHBUTTON   "OK", IDOK, 174, 192, 40, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 218, 192, 40, 14
+END
+
+/*
+ * Login prompt, shown by SQLDriverConnect when the Driver Manager asks for
+ * SQL_DRIVER_PROMPT, or for SQL_DRIVER_COMPLETE when something is missing.
+ */
+IDD_CUBESQL_LOGIN DIALOGEX 0, 0, 268, 176
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Connect to CubeSQL"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Server", IDC_STATIC, 6, 6, 256, 60
+    LTEXT           "Host:", IDC_STATIC, 14, 22, 70, 8
+    EDITTEXT        IDC_SERVER, 90, 20, 110, 13, ES_AUTOHSCROLL
+    LTEXT           "Port:", IDC_STATIC, 206, 22, 18, 8
+    EDITTEXT        IDC_PORT, 226, 20, 28, 13, ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Encryption:", IDC_STATIC, 14, 42, 70, 8
+    COMBOBOX        IDC_ENCRYPTION, 90, 40, 110, 100, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Timeout:", IDC_STATIC, 206, 42, 30, 8
+    EDITTEXT        IDC_TIMEOUT, 236, 40, 18, 13, ES_AUTOHSCROLL | ES_NUMBER
+
+    GROUPBOX        "Authentication", IDC_STATIC, 6, 72, 256, 46
+    LTEXT           "User name:", IDC_STATIC, 14, 88, 70, 8
+    EDITTEXT        IDC_USER, 90, 86, 110, 13, ES_AUTOHSCROLL
+    LTEXT           "Password:", IDC_STATIC, 14, 104, 70, 8
+    EDITTEXT        IDC_PASSWORD, 90, 102, 110, 13, ES_AUTOHSCROLL | ES_PASSWORD
+
+    LTEXT           "Database:", IDC_STATIC, 10, 128, 74, 8
+    COMBOBOX        IDC_DATABASE, 90, 126, 110, 120, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Refresh", IDC_REFRESH_DATABASES, 206, 125, 52, 14
+
+    LTEXT           "", IDC_STATUS, 10, 152, 120, 18
+    PUSHBUTTON      "&Test", IDC_TEST, 130, 154, 40, 14
+    DEFPUSHBUTTON   "OK", IDOK, 174, 154, 40, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 218, 154, 40, 14
+END
