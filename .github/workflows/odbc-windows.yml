@@ -53,6 +53,31 @@ jobs:
       - name: Check out SDK
         uses: actions/checkout@v6
 
+      # The registration scripts run under whatever PowerShell the customer
+      # has, and on a stock Windows that is 5.1. They were dead there once:
+      # [ushort] is a 7.x-only accelerator, so the script threw before writing
+      # anything, and nothing caught it because no test ran them. Note the
+      # shell: `powershell` is Windows PowerShell 5.1, `pwsh` is 7.x.
+      - name: Check the registration scripts under Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          # Type accelerators resolve at run time, so parsing is not enough to
+          # catch them; they are grepped for separately.
+          $sevenOnly = @("ushort", "ulong")
+          foreach ($s in @("ODBC\windows\install.ps1", "ODBC\windows\uninstall.ps1")) {
+              $errs = $null
+              [System.Management.Automation.Language.Parser]::ParseFile($s, [ref]$null, [ref]$errs) | Out-Null
+              if ($errs) { throw "$s does not parse under Windows PowerShell 5.1" }
+              $text = Get-Content $s -Raw
+              foreach ($t in $sevenOnly) {
+                  if ($text.Contains("[$t]")) {
+                      throw "$s uses [$t], which does not exist in Windows PowerShell 5.1"
+                  }
+              }
+          }
+          Write-Host "Both scripts load under PowerShell $($PSVersionTable.PSVersion)"
+
       - name: Configure MSVC ${{ matrix.cmake_arch }} build
         run: >-
           cmake -S ODBC -B "${{ matrix.build_dir }}"
@@ -60,8 +85,26 @@ jobs:
           -DBUILD_TESTING=ON
           -DCUBESQL_ODBC_WITH_TLS=ON
 
-      - name: Build driver and smoke test
+      - name: Build driver and test suite
         run: cmake --build "${{ matrix.build_dir }}" --config Release --parallel
+
+      # rc.exe does not define _WIN64, so the architecture in the version
+      # resource has to be passed in by the build. It was wrong once and every
+      # build, of either architecture, described itself as "(32-bit)".
+      - name: Check the version resource matches the binary
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $info = (Get-Item "${{ matrix.build_dir }}/Release/cubesqlodbc.dll").VersionInfo
+          Write-Host "FileVersion=$($info.FileVersion) Company=$($info.CompanyName) Description=$($info.FileDescription)"
+          $expected = if ("${{ matrix.name }}" -eq "x64") { "(64-bit)" } else { "(32-bit)" }
+          if ($info.FileDescription -notlike "*$expected*") {
+              throw "The version resource says '$($info.FileDescription)', expected $expected"
+          }
+          if (-not $info.CompanyName) { throw "CompanyName is empty" }
+          if ($info.FileVersion -notmatch '^\d+\.\d+\.\d+\.\d+$') {
+              throw "FileVersion '$($info.FileVersion)' is malformed"
+          }
 
       - name: Download and install CubeSQL server
         shell: pwsh
@@ -147,6 +190,18 @@ jobs:
               throw "ODBC smoke test failed with exit code $($process.ExitCode)"
           }
 
+      # The rest of the suite links the driver into each executable and calls it
+      # without a Driver Manager. Those tests were reachable only from the POSIX
+      # Makefile, so on Windows - the driver's only target - they were never
+      # even compiled. The smoke test is excluded because the step above already
+      # ran it, with crash dumps armed.
+      - name: Run the rest of the test suite
+        shell: pwsh
+        working-directory: ${{ matrix.build_dir }}
+        run: >-
+          ctest -C Release --output-on-failure --no-tests=error
+          --exclude-regex "^cubesql_odbc_smoke$"
+
       - name: Upload crash diagnostics
         if: failure()
         uses: actions/upload-artifact@v7
@@ -154,6 +209,7 @@ jobs:
           name: cubesql-odbc-windows-${{ matrix.name }}-diagnostics
           path: |
             ${{ runner.temp }}/cubesql-odbc-${{ matrix.name }}-dumps
+            ${{ matrix.build_dir }}/Testing
             ${{ matrix.build_dir }}/Release/*.pdb
             ${{ matrix.build_dir }}/Release/cubesql_odbc_smoke.exe
             ${{ matrix.build_dir }}/Release/cubesqlodbc.dll
@@ -167,6 +223,75 @@ jobs:
           $dumpKey = "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\cubesql_odbc_smoke.exe"
           Remove-Item -Path $dumpKey -Recurse -Force -ErrorAction SilentlyContinue
 
+      # WiX 5, not 6 or 7: from 6 onwards the tool ships under the OSMF licence,
+      # which asks for a paid subscription in a commercial setting. 5.x stays
+      # MS-RL. Building the package on every run is deliberate - the MSI once
+      # registered a driver path that was not a path, and it shipped that way
+      # because nothing built or installed it outside a release.
+      - name: Install WiX
+        shell: pwsh
+        run: dotnet tool install --global wix --version "5.*"
+
+      - name: Build ${{ matrix.name }} MSI
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          & ODBC/installer/build-msi.ps1 `
+              -DriverPath "${{ matrix.build_dir }}/Release/cubesqlodbc.dll" `
+              -OutputDir "${{ runner.temp }}/msi"
+
+      # An MSI that installs is worth little if it registers the wrong path, so
+      # the package is installed for real and the registry is read back.
+      - name: Install the MSI and check what it registered
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $msi = (Get-ChildItem "${{ runner.temp }}/msi" -Filter "*.msi" | Select-Object -First 1).FullName
+          $key = if ("${{ matrix.name }}" -eq "x64") {
+              "HKLM:\SOFTWARE\ODBC\ODBCINST.INI\CubeSQL ODBC Driver"
+          } else {
+              "HKLM:\SOFTWARE\WOW6432Node\ODBC\ODBCINST.INI\CubeSQL ODBC Driver"
+          }
+
+          # The smoke test registered a driver under this same key, and Windows
+          # keeps a usage count per driver: leaving it there would take the
+          # count to two, the key would survive the uninstall, and the check
+          # below would fail for a reason that has nothing to do with the
+          # package. Clear it first, put it back at the end.
+          $previous = if (Test-Path $key) { (Get-ItemProperty $key).Driver } else { $null }
+          for ($attempt = 0; $attempt -lt 8 -and (Test-Path $key); $attempt++) {
+              & ODBC/windows/uninstall.ps1 -Architecture "${{ matrix.registry_arch }}"
+          }
+          if (Test-Path $key) { throw "Could not clear the existing registration" }
+
+          $result = Start-Process msiexec.exe -Wait -PassThru -ArgumentList @(
+              "/i", $msi, "/qn", "/norestart", "/l*v", "$env:RUNNER_TEMP/msi-install.log")
+          if ($result.ExitCode -notin @(0, 3010)) {
+              Get-Content "$env:RUNNER_TEMP/msi-install.log" -Tail 60
+              throw "MSI installation failed with exit $($result.ExitCode)"
+          }
+
+          if (-not (Test-Path $key)) { throw "The MSI did not register the driver" }
+          $entry = Get-ItemProperty $key
+          Write-Host "Driver = $($entry.Driver)"
+          Write-Host "Setup  = $($entry.Setup)"
+          # Windows Installer stores a name that is not 8.3 as "short|long" and
+          # InstallODBC writes that pair straight into the registry, so a valid
+          # looking package can register something no application can load.
+          foreach ($value in @($entry.Driver, $entry.Setup)) {
+              if ([string]::IsNullOrWhiteSpace($value)) { throw "An empty registry value" }
+              if ($value.Contains("|")) { throw "Not a path, a short|long pair: $value" }
+              if (-not (Test-Path $value)) { throw "The registered path does not exist: $value" }
+          }
+
+          $result = Start-Process msiexec.exe -Wait -PassThru -ArgumentList @("/x", $msi, "/qn", "/norestart")
+          if ($result.ExitCode -notin @(0, 3010)) { throw "MSI uninstall failed with exit $($result.ExitCode)" }
+          if (Test-Path $key) { throw "The key survived the uninstall" }
+
+          if ($previous -and (Test-Path $previous)) {
+              & ODBC/windows/install.ps1 -DriverPath $previous -Encryption NONE
+          }
+
       - name: Package tested driver
         shell: pwsh
         run: |
@@ -178,6 +303,9 @@ jobs:
           Copy-Item ODBC/windows/uninstall.ps1 $package
           Copy-Item ODBC/README.md $package
           Copy-Item LICENSE $package
+          # Carried alongside the archive; the release job lifts it out so the
+          # MSI is an asset of its own rather than something to unzip first.
+          Copy-Item "${{ runner.temp }}/msi/*.msi" $package
 
           $hash = (Get-FileHash -Algorithm SHA256 `
               (Join-Path $package "cubesqlodbc.dll")).Hash.ToLowerInvariant()
@@ -232,10 +360,16 @@ jobs:
           for arch in x86 x64; do
               package="dist/cubesql-odbc-windows-$arch"
               test -f "$package/cubesqlodbc.dll"
+              # The installer is what most people want, so it becomes an asset
+              # of its own instead of something to find inside an archive. The
+              # zip keeps the loose DLL for anyone registering it by hand.
+              mv "$package"/cubesql-odbc-"$arch"-*.msi .
               archive="cubesql-odbc-${version}-windows-${arch}.zip"
               (cd "$package" && zip -9 -r "../../$archive" .)
           done
-          sha256sum cubesql-odbc-*-windows-*.zip > SHA256SUMS.txt
+          sha256sum cubesql-odbc-*-windows-*.zip cubesql-odbc-x86-*.msi cubesql-odbc-x64-*.msi \
+              > SHA256SUMS.txt
+          cat SHA256SUMS.txt
 
       - name: Publish GitHub Release
         shell: bash
@@ -247,8 +381,10 @@ jobs:
           tag="$GITHUB_REF_NAME"
           version="${tag#odbc-v}"
           assets=(
-              "cubesql-odbc-${version}-windows-x86.zip"
+              cubesql-odbc-x64-*.msi
+              cubesql-odbc-x86-*.msi
               "cubesql-odbc-${version}-windows-x64.zip"
+              "cubesql-odbc-${version}-windows-x86.zip"
               "SHA256SUMS.txt"
           )
           if gh release view "$tag" >/dev/null 2>&1; then

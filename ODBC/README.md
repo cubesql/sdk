@@ -326,10 +326,13 @@ cmake -S . -B build-vs -A x64 -DBUILD_TESTING=ON `
   -DCUBESQL_TEST_USER=admin -DCUBESQL_TEST_PASSWORD=secret
 ```
 
-`.github/workflows/windows.yml` builds and runs the suite for x64 and Win32. It
-also checks two things that are cheap and have gone wrong before: that the
-architecture in the version resource matches the binary, and that the PowerShell
-scripts load under Windows PowerShell 5.1.
+`.github/workflows/odbc-windows.yml`, at the root of the SDK, runs all of this
+for x86 and x64 on every push: it installs a CubeSQL server, registers the
+driver, runs the smoke test through the real Driver Manager and then the rest of
+the suite under CTest. It also checks three things that are cheap and have each
+gone wrong before — that the architecture in the version resource matches the
+binary, that the registration scripts load under Windows PowerShell 5.1, and
+that the MSI, once installed, registers a path that exists.
 
 The POSIX `tests/Makefile` still cross-builds `core`, `integration` and
 `conformance` with AddressSanitizer for development on macOS and Linux.
@@ -346,3 +349,17 @@ version so they match, build both architectures, then build the MSIs:
 
 The package platform is taken from the driver's PE header, so the x64 and x86
 packages are named from the binaries they actually carry.
+
+Publishing is driven by the tag, not by hand. Pushing a tag that starts with
+`odbc-v` runs the whole workflow and, only if it passes, creates the GitHub
+release from the binaries that were just tested:
+
+```bash
+git tag odbc-v1.2.0 && git push origin odbc-v1.2.0
+```
+
+The release carries four assets and a `SHA256SUMS.txt`: the two MSIs, for people
+who want an installer, and two zip archives holding the bare DLL with the
+registration scripts, for people who would rather register it themselves.
+Nothing built on a workstation is uploaded, so what ships is always what CI
+tested.
