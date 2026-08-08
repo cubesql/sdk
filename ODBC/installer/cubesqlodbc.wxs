@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
   Windows Installer package for the CubeSQL ODBC driver.
 
@@ -51,12 +51,32 @@
         <Directory Id="INSTALLFOLDER" Name="CubeSQL ODBC Driver">
 
           <Component Id="DriverComponent" Guid="$(DriverComponentGuid)">
-            <File Id="cubesqlodbc.dll" Name="cubesqlodbc.dll"
+            <!--
+              The installed name is csqlodbc.dll, not cubesqlodbc.dll, and it
+              has to stay within 8.3.
+
+              Windows Installer stores a file name that is not 8.3 as the pair
+              "short|long" in the FileName column, and the InstallODBC standard
+              action writes that column into the registry without resolving it.
+              With the longer name the Driver and Setup values came out as
+
+                C:\...\CubeSQL ODBC Driver\-pmuqzlm.dll|cubesqlodbc.dll
+
+              which is not a path. The file itself was laid down correctly and
+              the driver appeared in the ODBC Data Source Administrator, so the
+              package looked healthy while no application could load the driver.
+              Verified: giving the file an 8.3 name removes the pair and the
+              registry gets the real path. Supplying ShortName explicitly does
+              not help - the pair is still formed.
+
+              Keep this name 8.3 (at most eight characters plus extension).
+            -->
+            <File Id="DriverDll" Name="csqlodbc.dll"
                   Source="$(DriverPath)" KeyPath="yes" />
             <ODBCDriver Id="CubeSQLODBCDriver"
                         Name="CubeSQL ODBC Driver"
-                        File="cubesqlodbc.dll"
-                        SetupFile="cubesqlodbc.dll">
+                        File="DriverDll"
+                        SetupFile="DriverDll">
               <!-- The driver is registered in ODBC 2.0 compatibility mode; see
                    the note in README.md about explicit descriptors. -->
               <Property Id="APILevel" Value="2" />

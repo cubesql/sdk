@@ -20,6 +20,13 @@ Data Source Administrator, with its version and publisher shown on the
 **Drivers** tab. The 32-bit and 64-bit builds report their architecture in the
 file description, so the two are easy to tell apart.
 
+The MSI installs the driver as `csqlodbc.dll` under
+`%ProgramFiles%\SQLabs\CubeSQL ODBC Driver`. The name is deliberately within
+8.3: Windows Installer stores a longer name as a `short|long` pair and the
+`InstallODBC` action writes that pair into the registry unresolved, which
+leaves the `Driver` value pointing at something that is not a path. The ZIP and
+the build output keep the full `cubesqlodbc.dll` name.
+
 ### Creating a data source
 
 Open the ODBC Data Source Administrator matching the driver's architecture,
