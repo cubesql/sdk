@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
-project(CubeSQLODBC VERSION 1.0.0 LANGUAGES C)
+# Keep in step with include/cubesql_odbc_version.h, which the driver and the
+# Windows resource script both read.
+project(CubeSQLODBC VERSION 1.1.0 LANGUAGES C)
 
 if(NOT WIN32)
     message(FATAL_ERROR "The first CubeSQL ODBC release targets Windows only")
@@ -8,9 +10,12 @@ endif()
 option(CUBESQL_ODBC_WITH_TLS "Link the SDK's static LibreSSL library" ON)
 set(CSDK "${CMAKE_CURRENT_SOURCE_DIR}/../C_SDK")
 
+enable_language(RC)
+
 set(DRIVER_SOURCES
     src/driver.c
     src/setup.c
+    windows/cubesqlodbc.rc
     ${CSDK}/cubesql.c
     ${CSDK}/crypt/pseudorandom.c
     ${CSDK}/crypt/aescrypt.c
@@ -25,7 +30,9 @@ add_library(cubesqlodbc SHARED ${DRIVER_SOURCES})
 target_compile_features(cubesqlodbc PRIVATE c_std_99)
 target_compile_definitions(cubesqlodbc PRIVATE WIN32 CUBESQL_STATIC)
 target_include_directories(cubesqlodbc PRIVATE include ${CSDK} ${CSDK}/crypt ${CSDK}/zlib)
-target_link_libraries(cubesqlodbc PRIVATE ws2_32 shlwapi odbccp32 user32 advapi32 crypt32 bcrypt)
+set_source_files_properties(windows/cubesqlodbc.rc PROPERTIES
+    INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_link_libraries(cubesqlodbc PRIVATE ws2_32 shlwapi odbccp32 comctl32 user32 advapi32 crypt32 bcrypt)
 set_target_properties(cubesqlodbc PROPERTIES PREFIX "" OUTPUT_NAME "cubesqlodbc")
 
 if(CUBESQL_ODBC_WITH_TLS)

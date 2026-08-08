@@ -1,4 +1,8 @@
 /build/
+/build-vs/
+/build-vs32/
+/dist/
 /tests/test_odbc_integration
 /tests/test_odbc_core
+/tests/test_odbc_conformance
 /tests/*.dSYM/

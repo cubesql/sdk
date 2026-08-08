@@ -109,4 +109,5 @@ EXPORTS
     SQLTablesW
     SQLTransact
     ConfigDSN
+    ConfigDSNW
     ConfigDriver
