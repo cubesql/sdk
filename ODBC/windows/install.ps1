@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Registers the CubeSQL ODBC driver, and optionally creates a data source.
 
@@ -141,9 +141,9 @@ function Get-InstallerError {
     $messages = @()
     for ($i = 1; $i -le 8; $i++) {
         $code = 0
-        $written = [ushort]0
+        $written = [uint16]0
         $text = New-Object System.Text.StringBuilder 512
-        $rc = [CubeSQL.Odbcinst]::SQLInstallerErrorW([ushort]$i, [ref]$code, $text, [ushort]512, [ref]$written)
+        $rc = [CubeSQL.Odbcinst]::SQLInstallerErrorW([uint16]$i, [ref]$code, $text, [uint16]512, [ref]$written)
         if ($rc -ne 0 -and $rc -ne 1) { break }
         $messages += ("({0}) {1}" -f $code, $text.ToString())
     }
@@ -169,12 +169,12 @@ $driverEntries = @(
 )
 
 $pathOut = New-Object System.Text.StringBuilder 512
-$pathLen = [ushort]0
+$pathLen = [uint16]0
 $usage = 0
 $ok = [CubeSQL.Odbcinst]::SQLInstallDriverExW(
     (ConvertTo-OdbcList $driverEntries), $null,
-    $pathOut, [ushort]512, [ref]$pathLen,
-    [ushort]1,          # ODBC_INSTALL_COMPLETE
+    $pathOut, [uint16]512, [ref]$pathLen,
+    [uint16]2,          # ODBC_INSTALL_COMPLETE (2; 1 e' ODBC_INSTALL_INQUIRY, che non scrive nulla)
     [ref]$usage)
 if (-not $ok) {
     throw "Registering '$driverName' failed: $(Get-InstallerError)"
@@ -193,7 +193,7 @@ if ($Dsn) {
         "Description=$Description"
     )
     # 4 = ODBC_ADD_SYS_DSN, 1 = ODBC_ADD_DSN
-    $request = if ($Scope -eq "System") { [ushort]4 } else { [ushort]1 }
+    $request = if ($Scope -eq "System") { [uint16]4 } else { [uint16]1 }
     $ok = [CubeSQL.Odbcinst]::SQLConfigDataSourceW(
         [IntPtr]::Zero, $request, $driverName, (ConvertTo-OdbcList $dsnEntries))
     if (-not $ok) {

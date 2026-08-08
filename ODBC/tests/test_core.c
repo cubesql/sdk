@@ -53,7 +53,24 @@ int main(void) {
     REQUIRE(supported == SQL_TRUE);
     REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLALLOCENV, &supported) == SQL_SUCCESS);
     REQUIRE(supported == SQL_TRUE);
+    /*
+     * SQLAllocHandle e' esportata dal driver, quindi va dichiarata supportata.
+     * Questo controllo pretendeva SQL_FALSE, cioe' fotografava un difetto: la
+     * tabella di SQLGetFunctions elencava solo gli identificatori ODBC 2.x, e
+     * SQL_API_ODBC3_ALL_FUNCTIONS rispondeva percio' che mancavano
+     * SQLAllocHandle, SQLFreeHandle, SQLGetDiagRec e le altre funzioni
+     * fondamentali della 3.x, tutte presenti negli export.
+     */
     REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLALLOCHANDLE, &supported) == SQL_SUCCESS);
+    REQUIRE(supported == SQL_TRUE);
+    REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLFREEHANDLE, &supported) == SQL_SUCCESS);
+    REQUIRE(supported == SQL_TRUE);
+    REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLGETDIAGREC, &supported) == SQL_SUCCESS);
+    REQUIRE(supported == SQL_TRUE);
+    REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLSETSTMTATTR, &supported) == SQL_SUCCESS);
+    REQUIRE(supported == SQL_TRUE);
+    /* I descrittori non sono implementati: vanno dichiarati assenti. */
+    REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLGETDESCFIELD, &supported) == SQL_SUCCESS);
     REQUIRE(supported == SQL_FALSE);
     REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLALLOCSTMT, &supported) == SQL_SUCCESS);
     REQUIRE(supported == SQL_TRUE);

@@ -1,4 +1,4 @@
-#ifndef CUBESQL_ODBC_INTERNAL_H
+﻿#ifndef CUBESQL_ODBC_INTERNAL_H
 #define CUBESQL_ODBC_INTERNAL_H
 
 #define ODBCVER 0x0380
@@ -34,9 +34,30 @@
 #include "cubesql_odbc_version.h"
 
 /*
- * The driver is registered as an ODBC 2.0 driver on purpose: it does not yet
- * implement explicit descriptors, and in 2.0 compatibility mode the Driver
- * Manager maps the ODBC 3.x descriptor calls for us. See the note in README.md.
+ * The driver still registers as ODBC 2.0, but now handles the 2.x spellings the
+ * Driver Manager sends in that mode.
+ *
+ * Reporting "02.00" was assumed to make the Driver Manager supply the ODBC 3.x
+ * descriptor mappings. It does the opposite: in 2.0 mode the Driver Manager
+ * rewrites 3.x calls into their 2.x forms before the driver sees them, and the
+ * driver used to reject those forms:
+ *
+ *   - SQLColAttribute(SQL_DESC_NAME) arrives as SQL_COLUMN_NAME (1), which was
+ *     answered with HY091, so no consumer could read column metadata and
+ *     OdbcDataAdapter.Fill failed outright;
+ *   - SQLSetStmtAttr(SQL_ATTR_ROW_ARRAY_SIZE) arrives as SQL_ROWSET_SIZE (9),
+ *     answered with HYC00, which disabled block fetch.
+ *
+ * Both spellings are now accepted; see cs_i_SQLColAttribute and
+ * cs_i_SQLSetStmtAttr.
+ *
+ * Moving to "03.80" would additionally unblock SQL_ATTR_METADATA_ID and the
+ * fourteen ODBC 3.x InfoTypes that the Driver Manager currently refuses on the
+ * driver's behalf with HY092/HY096. It cannot be done yet: with a 3.x
+ * declaration the Driver Manager faults inside ODBC32.dll on the first
+ * SQLExecDirect, because this driver implements no descriptor handles
+ * (SQLGetDescField and friends are not exported at all). Implementing the
+ * implicit descriptors is the prerequisite for that change.
  */
 #define CSODBC_ODBC_VERSION "03.80"
 #define CSODBC_DRIVER_ODBC_VERSION "02.00"
@@ -74,6 +95,12 @@ typedef struct cs_handle {
     SQLSMALLINT type;
     SQLRETURN last_return;
     SQLSMALLINT diag_count;
+    /*
+     * How many records SQLError has already handed out. SQLError is the ODBC 2.x
+     * interface and is defined to walk the diagnostic records one call at a time,
+     * ending with SQL_NO_DATA; callers loop on it until that arrives.
+     */
+    SQLSMALLINT diag_next;
     cs_diag_record diag[CSODBC_MAX_DIAG];
 } cs_handle;
 
@@ -199,6 +226,18 @@ struct cs_stmt {
     char cursor_name[128];
     int prepared;
     int executed;
+    /*
+     * Column types taken from the catalogue, resolved once per result set.
+     *
+     * CubeSQL reports the runtime type of a column, and for a REAL column it
+     * reports text: the wire protocol carries a single type code per column and
+     * there is no declared type in it. Reporting every such column as VARCHAR
+     * makes consumers treat numbers as strings, so when the runtime type is text
+     * the driver asks the catalogue what the column was declared as.
+     * Zero means "no better answer than the runtime type".
+     */
+    SQLSMALLINT decl_type[CSODBC_MAX_COLS];
+    int types_resolved;
 };
 
 void cs_diag_clear(cs_handle *h);

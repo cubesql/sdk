@@ -73,6 +73,8 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -DriverPath .\cubesqlodbc
 DRIVER={CubeSQL ODBC Driver};SERVER=localhost;PORT=4430;UID=admin;PWD=admin;DATABASE=app.db;ENCRYPTION=AES256;TIMEOUT=12;
 ```
 
+`DATABASE=` is not optional in practice — see *Always select a database* below.
+
 | Keyword | Aliases | Default | Meaning |
 |---|---|---|---|
 | `SERVER` | `HOST` | `localhost` | Server host name or IP address (IPv4 or IPv6) |
@@ -163,12 +165,71 @@ Explicit descriptors, asynchronous execution, updatable cursors, output
 parameters, and bookmarks are not implemented. They return `HYC00` rather than
 silently behaving incorrectly.
 
-Because explicit descriptors are not implemented, the driver registers itself
-with `DriverODBCVer=02.00`, which lets the Windows Driver Manager provide the
-ODBC 3.x descriptor mappings. One consequence is that dynamic
-`SQL_ATTR_CURRENT_CATALOG` changes are not exposed through the Driver Manager:
-select a database with `DATABASE=` in the connection string, or run a CubeSQL
-`USE DATABASE database_name;` command after connecting.
+## ODBC conformance
+
+The driver registers as **ODBC 2.0** (`DriverODBCVer=02.00`) and reports
+`SQL_OAC_LEVEL1` for `SQL_ODBC_API_CONFORMANCE`. In practice it implements the
+whole ODBC 2.0 API — all 23 Core functions, all 15 Level 1, and all 16 Level 2 —
+so the declared level is deliberately more modest than what is provided.
+
+What this means for an application:
+
+- Everything an ODBC 2.x consumer asks for works, in both the ANSI and the
+  Unicode entry points, and in both the 2.x and the 3.x spellings of the same
+  request (`SQL_COLUMN_NAME` as well as `SQL_DESC_NAME`, `SQL_ROWSET_SIZE` as
+  well as `SQL_ATTR_ROW_ARRAY_SIZE`, `SQL_C_TIMESTAMP` as well as
+  `SQL_C_TYPE_TIMESTAMP`).
+- Fourteen ODBC **3.0-only** InfoTypes, and `SQL_ATTR_METADATA_ID`, are refused
+  by the *Driver Manager* before they reach the driver, with `HY096` and
+  `HY092`. The driver implements them; the Driver Manager does not forward
+  3.0-only requests to a driver that declares 2.0. This is expected and harmless
+  for 2.x consumers.
+- `SQL_ATTR_CURRENT_CATALOG` cannot be used to switch database after connecting.
+  Select the database with `DATABASE=` in the connection string, or run
+  `USE DATABASE database_name;`.
+
+Moving to ODBC 3.x would remove those restrictions, but it requires implementing
+the implicit descriptors first: with a 3.x declaration and no descriptor handles
+the Windows Driver Manager faults inside `ODBC32.dll` on the first
+`SQLExecDirect`. `SQLGetDescField` and friends are not exported, and
+`SQLGetFunctions` reports them absent, which is the correct answer today.
+
+## Always select a database
+
+Give every connection a database, either with `DATABASE=` in the connection
+string, in the data source, or by running `USE DATABASE database_name;` as the
+first statement.
+
+This matters beyond convenience: on a connection with **no** current database an
+ordinary statement — even `SELECT 1;` — fails on the server, and the Windows
+Driver Manager does not return from the failing call. It keeps allocating until
+the client process runs out of memory, which on a machine with little RAM takes
+the whole system down with it. The driver itself returns `SQL_ERROR` promptly;
+the loop is inside `ODBC32.dll`.
+
+The commands that are meaningful without a current database — `SHOW DATABASES;`,
+`USE DATABASE`, `CREATE DATABASE` — are unaffected.
+
+## Data types
+
+CubeSQL reports the *runtime* type of a column, and for a `REAL` column it
+reports text. Taken literally that would make every floating-point column arrive
+as `SQL_VARCHAR`, and consumers would treat numbers as strings. When the runtime
+type is text the driver therefore asks the catalogue what the column was
+declared as, once per result set and only when it can help:
+
+| Declared | Reported | Typical .NET type |
+|---|---|---|
+| `INTEGER` | `SQL_BIGINT` | `Int64` |
+| `REAL`, `FLOAT`, `DOUBLE` | `SQL_DOUBLE` | `Double` |
+| `NUMERIC`, `DECIMAL` | `SQL_DECIMAL` | `Decimal` |
+| `TEXT`, `CHAR`, `VARCHAR`, `CLOB` | `SQL_VARCHAR` | `String` |
+| `BLOB` | `SQL_LONGVARBINARY` | `Byte[]` |
+| `BOOLEAN` | `SQL_BIT` | `Boolean` |
+| `DATE`, `TIME`, `TIMESTAMP`, `DATETIME` | `SQL_TYPE_*` | `DateTime` |
+
+Columns that are expressions rather than table columns have no declared type and
+are reported as the server describes them.
 
 ## Build
 
@@ -189,7 +250,15 @@ The CMake build links the SDK's architecture-specific `tls.lib` by default. Use
 
 ### MSI
 
-Requires the WiX .NET tool (`dotnet tool install --global wix`):
+Requires **WiX 5** and the .NET SDK. Install the version explicitly:
+
+```powershell
+dotnet tool install --global wix --version "5.*"
+```
+
+Do not use the unpinned `dotnet tool install --global wix`: it now installs WiX
+7, which refuses to build with `error WIX7015: You must accept the Open Source
+Maintenance Fee (OSMF) EULA`.
 
 ```powershell
 .\installer\build-msi.ps1 -DriverPath .\build-vs\Release\cubesqlodbc.dll -OutputDir .\dist
@@ -212,58 +281,61 @@ Outputs are `build/win32/cubesqlodbc.dll` and `build/win64/cubesqlodbc.dll`.
 
 ## Tests
 
-Two native suites call the driver ABI directly against a live CubeSQL server,
-under AddressSanitizer. `test_odbc_integration` covers connections, DDL,
-prepared parameters, BLOBs, binding, partial `SQLGetData`, scrolling, rollback,
-metadata, and diagnostics. `test_odbc_conformance` covers the behaviour ODBC
-consumers depend on: parameter arrays, column-wise and row-wise rowset fetch,
-scrolling across rowsets, attribute tolerance, a full `SQLGetInfo` sweep,
-catalog handling, escape sequence translation, non-ASCII round trips, concurrent
-use of one connection from several threads, and disconnect semantics.
-
-To start an isolated CubeSQL instance, run both suites, and stop the server:
-
-```bash
-make -C tests clean all && (cd tests && ./run_local_server.sh)
-```
-
-The script leaves its temporary server directory in place and prints the path,
-so the server log and test database stay available for inspection. Point it at a
-different server binary with `CUBESQL_SERVER_BIN`.
-
-To run a suite against a server you already have:
-
-```bash
-make -C tests
-CUBESQL_ODBC_HOST=127.0.0.1 CUBESQL_ODBC_PORT=4430 CUBESQL_ODBC_USER=admin CUBESQL_ODBC_PASSWORD=admin tests/test_odbc_conformance
-```
-
-For a Windows Driver Manager smoke test, install the driver, build the CMake
-`cubesql_odbc_smoke` target, then set:
+The suite is driven by CTest and runs on Windows for both architectures. It
+needs a live CubeSQL server on `127.0.0.1:4430` (configurable, see below).
 
 ```powershell
-$env:CUBESQL_ODBC_CONNECTION_STRING = "DRIVER={CubeSQL ODBC Driver};SERVER=localhost;PORT=4430;UID=admin;PWD=admin;DATABASE=app.db;ENCRYPTION=AES256;"
-.\build-vs\Release\cubesql_odbc_smoke.exe
+cmake -S . -B build-vs -A x64 -DBUILD_TESTING=ON
+cmake --build build-vs --config Release
+cd build-vs
+ctest -C Release --output-on-failure
 ```
 
-GitHub Actions runs the smoke test through the real Windows Driver Manager for
-both MSVC Win32 and x64 builds. Each matrix job installs a pinned CubeSQL
-Windows MSI, registers the matching driver architecture, **verifies the driver
-was registered in the correct 32-bit or 64-bit registry view**, runs the smoke
-target, builds and round-trips the MSI, then cleans up. Successful runs publish
-`cubesql-odbc-windows-x86` and `cubesql-odbc-windows-x64` artifacts for 30 days.
-See `.github/workflows/odbc-windows.yml`.
+| Suite | What it covers |
+|---|---|
+| `smoke` | the real Windows Driver Manager, end to end |
+| `core` | handles, environment attributes, `SQLGetFunctions` |
+| `integration` | connections, DDL, prepared parameters, BLOBs, binding, partial `SQLGetData`, scrolling, rollback, metadata |
+| `conformance` | parameter arrays, rowset fetch column-wise and row-wise, attribute tolerance, escape translation, non-ASCII round trips, several threads on one connection, disconnect semantics |
+| `types` | declared types, every C type including both date/time spellings, `NULL`, truncation with `01004`, chunked `SQLGetData` |
+| `unicode` | the Unicode entry points and the ODBC 2.x spellings against their 3.x equivalents |
+| `diagnostics` | `SQLError` record walking, diagnostic fields, catalog functions |
+| `setup` | `ConfigDSN`/`ConfigDSNW` with no user interface, add, configure, remove, error cases |
+| `aliases` | every ODBC 2.x alias, the A/W variants, and the optional functions |
+| `install_scripts` | `install.ps1`/`uninstall.ps1` against the registry |
+
+Every function the driver exports is called by at least one suite.
+
+`install_scripts` writes to `HKEY_LOCAL_MACHINE`, so it needs an elevated
+prompt. Without one it reports itself **skipped**, with an explanation, rather
+than failing. It saves and restores any pre-existing registration, and does not
+touch data sources belonging to anyone else.
+
+Point the suite at a different server when configuring:
+
+```powershell
+cmake -S . -B build-vs -A x64 -DBUILD_TESTING=ON `
+  -DCUBESQL_TEST_HOST=10.0.0.5 -DCUBESQL_TEST_PORT=4430 `
+  -DCUBESQL_TEST_USER=admin -DCUBESQL_TEST_PASSWORD=secret
+```
+
+`.github/workflows/windows.yml` builds and runs the suite for x64 and Win32. It
+also checks two things that are cheap and have gone wrong before: that the
+architecture in the version resource matches the binary, and that the PowerShell
+scripts load under Windows PowerShell 5.1.
+
+The POSIX `tests/Makefile` still cross-builds `core`, `integration` and
+`conformance` with AddressSanitizer for development on macOS and Linux.
 
 ## Releases
 
-Push an annotated `odbc-v*` tag after updating `include/cubesql_odbc_version.h`
-and the CMake project version to match:
+Update the version in `include/cubesql_odbc_version.h` and the CMake project
+version so they match, build both architectures, then build the MSIs:
 
-```bash
-git tag -a odbc-v1.1.0 -m "CubeSQL ODBC 1.1.0"
-git push origin odbc-v1.1.0
+```powershell
+.\installer\build-msi.ps1 -DriverPath .\build-vs\Release\cubesqlodbc.dll   -OutputDir .\dist
+.\installer\build-msi.ps1 -DriverPath .\build-vs32\Release\cubesqlodbc.dll -OutputDir .\dist
 ```
 
-The tag runs both Windows jobs first. Only if Win32 and x64 both pass does the
-workflow create or update the GitHub Release with the versioned MSIs, the ZIP
-packages, and a release-level `SHA256SUMS.txt`.
+The package platform is taken from the driver's PE header, so the x64 and x86
+packages are named from the binaries they actually carry.

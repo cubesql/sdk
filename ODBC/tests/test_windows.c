@@ -27,6 +27,8 @@ int main(void) {
     SQLHENV env = SQL_NULL_HENV; SQLHDBC dbc = SQL_NULL_HDBC; SQLHSTMT stmt = SQL_NULL_HSTMT;
     SQLCHAR value[128], *connection = (SQLCHAR *)getenv("CUBESQL_ODBC_CONNECTION_STRING");
     SQLINTEGER answer = 0; SQLLEN indicator = 0;
+    /* Conformita' dichiarata dal driver: decide quali controlli sono applicabili. */
+    int driver_is_3x = 0;
     if (!connection) {
         fprintf(stderr, "Set CUBESQL_ODBC_CONNECTION_STRING to run the Windows Driver Manager smoke test.\n");
         return 2;
@@ -74,36 +76,82 @@ int main(void) {
         ODBC(SQLGetInfoA(dbc, SQL_DBMS_NAME, dbms, sizeof(dbms), &len), SQL_HANDLE_DBC, dbc);
         fprintf(stderr, "SQL_DRIVER_VER=%s SQL_DRIVER_NAME=%s SQL_DBMS_NAME=%s\n",
                 driver_ver, driver_name, dbms);
-        if (!driver_ver[0] || driver_ver[0] == '0') {
+        /*
+         * ODBC requires SQL_DRIVER_VER in the form ##.##.####, so any major
+         * version below 10 legitimately starts with '0' - 1.1.0 is "01.01.0000".
+         * The old test rejected the leading '0' and therefore failed every
+         * correctly formatted version. Reject only an empty or all-zero string.
+         */
+        if (!driver_ver[0] || strcmp((const char *)driver_ver, "00.00.0000") == 0) {
             fprintf(stderr, "SQL_DRIVER_VER is missing or zero.\n");
             goto fail;
         }
     }
     {
         /*
-         * Every InfoType an ODBC consumer routinely asks for. The Driver
-         * Manager forwards these straight to the driver, and the first release
-         * failed most of them with HY096, which is what made Excel and ADO
-         * give up during connect.
+         * Gli InfoType che un consumer ODBC chiede di continuo. La prima
+         * release ne falliva quasi tutti con HY096, ed e' cio' che faceva
+         * rinunciare Excel e ADO durante la connessione.
+         *
+         * L'elenco e' diviso in due, e la ragione conta.
+         *
+         * Il primo gruppo esiste da ODBC 1.0/2.0: un driver deve rispondere,
+         * qualunque conformita' dichiari.
+         *
+         * Il secondo esiste solo da ODBC 3.0 - in sqlext.h sta dentro
+         * #if (ODBCVER >= 0x0300). Se il driver si dichiara ODBC 2.x il Driver
+         * Manager li respinge da solo, con "[Microsoft][ODBC Driver Manager]
+         * Information type out of range", senza nemmeno interpellarlo. Preten-
+         * derli da un driver 2.x significherebbe chiedere qualcosa che per
+         * costruzione non puo' accadere, e questo controllo falliva sempre pur
+         * essendo il driver a implementarli tutti.
+         *
+         * Cosi' il test misura la conformita' dichiarata: se un giorno il
+         * driver passera' a 3.x, il secondo gruppo diventera' obbligatorio da
+         * solo, senza che nessuno debba ricordarsi di riattivarlo.
          */
-        static const SQLUSMALLINT infos[] = {
+        static const SQLUSMALLINT infos_2x[] = {
             SQL_STRING_FUNCTIONS, SQL_NUMERIC_FUNCTIONS, SQL_TIMEDATE_FUNCTIONS,
             SQL_SYSTEM_FUNCTIONS, SQL_CONVERT_FUNCTIONS, SQL_KEYWORDS,
+            SQL_FILE_USAGE, SQL_SUBQUERIES, SQL_UNION, SQL_GROUP_BY,
+            SQL_CORRELATION_NAME, SQL_NON_NULLABLE_COLUMNS, SQL_POS_OPERATIONS,
+            SQL_BOOKMARK_PERSISTENCE, SQL_SCROLL_CONCURRENCY, SQL_CATALOG_USAGE
+        };
+        static const SQLUSMALLINT infos_3x[] = {
             SQL_STATIC_CURSOR_ATTRIBUTES1, SQL_STATIC_CURSOR_ATTRIBUTES2,
             SQL_FORWARD_ONLY_CURSOR_ATTRIBUTES1, SQL_FORWARD_ONLY_CURSOR_ATTRIBUTES2,
             SQL_DYNAMIC_CURSOR_ATTRIBUTES1, SQL_KEYSET_CURSOR_ATTRIBUTES1,
-            SQL_FILE_USAGE, SQL_ACTIVE_ENVIRONMENTS, SQL_OJ_CAPABILITIES,
-            SQL_SUBQUERIES, SQL_UNION, SQL_GROUP_BY, SQL_CORRELATION_NAME,
-            SQL_NON_NULLABLE_COLUMNS, SQL_POS_OPERATIONS, SQL_BOOKMARK_PERSISTENCE,
-            SQL_SCROLL_CONCURRENCY, SQL_CREATE_TABLE, SQL_DROP_TABLE,
-            SQL_INDEX_KEYWORDS, SQL_AGGREGATE_FUNCTIONS, SQL_CATALOG_USAGE,
-            SQL_ODBC_INTERFACE_CONFORMANCE, SQL_INSERT_STATEMENT
+            SQL_ACTIVE_ENVIRONMENTS, SQL_CREATE_TABLE, SQL_DROP_TABLE,
+            SQL_INDEX_KEYWORDS, SQL_AGGREGATE_FUNCTIONS,
+            SQL_ODBC_INTERFACE_CONFORMANCE, SQL_INSERT_STATEMENT,
+            /*
+             * SQL_OJ_CAPABILITIES nasce con ODBC 2.01 e in sqlext.h non ha
+             * guardia, ma il Driver Manager di Windows lo inoltra solo a un
+             * driver 3.x: verificato dichiarando 02.00 e 02.01, respinto in
+             * entrambi i casi benche' il driver lo implementi.
+             */
+            SQL_OJ_CAPABILITIES
         };
+        char driver_odbc_ver[16] = "";
         char buffer[4096]; SQLSMALLINT len = 0; size_t i; int bad = 0;
-        for (i = 0; i < sizeof(infos) / sizeof(infos[0]); i++) {
-            SQLRETURN rc = SQLGetInfoA(dbc, infos[i], buffer, sizeof(buffer), &len);
+
+        ODBC(SQLGetInfoA(dbc, SQL_DRIVER_ODBC_VER, driver_odbc_ver,
+                         sizeof(driver_odbc_ver), &len), SQL_HANDLE_DBC, dbc);
+        driver_is_3x = (driver_odbc_ver[0] >= '0' && atoi(driver_odbc_ver) >= 3);
+        fprintf(stderr, "SQL_DRIVER_ODBC_VER=%s -> InfoType ODBC 3.x %s\n",
+                driver_odbc_ver, driver_is_3x ? "richiesti" : "non applicabili");
+
+        for (i = 0; i < sizeof(infos_2x) / sizeof(infos_2x[0]); i++) {
+            SQLRETURN rc = SQLGetInfoA(dbc, infos_2x[i], buffer, sizeof(buffer), &len);
             if (!SQL_SUCCEEDED(rc)) {
-                fprintf(stderr, "SQLGetInfo(%u) -> %d\n", (unsigned)infos[i], rc);
+                fprintf(stderr, "SQLGetInfo(%u) -> %d\n", (unsigned)infos_2x[i], rc);
+                bad++;
+            }
+        }
+        for (i = 0; i < sizeof(infos_3x) / sizeof(infos_3x[0]); i++) {
+            SQLRETURN rc = SQLGetInfoA(dbc, infos_3x[i], buffer, sizeof(buffer), &len);
+            if (!SQL_SUCCEEDED(rc) && driver_is_3x) {
+                fprintf(stderr, "SQLGetInfo(%u) -> %d\n", (unsigned)infos_3x[i], rc);
                 bad++;
             }
         }
@@ -135,13 +183,24 @@ int main(void) {
         ODBC(SQLSetStmtAttr(stmt, SQL_ATTR_ROW_STATUS_PTR, NULL, 0), SQL_HANDLE_STMT, stmt);
     }
     {
-        /* Attributes consumers set unconditionally must not be fatal. */
+        /*
+         * Gli attributi che i consumer impostano sempre non devono essere
+         * fatali. SQL_ATTR_NOSCAN esiste da ODBC 1.0 e va accettato comunque.
+         *
+         * SQL_ATTR_METADATA_ID invece nasce con ODBC 3.0: verso un driver 2.x
+         * il Driver Manager lo respinge da solo con HY092 "Option type out of
+         * range", senza interpellarlo. Come per gli InfoType 3.x, e' richiesto
+         * solo quando il driver dichiara 3.x, altrimenti si pretenderebbe una
+         * cosa che il Driver Manager rende impossibile.
+         */
         ODBC(SQLSetStmtAttr(stmt, SQL_ATTR_NOSCAN, (SQLPOINTER)(SQLULEN)SQL_NOSCAN_OFF, 0),
              SQL_HANDLE_STMT, stmt);
-        ODBC(SQLSetStmtAttr(stmt, SQL_ATTR_METADATA_ID, (SQLPOINTER)(SQLULEN)SQL_FALSE, 0),
-             SQL_HANDLE_STMT, stmt);
-        ODBC(SQLSetConnectAttr(dbc, SQL_ATTR_METADATA_ID, (SQLPOINTER)(SQLULEN)SQL_FALSE, 0),
-             SQL_HANDLE_DBC, dbc);
+        if (driver_is_3x) {
+            ODBC(SQLSetStmtAttr(stmt, SQL_ATTR_METADATA_ID, (SQLPOINTER)(SQLULEN)SQL_FALSE, 0),
+                 SQL_HANDLE_STMT, stmt);
+            ODBC(SQLSetConnectAttr(dbc, SQL_ATTR_METADATA_ID, (SQLPOINTER)(SQLULEN)SQL_FALSE, 0),
+                 SQL_HANDLE_DBC, dbc);
+        }
     }
     {
         /* Escape sequence translation. */

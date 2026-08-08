@@ -1,4 +1,4 @@
-#include "cubesql_odbc.h"
+﻿#include "cubesql_odbc.h"
 
 #include <ctype.h>
 #include <errno.h>
@@ -112,6 +112,7 @@ static int cs_ascii_equal(const char *a, const char *b) {
 void cs_diag_clear(cs_handle *h) {
     if (!h) return;
     h->diag_count = 0;
+    h->diag_next = 0;
     h->last_return = SQL_SUCCESS;
     memset(h->diag, 0, sizeof(h->diag));
 }
@@ -347,6 +348,8 @@ static void cs_stmt_close(cs_stmt *stmt) {
     if (stmt->cursor) cubesql_cursor_free(stmt->cursor);
     stmt->cursor = NULL;
     stmt->executed = 0;
+    /* i tipi risolti dal catalogo valgono solo per il result set che si chiude */
+    stmt->types_resolved = 0;
     stmt->current_row = 0;
     stmt->row_count = 0;
     stmt->rowset_start = 0;
@@ -618,13 +621,59 @@ CSODBC_EXPORT SQLRETURN SQL_API SQLGetDiagField(SQLSMALLINT type, SQLHANDLE hand
     return cs__rc;
 }
 
+/*
+ * SQLError walks the diagnostic records one per call and reports SQL_NO_DATA
+ * once they are exhausted. Every caller - the Driver Manager included - loops
+ * on it until that happens.
+ *
+ * This used to hand back record 1 on every call, so the loop never ended: the
+ * caller kept receiving SQL_SUCCESS and the same message for ever, appending it
+ * to its own buffer until memory ran out. On a machine with little RAM that
+ * took the whole system down, and it fired on ANY failing statement, which is
+ * why "SELECT 1;" without a current database was enough to hang a consumer.
+ *
+ * SQLError e SQLErrorW hanno due corpi distinti: la logica del cursore sta
+ * qui in un punto solo, perche' e' esattamente tenendo due copie a mano che
+ * questo difetto e' nato, ed e' sopravvissuto alla prima correzione proprio
+ * perche' ne era stata sistemata una sola.
+ *
+ * Sceglie l'handle secondo le regole di SQLError e avanza di un record.
+ * Restituisce il numero del record, 0 quando sono esauriti, -1 se l'handle
+ * non e' valido.
+ */
+static SQLSMALLINT cs_diag_take_next(SQLHENV env, SQLHDBC dbc, SQLHSTMT stmt,
+                                     SQLSMALLINT *out_type, SQLHANDLE *out_handle) {
+    SQLSMALLINT type; SQLHANDLE handle; cs_handle *h; SQLSMALLINT record = 0;
+    cs_mutex *cs__m;
+
+    if (stmt) { type = SQL_HANDLE_STMT; handle = stmt; }
+    else if (dbc) { type = SQL_HANDLE_DBC; handle = dbc; }
+    else if (env) { type = SQL_HANDLE_ENV; handle = env; }
+    else return -1;
+
+    cs__m = cs_handle_lock(type, handle);
+    if (cs__m) cs_mutex_lock(cs__m);
+    h = cs_diag_handle(type, handle);
+    if (!h) { if (cs__m) cs_mutex_unlock(cs__m); return -1; }
+    if (h->diag_next < h->diag_count) {
+        record = (SQLSMALLINT)(h->diag_next + 1);
+        h->diag_next++;
+    }
+    if (cs__m) cs_mutex_unlock(cs__m);
+
+    *out_type = type;
+    *out_handle = handle;
+    return record;
+}
+
 CSODBC_EXPORT SQLRETURN SQL_API SQLError(SQLHENV env, SQLHDBC dbc, SQLHSTMT stmt,
     SQLCHAR *state, SQLINTEGER *native, SQLCHAR *message, SQLSMALLINT capacity,
     SQLSMALLINT *length) {
-    if (stmt) return SQLGetDiagRec(SQL_HANDLE_STMT, stmt, 1, state, native, message, capacity, length);
-    if (dbc) return SQLGetDiagRec(SQL_HANDLE_DBC, dbc, 1, state, native, message, capacity, length);
-    if (env) return SQLGetDiagRec(SQL_HANDLE_ENV, env, 1, state, native, message, capacity, length);
-    return SQL_INVALID_HANDLE;
+    SQLSMALLINT type = 0; SQLHANDLE handle = NULL;
+    SQLSMALLINT record = cs_diag_take_next(env, dbc, stmt, &type, &handle);
+    if (record < 0) return SQL_INVALID_HANDLE;
+    if (record == 0) return SQL_NO_DATA;
+    return SQLGetDiagRec(type, handle, record, state, native, message, capacity, length);
 }
 
 void cs_option_set(char *dst, size_t cap, const char *value) {
@@ -1437,6 +1486,13 @@ static SQLRETURN SQL_API cs_i_SQLSetStmtAttr(SQLHSTMT statement,SQLINTEGER attri
         case SQL_ATTR_MAX_ROWS:s->max_rows=v;return SQL_SUCCESS;
         case SQL_ATTR_MAX_LENGTH:s->max_length=v;return SQL_SUCCESS;
         /* Rowset binding: block fetch is what Excel, Power Query and ADO use. */
+        /*
+         * SQL_ROWSET_SIZE (9) is the ODBC 2.x spelling of SQL_ATTR_ROW_ARRAY_SIZE
+         * (27). The Driver Manager rewrites the 3.x attribute into this one when
+         * it thinks it is talking to a 2.x driver, and without this case block
+         * fetch was rejected with HYC00 "Statement attribute 9 is not supported".
+         */
+        case SQL_ROWSET_SIZE:
         case SQL_ATTR_ROW_ARRAY_SIZE:
             if(v<1)return cs_diag_add(&s->h,"HY024",0,"Row array size must be at least one");
             s->row_array_size=v;return SQL_SUCCESS;
@@ -1522,7 +1578,8 @@ static SQLRETURN SQL_API cs_i_SQLGetStmtAttr(SQLHSTMT statement,SQLINTEGER attri
     if(!cs_valid_handle(statement,SQL_HANDLE_STMT))return SQL_INVALID_HANDLE; cs_diag_clear(&s->h);
     switch(attribute){
         case SQL_ATTR_QUERY_TIMEOUT:v=s->query_timeout;break;case SQL_ATTR_MAX_ROWS:v=s->max_rows;break;
-        case SQL_ATTR_MAX_LENGTH:v=s->max_length;break;case SQL_ATTR_ROW_ARRAY_SIZE:v=s->row_array_size;break;
+        case SQL_ATTR_MAX_LENGTH:v=s->max_length;break;
+        case SQL_ROWSET_SIZE:case SQL_ATTR_ROW_ARRAY_SIZE:v=s->row_array_size;break;
         case SQL_ATTR_ROWS_FETCHED_PTR:if(value)*(SQLULEN **)value=s->rows_fetched;if(length)*length=sizeof(void *);return SQL_SUCCESS;
         case SQL_ATTR_ROW_STATUS_PTR:if(value)*(SQLUSMALLINT **)value=s->row_status;if(length)*length=sizeof(void *);return SQL_SUCCESS;
         case SQL_ATTR_ROW_OPERATION_PTR:if(value)*(SQLUSMALLINT **)value=s->row_operation;if(length)*length=sizeof(void *);return SQL_SUCCESS;
@@ -1557,6 +1614,54 @@ CSODBC_EXPORT SQLRETURN SQL_API SQLGetStmtAttr(SQLHSTMT statement,SQLINTEGER att
     SQLRETURN cs__rc;
     if (cs__m) cs_mutex_lock(cs__m);
     cs__rc = cs_i_SQLGetStmtAttr(statement, attribute, value, capacity, length);
+    if (cs__m) cs_mutex_unlock(cs__m);
+    return cs__rc;
+}
+
+/*
+ * SQLSetScrollOptions e' l'ultima funzione ODBC 2.0 che mancava: e' Level 2,
+ * quindi facoltativa per un driver che dichiara Level 1 come questo, ma era
+ * l'unico buco nell'intera API 2.0 e chiuderlo costa poco. E' deprecata in
+ * ODBC 3.x, dove il suo lavoro si fa con SQL_ATTR_CURSOR_TYPE,
+ * SQL_ATTR_CONCURRENCY e SQL_ATTR_ROW_ARRAY_SIZE: qui si limita a tradurre nei
+ * tre attributi, cosi' la sostituzione dei tipi di cursore non supportati e la
+ * relativa segnalazione 01S02 restano in un punto solo.
+ */
+static SQLRETURN SQL_API cs_i_SQLSetScrollOptions(SQLHSTMT statement,SQLUSMALLINT concurrency,
+    SQLLEN keyset,SQLUSMALLINT rowset){
+    cs_stmt *s=(cs_stmt *)statement;SQLULEN cursor_type;SQLRETURN rc,worst=SQL_SUCCESS;
+    if(!cs_valid_handle(statement,SQL_HANDLE_STMT))return SQL_INVALID_HANDLE;
+    cs_diag_clear(&s->h);
+    if(rowset<1)return cs_diag_add(&s->h,"HY107",0,"Row value out of range");
+    switch(keyset){
+        case SQL_SCROLL_FORWARD_ONLY:cursor_type=SQL_CURSOR_FORWARD_ONLY;break;
+        case SQL_SCROLL_STATIC:cursor_type=SQL_CURSOR_STATIC;break;
+        case SQL_SCROLL_KEYSET_DRIVEN:cursor_type=SQL_CURSOR_KEYSET_DRIVEN;break;
+        case SQL_SCROLL_DYNAMIC:cursor_type=SQL_CURSOR_DYNAMIC;break;
+        default:
+            if(keyset<1)return cs_diag_add(&s->h,"HY107",0,"Row value out of range");
+            if(keyset<(SQLLEN)rowset)return cs_diag_add(&s->h,"HY107",0,"Keyset size must be at least the rowset size");
+            cursor_type=SQL_CURSOR_KEYSET_DRIVEN;
+            rc=SQLSetStmtAttr(statement,SQL_ATTR_KEYSET_SIZE,(SQLPOINTER)(SQLULEN)keyset,0);
+            if(!SQL_SUCCEEDED(rc))return rc;
+            if(rc==SQL_SUCCESS_WITH_INFO)worst=rc;
+            break;
+    }
+    rc=SQLSetStmtAttr(statement,SQL_ATTR_CURSOR_TYPE,(SQLPOINTER)cursor_type,0);
+    if(!SQL_SUCCEEDED(rc))return rc; if(rc==SQL_SUCCESS_WITH_INFO)worst=rc;
+    rc=SQLSetStmtAttr(statement,SQL_ATTR_CONCURRENCY,(SQLPOINTER)(SQLULEN)concurrency,0);
+    if(!SQL_SUCCEEDED(rc))return rc; if(rc==SQL_SUCCESS_WITH_INFO)worst=rc;
+    rc=SQLSetStmtAttr(statement,SQL_ATTR_ROW_ARRAY_SIZE,(SQLPOINTER)(SQLULEN)rowset,0);
+    if(!SQL_SUCCEEDED(rc))return rc; if(rc==SQL_SUCCESS_WITH_INFO)worst=rc;
+    return worst;
+}
+
+CSODBC_EXPORT SQLRETURN SQL_API SQLSetScrollOptions(SQLHSTMT statement,SQLUSMALLINT concurrency,
+    SQLLEN keyset,SQLUSMALLINT rowset) {
+    cs_mutex *cs__m = cs_handle_lock(SQL_HANDLE_STMT, statement);
+    SQLRETURN cs__rc;
+    if (cs__m) cs_mutex_lock(cs__m);
+    cs__rc = cs_i_SQLSetScrollOptions(statement, concurrency, keyset, rowset);
     if (cs__m) cs_mutex_unlock(cs__m);
     return cs__rc;
 }
@@ -1616,6 +1721,7 @@ static int cs_sql_should_commit(const char *sql){
     if((!strcmp(first,"CREATE")||!strcmp(first,"DROP"))&&!strcmp(second,"DATABASE"))return 0;
     return cs_sql_is_write(sql);
 }
+
 
 /*
  * ODBC escape sequence translation.
@@ -1965,9 +2071,9 @@ static int cs_vm_bind(cs_stmt *s,csqlvm *vm,SQLUSMALLINT index,SQLULEN set){
         case SQL_C_UBIGINT:snprintf(tmp,sizeof(tmp),"%llu",(unsigned long long)*(const uint64_t *)data);return cubesql_vmbind_text(vm,index,tmp,(int)strlen(tmp));
         case SQL_C_FLOAT:return cubesql_vmbind_double(vm,index,*(const float *)data);case SQL_C_DOUBLE:return cubesql_vmbind_double(vm,index,*(const double *)data);
         case SQL_C_BIT:return cubesql_vmbind_int(vm,index,*(const unsigned char *)data?1:0);
-        case SQL_C_TYPE_DATE:{const SQL_DATE_STRUCT *d=(const SQL_DATE_STRUCT *)data;snprintf(tmp,sizeof(tmp),"%04d-%02u-%02u",d->year,d->month,d->day);break;}
-        case SQL_C_TYPE_TIME:{const SQL_TIME_STRUCT *t=(const SQL_TIME_STRUCT *)data;snprintf(tmp,sizeof(tmp),"%02u:%02u:%02u",t->hour,t->minute,t->second);break;}
-        case SQL_C_TYPE_TIMESTAMP:{const SQL_TIMESTAMP_STRUCT *t=(const SQL_TIMESTAMP_STRUCT *)data;snprintf(tmp,sizeof(tmp),"%04d-%02u-%02u %02u:%02u:%02u.%09lu",t->year,t->month,t->day,t->hour,t->minute,t->second,(unsigned long)t->fraction);break;}
+        case SQL_C_DATE:case SQL_C_TYPE_DATE:{const SQL_DATE_STRUCT *d=(const SQL_DATE_STRUCT *)data;snprintf(tmp,sizeof(tmp),"%04d-%02u-%02u",d->year,d->month,d->day);break;}
+        case SQL_C_TIME:case SQL_C_TYPE_TIME:{const SQL_TIME_STRUCT *t=(const SQL_TIME_STRUCT *)data;snprintf(tmp,sizeof(tmp),"%02u:%02u:%02u",t->hour,t->minute,t->second);break;}
+        case SQL_C_TIMESTAMP:case SQL_C_TYPE_TIMESTAMP:{const SQL_TIMESTAMP_STRUCT *t=(const SQL_TIMESTAMP_STRUCT *)data;snprintf(tmp,sizeof(tmp),"%04d-%02u-%02u %02u:%02u:%02u.%09lu",t->year,t->month,t->day,t->hour,t->minute,t->second,(unsigned long)t->fraction);break;}
         default:return CUBESQL_PARAMETER_ERROR;
     }return cubesql_vmbind_text(vm,index,tmp,(int)strlen(tmp));
 }
@@ -2011,7 +2117,9 @@ static SQLRETURN cs_execute_now(cs_stmt *s){
     if(s->num_params==0){
         if(cs_sql_returns_rows(s->sql)){
             s->cursor=cubesql_select(s->dbc->db,s->sql,kFALSE);
-            if(!s->cursor){cs_map_sdk_error(&s->h,s->dbc->db,cubesql_errcode(s->dbc->db),"execute query");return SQL_ERROR;}
+            if(!s->cursor){
+                cs_map_sdk_error(&s->h,s->dbc->db,cubesql_errcode(s->dbc->db),"execute query");
+                return SQL_ERROR;}
             s->row_count=-1;
         }else{
             rc=cubesql_execute(s->dbc->db,s->sql);
@@ -2160,6 +2268,112 @@ static SQLSMALLINT cs_column_sql_type(csqlc *cursor,SQLUSMALLINT col){
     }
 }
 
+/*
+ * Maps a declared column type - the text SQLite keeps in the catalogue, such as
+ * "REAL" or "VARCHAR(40)" - onto an ODBC type, following the same affinity
+ * rules the driver already applies in SQLColumns. Returns 0 when the text says
+ * nothing useful, meaning "keep whatever the server reported".
+ */
+static SQLSMALLINT cs_decl_type_to_sql(const char *decl){
+    char up[128];size_t i;
+    if(!decl||!decl[0])return 0;
+    for(i=0;decl[i]&&i+1<sizeof(up);i++)up[i]=(char)toupper((unsigned char)decl[i]);
+    up[i]='\0';
+    if(strstr(up,"INT"))return SQL_BIGINT;
+    if(strstr(up,"CHAR")||strstr(up,"CLOB")||strstr(up,"TEXT"))return SQL_VARCHAR;
+    if(strstr(up,"BLOB"))return SQL_LONGVARBINARY;
+    if(strstr(up,"REAL")||strstr(up,"FLOA")||strstr(up,"DOUB"))return SQL_DOUBLE;
+    if(strstr(up,"BOOL"))return SQL_BIT;
+    if(strstr(up,"TIMESTAMP")||strstr(up,"DATETIME"))return SQL_TYPE_TIMESTAMP;
+    if(!strcmp(up,"DATE"))return SQL_TYPE_DATE;
+    if(!strcmp(up,"TIME"))return SQL_TYPE_TIME;
+    if(strstr(up,"NUMERIC")||strstr(up,"DECIMAL"))return SQL_DECIMAL;
+    return 0;
+}
+
+/*
+ * Copies one cursor field into a NUL-terminated buffer. The SDK returns a
+ * pointer into a packed buffer that is not NUL-terminated for data rows, so the
+ * length it reports has to be honoured.
+ */
+static void cs_field_copy(csqlc *c,int row,int col,char *out,size_t cap){
+    int len=0;char *v;size_t n;
+    if(!cap)return;
+    out[0]='\0';
+    if(!c)return;
+    v=cubesql_cursor_field(c,row,col,&len);
+    if(!v||len<=0)return;
+    n=(size_t)len;if(n>=cap)n=cap-1;
+    memcpy(out,v,n);out[n]='\0';
+}
+
+/* Fills in decl_type for every column of one table, with a single catalogue query. */
+static void cs_resolve_from_table(cs_stmt *s,const char *table,int ncols){
+    char q[700],esc[300],cname[256],ctype[128],colname[256],coltable[256];
+    csqlc *info;int rows,r,col;size_t i,n=0;
+    if(!table||!table[0])return;
+    for(i=0;table[i]&&n+2<sizeof(esc);i++){if(table[i]=='\'')esc[n++]='\'';esc[n++]=table[i];}
+    esc[n]='\0';
+    snprintf(q,sizeof(q),"PRAGMA table_info('%s');",esc);
+    info=cubesql_select(s->dbc->db,q,kFALSE);
+    if(!info){cubesql_clear_errors(s->dbc->db);return;}
+    rows=cubesql_cursor_numrows(info);
+    for(col=1;col<=ncols;col++){
+        if(s->decl_type[col-1])continue;
+        cs_field_copy(s->cursor,CUBESQL_COLTABLE,col,coltable,sizeof(coltable));
+        if(!cs_ascii_equal(coltable,table))continue;
+        cs_field_copy(s->cursor,CUBESQL_COLNAME,col,colname,sizeof(colname));
+        for(r=1;r<=rows;r++){
+            cs_field_copy(info,r,2,cname,sizeof(cname));
+            if(cs_ascii_equal(cname,colname)){
+                cs_field_copy(info,r,3,ctype,sizeof(ctype));
+                s->decl_type[col-1]=cs_decl_type_to_sql(ctype);
+                break;
+            }
+        }
+    }
+    cubesql_cursor_free(info);
+}
+
+/*
+ * Resolves declared types once per result set, and only when it can help: if no
+ * column came back as text there is nothing to improve and no query is issued.
+ * Columns that are expressions rather than table columns have no table name and
+ * are left as the server reported them.
+ */
+static void cs_resolve_column_types(cs_stmt *s){
+    int ncols,col,need=0,done,d;
+    char table[256];char seen[8][256];int nseen=0;
+    if(s->types_resolved||!s->cursor)return;
+    s->types_resolved=1;
+    ncols=cubesql_cursor_numcolumns(s->cursor);
+    if(ncols>CSODBC_MAX_COLS)ncols=CSODBC_MAX_COLS;
+    for(col=1;col<=ncols;col++){
+        s->decl_type[col-1]=0;
+        if(cs_column_sql_type(s->cursor,(SQLUSMALLINT)col)==SQL_VARCHAR)need=1;
+    }
+    if(!need)return;
+    for(col=1;col<=ncols;col++){
+        if(cs_column_sql_type(s->cursor,(SQLUSMALLINT)col)!=SQL_VARCHAR)continue;
+        cs_field_copy(s->cursor,CUBESQL_COLTABLE,col,table,sizeof(table));
+        if(!table[0])continue;
+        done=0;
+        for(d=0;d<nseen;d++)if(cs_ascii_equal(seen[d],table)){done=1;break;}
+        if(done)continue;
+        if(nseen<8){cs_option_set(seen[nseen],sizeof(seen[nseen]),table);nseen++;}
+        cs_resolve_from_table(s,table,ncols);
+    }
+}
+
+/* Type reported to the application: the catalogue's answer when there is one. */
+static SQLSMALLINT cs_stmt_column_type(cs_stmt *s,SQLUSMALLINT col){
+    SQLSMALLINT base=cs_column_sql_type(s->cursor,col);
+    if(base!=SQL_VARCHAR)return base;
+    cs_resolve_column_types(s);
+    if(col>=1&&col<=CSODBC_MAX_COLS&&s->decl_type[col-1])return s->decl_type[col-1];
+    return base;
+}
+
 static const char *cs_sql_type_name(SQLSMALLINT type){
     switch(type){case SQL_BIGINT:return "BIGINT";case SQL_INTEGER:return "INTEGER";case SQL_SMALLINT:return "SMALLINT";
         case SQL_DOUBLE:return "DOUBLE";case SQL_REAL:return "REAL";case SQL_DECIMAL:return "DECIMAL";case SQL_BIT:return "BIT";
@@ -2195,7 +2409,7 @@ static SQLRETURN SQL_API cs_i_SQLDescribeCol(SQLHSTMT statement,SQLUSMALLINT col
     if(!cs_valid_handle(statement,SQL_HANDLE_STMT))return SQL_INVALID_HANDLE;cs_diag_clear(&s->h);
     if(!s->cursor)return cs_diag_add(&s->h,"07005",0,"Statement has no result columns");
     if(column<1||column>cubesql_cursor_numcolumns(s->cursor))return cs_diag_add(&s->h,"07009",0,"Invalid column number");
-    n=cubesql_cursor_field(s->cursor,CUBESQL_COLNAME,column,&raw_len);t=cs_column_sql_type(s->cursor,column);
+    n=cubesql_cursor_field(s->cursor,CUBESQL_COLNAME,column,&raw_len);t=cs_stmt_column_type(s,column);
     rc=cs_copy_ansi(name,capacity,&out_len,n?n:"",&s->h,s->dbc->ansi_charset);if(name_len)*name_len=(SQLSMALLINT)out_len;
     if(type)*type=t;if(size)*size=cs_sql_type_size(t);if(scale)*scale=t==SQL_DECIMAL?6:0;if(nullable)*nullable=SQL_NULLABLE;return rc;
 }
@@ -2217,7 +2431,7 @@ static SQLRETURN SQL_API cs_i_SQLDescribeColW(SQLHSTMT statement,SQLUSMALLINT co
     cs_stmt *s=(cs_stmt *)statement;char *n;int raw_len;SQLLEN out_len=0;SQLSMALLINT t;SQLRETURN rc;
     if(!cs_valid_handle(statement,SQL_HANDLE_STMT))return SQL_INVALID_HANDLE;cs_diag_clear(&s->h);
     if(!s->cursor)return cs_diag_add(&s->h,"07005",0,"Statement has no result columns");if(column<1||column>cubesql_cursor_numcolumns(s->cursor))return cs_diag_add(&s->h,"07009",0,"Invalid column number");
-    n=cubesql_cursor_field(s->cursor,CUBESQL_COLNAME,column,&raw_len);t=cs_column_sql_type(s->cursor,column);rc=cs_copy_utf16(name,capacity,&out_len,n?n:"",&s->h);
+    n=cubesql_cursor_field(s->cursor,CUBESQL_COLNAME,column,&raw_len);t=cs_stmt_column_type(s,column);rc=cs_copy_utf16(name,capacity,&out_len,n?n:"",&s->h);
     if(name_len)*name_len=(SQLSMALLINT)out_len;if(type)*type=t;if(size)*size=cs_sql_type_size(t);if(scale)*scale=t==SQL_DECIMAL?6:0;if(nullable)*nullable=SQL_NULLABLE;return rc;
 }
 
@@ -2276,6 +2490,13 @@ static SQLRETURN cs_convert_value(cs_stmt *s,const unsigned char *data,SQLLEN le
     if((size_t)len>=sizeof(tmp))return cs_numeric_error(s,"Numeric value is too long");memcpy(tmp,data,(size_t)len);tmp[len]='\0';errno=0;
     switch(target_type){
         case SQL_C_SHORT:case SQL_C_SSHORT:sv=strtoll(tmp,&end,10);if(errno||end==tmp||sv<INT16_MIN||sv>INT16_MAX)return cs_numeric_error(s,"Small integer out of range");if(out)*(int16_t *)out=(int16_t)sv;if(indicator)*indicator=sizeof(int16_t);break;
+        /*
+         * I tipi C a 8 bit mancavano del tutto: cs_ctype_stride li conosceva
+         * gia', ma la conversione rispondeva HY003. Un consumer che chieda
+         * SQL_C_STINYINT per una colonna piccola non riusciva a leggerla.
+         */
+        case SQL_C_TINYINT:case SQL_C_STINYINT:sv=strtoll(tmp,&end,10);if(errno||end==tmp||sv<INT8_MIN||sv>INT8_MAX)return cs_numeric_error(s,"Tiny integer out of range");if(out)*(signed char *)out=(signed char)sv;if(indicator)*indicator=sizeof(signed char);break;
+        case SQL_C_UTINYINT:uv=strtoull(tmp,&end,10);if(errno||end==tmp||uv>UINT8_MAX)return cs_numeric_error(s,"Unsigned tiny integer out of range");if(out)*(unsigned char *)out=(unsigned char)uv;if(indicator)*indicator=sizeof(unsigned char);break;
         case SQL_C_USHORT:uv=strtoull(tmp,&end,10);if(errno||end==tmp||uv>UINT16_MAX)return cs_numeric_error(s,"Unsigned small integer out of range");if(out)*(uint16_t *)out=(uint16_t)uv;if(indicator)*indicator=sizeof(uint16_t);break;
         case SQL_C_LONG:case SQL_C_SLONG:sv=strtoll(tmp,&end,10);if(errno||end==tmp||sv<INT32_MIN||sv>INT32_MAX)return cs_numeric_error(s,"Integer out of range");if(out)*(int32_t *)out=(int32_t)sv;if(indicator)*indicator=sizeof(int32_t);break;
         case SQL_C_ULONG:uv=strtoull(tmp,&end,10);if(errno||end==tmp||uv>UINT32_MAX)return cs_numeric_error(s,"Unsigned integer out of range");if(out)*(uint32_t *)out=(uint32_t)uv;if(indicator)*indicator=sizeof(uint32_t);break;
@@ -2284,10 +2505,16 @@ static SQLRETURN cs_convert_value(cs_stmt *s,const unsigned char *data,SQLLEN le
         case SQL_C_FLOAT:dv=strtod(tmp,&end);if(errno||end==tmp)return cs_numeric_error(s,"Floating point value out of range");if(out)*(float *)out=(float)dv;if(indicator)*indicator=sizeof(float);break;
         case SQL_C_DOUBLE:dv=strtod(tmp,&end);if(errno||end==tmp)return cs_numeric_error(s,"Floating point value out of range");if(out)*(double *)out=dv;if(indicator)*indicator=sizeof(double);break;
         case SQL_C_BIT:sv=strtoll(tmp,&end,10);if(end==tmp||sv<0||sv>1)return cs_numeric_error(s,"Bit value must be zero or one");if(out)*(unsigned char *)out=(unsigned char)sv;if(indicator)*indicator=1;break;
-        case SQL_C_TYPE_DATE:{SQL_DATE_STRUCT *d=(SQL_DATE_STRUCT *)out;int y,m,day;if(sscanf(tmp,"%d-%d-%d",&y,&m,&day)!=3)return cs_diag_add(&s->h,"22007",0,"Invalid date value");if(d){d->year=(SQLSMALLINT)y;d->month=(SQLUSMALLINT)m;d->day=(SQLUSMALLINT)day;}if(indicator)*indicator=sizeof(*d);break;}
-        case SQL_C_TYPE_TIME:{SQL_TIME_STRUCT *t=(SQL_TIME_STRUCT *)out;int h,m,sec;if(sscanf(tmp,"%d:%d:%d",&h,&m,&sec)!=3)return cs_diag_add(&s->h,"22007",0,"Invalid time value");if(t){t->hour=(SQLUSMALLINT)h;t->minute=(SQLUSMALLINT)m;t->second=(SQLUSMALLINT)sec;}if(indicator)*indicator=sizeof(*t);break;}
-        case SQL_C_TYPE_TIMESTAMP:{SQL_TIMESTAMP_STRUCT *t=(SQL_TIMESTAMP_STRUCT *)out;int y,mo,d,h,mi,se;unsigned frac=0;int fields=sscanf(tmp,"%d-%d-%d %d:%d:%d.%u",&y,&mo,&d,&h,&mi,&se,&frac);if(fields<6)return cs_diag_add(&s->h,"22007",0,"Invalid timestamp value");if(t){t->year=(SQLSMALLINT)y;t->month=(SQLUSMALLINT)mo;t->day=(SQLUSMALLINT)d;t->hour=(SQLUSMALLINT)h;t->minute=(SQLUSMALLINT)mi;t->second=(SQLUSMALLINT)se;t->fraction=frac;}if(indicator)*indicator=sizeof(*t);break;}
-        default:return cs_diag_add(&s->h,"HY003",0,"Unsupported C target type %d",target_type);
+        case SQL_C_DATE:case SQL_C_TYPE_DATE:{SQL_DATE_STRUCT *d=(SQL_DATE_STRUCT *)out;int y,m,day;if(sscanf(tmp,"%d-%d-%d",&y,&m,&day)!=3)return cs_diag_add(&s->h,"22007",0,"Invalid date value");if(d){d->year=(SQLSMALLINT)y;d->month=(SQLUSMALLINT)m;d->day=(SQLUSMALLINT)day;}if(indicator)*indicator=sizeof(*d);break;}
+        case SQL_C_TIME:case SQL_C_TYPE_TIME:{SQL_TIME_STRUCT *t=(SQL_TIME_STRUCT *)out;int h,m,sec;if(sscanf(tmp,"%d:%d:%d",&h,&m,&sec)!=3)return cs_diag_add(&s->h,"22007",0,"Invalid time value");if(t){t->hour=(SQLUSMALLINT)h;t->minute=(SQLUSMALLINT)m;t->second=(SQLUSMALLINT)sec;}if(indicator)*indicator=sizeof(*t);break;}
+        case SQL_C_TIMESTAMP:case SQL_C_TYPE_TIMESTAMP:{SQL_TIMESTAMP_STRUCT *t=(SQL_TIMESTAMP_STRUCT *)out;int y,mo,d,h,mi,se;unsigned frac=0;int fields=sscanf(tmp,"%d-%d-%d %d:%d:%d.%u",&y,&mo,&d,&h,&mi,&se,&frac);if(fields<6)return cs_diag_add(&s->h,"22007",0,"Invalid timestamp value");if(t){t->year=(SQLSMALLINT)y;t->month=(SQLUSMALLINT)mo;t->day=(SQLUSMALLINT)d;t->hour=(SQLUSMALLINT)h;t->minute=(SQLUSMALLINT)mi;t->second=(SQLUSMALLINT)se;t->fraction=frac;}if(indicator)*indicator=sizeof(*t);break;}
+                /*
+         * SQL_C_DATE/TIME/TIMESTAMP (9/10/11) sono le grafie ODBC 2.x di
+         * SQL_C_TYPE_DATE/TIME/TIMESTAMP (91/92/93) e usano le stesse strutture.
+         * Finche' il driver si dichiara ODBC 2.0 il Driver Manager converte le
+         * seconde nelle prime, quindi vanno accettate entrambe: senza di esse
+         * ogni colonna di tipo data/ora falliva con HY003.
+         */        default:return cs_diag_add(&s->h,"HY003",0,"Unsupported C target type %d",target_type);
     }(void)partial;return SQL_SUCCESS;
 }
 
@@ -2311,9 +2538,9 @@ static SQLLEN cs_ctype_stride(SQLSMALLINT c_type,SQLLEN buffer_length){
         case SQL_C_FLOAT:return (SQLLEN)sizeof(float);
         case SQL_C_DOUBLE:return (SQLLEN)sizeof(double);
         case SQL_C_SBIGINT:case SQL_C_UBIGINT:return 8;
-        case SQL_C_TYPE_DATE:return (SQLLEN)sizeof(SQL_DATE_STRUCT);
-        case SQL_C_TYPE_TIME:return (SQLLEN)sizeof(SQL_TIME_STRUCT);
-        case SQL_C_TYPE_TIMESTAMP:return (SQLLEN)sizeof(SQL_TIMESTAMP_STRUCT);
+        case SQL_C_DATE:case SQL_C_TYPE_DATE:return (SQLLEN)sizeof(SQL_DATE_STRUCT);
+        case SQL_C_TIME:case SQL_C_TYPE_TIME:return (SQLLEN)sizeof(SQL_TIME_STRUCT);
+        case SQL_C_TIMESTAMP:case SQL_C_TYPE_TIMESTAMP:return (SQLLEN)sizeof(SQL_TIMESTAMP_STRUCT);
         default:return buffer_length;   /* CHAR, WCHAR, BINARY: application sized */
     }
 }
@@ -2501,6 +2728,29 @@ CSODBC_EXPORT SQLRETURN SQL_API SQLGetData(SQLHSTMT statement,SQLUSMALLINT colum
 
 static SQLLEN *cs_numeric_attr_ptr(SQLPOINTER p){return (SQLLEN *)p;}
 
+/*
+ * Column attributes whose value is a string rather than a number.
+ *
+ * SQLColAttribute and SQLColAttributeW both have to agree on this: the ANSI
+ * entry point uses it to decide what to copy out as text, the Unicode one to
+ * decide what to convert to UTF-16. They used to carry two hand-maintained
+ * copies of the list, and the copies drifted - SQL_COLUMN_NAME reached one and
+ * not the other, so SQLColAttributeW left the caller's buffer untouched and
+ * every consumer that reads column names through the Unicode entry point (which
+ * is the one the Driver Manager calls) got an empty string back.
+ *
+ * Most ODBC 2.x identifiers share a value with their 3.x counterpart -
+ * SQL_COLUMN_TYPE_NAME is SQL_DESC_TYPE_NAME, SQL_COLUMN_LABEL is
+ * SQL_DESC_LABEL, and so on - so only SQL_COLUMN_NAME needs naming separately.
+ */
+static int cs_colattr_is_string(SQLUSMALLINT field){
+    return field==SQL_DESC_NAME||field==SQL_COLUMN_NAME||field==SQL_DESC_LABEL||
+           field==SQL_DESC_BASE_COLUMN_NAME||field==SQL_DESC_TABLE_NAME||
+           field==SQL_DESC_BASE_TABLE_NAME||field==SQL_DESC_CATALOG_NAME||
+           field==SQL_DESC_SCHEMA_NAME||field==SQL_DESC_TYPE_NAME||
+           field==SQL_DESC_LOCAL_TYPE_NAME;
+}
+
 static SQLRETURN SQL_API cs_i_SQLColAttribute(SQLHSTMT statement,SQLUSMALLINT column,
     SQLUSMALLINT field,SQLPOINTER chars,SQLSMALLINT capacity,SQLSMALLINT *char_len,
 #ifdef _WIN64
@@ -2512,7 +2762,7 @@ static SQLRETURN SQL_API cs_i_SQLColAttribute(SQLHSTMT statement,SQLUSMALLINT co
     cs_stmt *s=(cs_stmt *)statement;SQLLEN *num=cs_numeric_attr_ptr((SQLPOINTER)numeric);SQLLEN n=0;char *name=NULL,*table=NULL;int rawlen;SQLSMALLINT type;const char *str="";SQLRETURN rc=SQL_SUCCESS;
     if(!cs_valid_handle(statement,SQL_HANDLE_STMT))return SQL_INVALID_HANDLE;cs_diag_clear(&s->h);if(!s->cursor)return cs_diag_add(&s->h,"07005",0,"Statement has no result columns");
     if(column<1||column>cubesql_cursor_numcolumns(s->cursor))return cs_diag_add(&s->h,"07009",0,"Invalid column number");
-    type=cs_column_sql_type(s->cursor,column);name=cubesql_cursor_field(s->cursor,CUBESQL_COLNAME,column,&rawlen);table=cubesql_cursor_field(s->cursor,CUBESQL_COLTABLE,column,&rawlen);
+    type=cs_stmt_column_type(s,column);name=cubesql_cursor_field(s->cursor,CUBESQL_COLNAME,column,&rawlen);table=cubesql_cursor_field(s->cursor,CUBESQL_COLTABLE,column,&rawlen);
     switch(field){
         case SQL_DESC_NAME:case SQL_DESC_LABEL:case SQL_DESC_BASE_COLUMN_NAME:str=name?name:"";break;
         case SQL_DESC_TABLE_NAME:case SQL_DESC_BASE_TABLE_NAME:str=table?table:"";break;
@@ -2526,9 +2776,23 @@ static SQLRETURN SQL_API cs_i_SQLColAttribute(SQLHSTMT statement,SQLUSMALLINT co
         case SQL_DESC_SEARCHABLE:if(num)*num=SQL_PRED_BASIC;break;case SQL_DESC_UPDATABLE:if(num)*num=SQL_ATTR_READONLY;break;
         case SQL_DESC_AUTO_UNIQUE_VALUE:case SQL_DESC_FIXED_PREC_SCALE:if(num)*num=SQL_FALSE;break;
         case SQL_DESC_NUM_PREC_RADIX:if(num)*num=(type==SQL_BIGINT||type==SQL_INTEGER||type==SQL_DOUBLE||type==SQL_DECIMAL)?10:0;break;
+        /*
+         * ODBC 2.x field identifiers. Most of them share a numeric value with
+         * their 3.x counterpart above (SQL_COLUMN_TYPE_NAME is SQL_DESC_TYPE_NAME
+         * and so on), but these six do not and used to fall through to HY091.
+         * SQL_COLUMN_NAME in particular is what an ODBC 2 application - and the
+         * Driver Manager, whenever it decides to talk 2.x to us - sends to read
+         * a column name, so rejecting it made column metadata unreadable.
+         */
+        case SQL_COLUMN_NAME:str=name?name:"";break;
+        case SQL_COLUMN_COUNT:if(num)*num=(SQLLEN)cubesql_cursor_numcolumns(s->cursor);break;
+        case SQL_COLUMN_LENGTH:if(num)*num=(SQLLEN)cs_sql_type_size(type);break;
+        case SQL_COLUMN_PRECISION:if(num)*num=(SQLLEN)cs_sql_type_size(type);break;
+        case SQL_COLUMN_SCALE:if(num)*num=type==SQL_DECIMAL?6:0;break;
+        case SQL_COLUMN_NULLABLE:if(num)*num=SQL_NULLABLE;break;
         default:return cs_diag_add(&s->h,"HY091",0,"Invalid column attribute %u",field);
     }
-    if(field==SQL_DESC_NAME||field==SQL_DESC_LABEL||field==SQL_DESC_BASE_COLUMN_NAME||field==SQL_DESC_TABLE_NAME||field==SQL_DESC_BASE_TABLE_NAME||field==SQL_DESC_CATALOG_NAME||field==SQL_DESC_SCHEMA_NAME||field==SQL_DESC_TYPE_NAME||field==SQL_DESC_LOCAL_TYPE_NAME){rc=cs_copy_ansi((SQLCHAR *)chars,capacity,&n,str,&s->h,s->dbc->ansi_charset);if(char_len)*char_len=(SQLSMALLINT)n;}
+    if(cs_colattr_is_string(field)){rc=cs_copy_ansi((SQLCHAR *)chars,capacity,&n,str,&s->h,s->dbc->ansi_charset);if(char_len)*char_len=(SQLSMALLINT)n;}
     return rc;
 }
 
@@ -3017,7 +3281,26 @@ CSODBC_EXPORT SQLRETURN SQL_API SQLGetInfoW(SQLHDBC connection,SQLUSMALLINT type
 }
 
 static SQLRETURN SQL_API cs_i_SQLGetFunctions(SQLHDBC connection,SQLUSMALLINT id,SQLUSMALLINT *supported){
-    cs_dbc *d=(cs_dbc *)connection;static const SQLUSMALLINT funcs[]={SQL_API_SQLALLOCCONNECT,SQL_API_SQLALLOCENV,SQL_API_SQLALLOCSTMT,SQL_API_SQLBINDCOL,SQL_API_SQLBINDPARAMETER,SQL_API_SQLCANCEL,SQL_API_SQLCOLATTRIBUTES,SQL_API_SQLCOLUMNS,SQL_API_SQLCONNECT,SQL_API_SQLDESCRIBECOL,SQL_API_SQLDESCRIBEPARAM,SQL_API_SQLDISCONNECT,SQL_API_SQLDRIVERCONNECT,SQL_API_SQLERROR,SQL_API_SQLEXECDIRECT,SQL_API_SQLEXECUTE,SQL_API_SQLEXTENDEDFETCH,SQL_API_SQLFETCH,SQL_API_SQLFOREIGNKEYS,SQL_API_SQLFREECONNECT,SQL_API_SQLFREEENV,SQL_API_SQLFREESTMT,SQL_API_SQLGETCONNECTOPTION,SQL_API_SQLGETDATA,SQL_API_SQLGETFUNCTIONS,SQL_API_SQLGETINFO,SQL_API_SQLGETSTMTOPTION,SQL_API_SQLGETTYPEINFO,SQL_API_SQLMORERESULTS,SQL_API_SQLNATIVESQL,SQL_API_SQLNUMPARAMS,SQL_API_SQLNUMRESULTCOLS,SQL_API_SQLPARAMDATA,SQL_API_SQLPREPARE,SQL_API_SQLPRIMARYKEYS,SQL_API_SQLPUTDATA,SQL_API_SQLROWCOUNT,SQL_API_SQLSETCONNECTOPTION,SQL_API_SQLSETSTMTOPTION,SQL_API_SQLSPECIALCOLUMNS,SQL_API_SQLSTATISTICS,SQL_API_SQLTABLES,SQL_API_SQLTRANSACT};size_t i;
+    cs_dbc *d=(cs_dbc *)connection;static const SQLUSMALLINT funcs[]={SQL_API_SQLALLOCCONNECT,SQL_API_SQLALLOCENV,SQL_API_SQLALLOCSTMT,SQL_API_SQLBINDCOL,SQL_API_SQLBINDPARAMETER,SQL_API_SQLCANCEL,SQL_API_SQLCOLATTRIBUTES,SQL_API_SQLCOLUMNS,SQL_API_SQLCONNECT,SQL_API_SQLDESCRIBECOL,SQL_API_SQLDESCRIBEPARAM,SQL_API_SQLDISCONNECT,SQL_API_SQLDRIVERCONNECT,SQL_API_SQLERROR,SQL_API_SQLEXECDIRECT,SQL_API_SQLEXECUTE,SQL_API_SQLEXTENDEDFETCH,SQL_API_SQLFETCH,SQL_API_SQLFOREIGNKEYS,SQL_API_SQLFREECONNECT,SQL_API_SQLFREEENV,SQL_API_SQLFREESTMT,SQL_API_SQLGETCONNECTOPTION,SQL_API_SQLGETDATA,SQL_API_SQLGETFUNCTIONS,SQL_API_SQLGETINFO,SQL_API_SQLGETSTMTOPTION,SQL_API_SQLGETTYPEINFO,SQL_API_SQLMORERESULTS,SQL_API_SQLNATIVESQL,SQL_API_SQLNUMPARAMS,SQL_API_SQLNUMRESULTCOLS,SQL_API_SQLPARAMDATA,SQL_API_SQLPREPARE,SQL_API_SQLPRIMARYKEYS,SQL_API_SQLPUTDATA,SQL_API_SQLROWCOUNT,SQL_API_SQLSETCONNECTOPTION,SQL_API_SQLSETSTMTOPTION,SQL_API_SQLSPECIALCOLUMNS,SQL_API_SQLSTATISTICS,SQL_API_SQLTABLES,SQL_API_SQLTRANSACT,
+        /*
+         * ODBC 3.x entry points. The list above holds only the 2.x identifiers,
+         * so SQLGetFunctions(SQL_API_ODBC3_ALL_FUNCTIONS) used to answer that
+         * core ODBC 3 calls - SQLAllocHandle, SQLFreeHandle, SQLGetDiagRec,
+         * SQLSetStmtAttr and the rest - were unsupported, even though the driver
+         * exports every one of them. While the driver declared itself ODBC 2.0
+         * the Driver Manager never asked, so the mistake stayed hidden; as soon
+         * as it reported 3.x the Driver Manager believed the answer and faulted
+         * inside ODBC32.dll on the first SQLExecDirect.
+         *
+         * SQLColAttribute shares identifier 6 with SQLColAttributes, already
+         * listed above. The descriptor functions are deliberately absent: they
+         * genuinely are not implemented, and reporting them missing is correct.
+         */
+        SQL_API_SQLALLOCHANDLE,SQL_API_SQLFREEHANDLE,SQL_API_SQLCLOSECURSOR,SQL_API_SQLENDTRAN,
+        SQL_API_SQLFETCHSCROLL,SQL_API_SQLGETCONNECTATTR,SQL_API_SQLSETCONNECTATTR,
+        SQL_API_SQLGETENVATTR,SQL_API_SQLSETENVATTR,SQL_API_SQLGETSTMTATTR,SQL_API_SQLSETSTMTATTR,
+        SQL_API_SQLGETDIAGREC,SQL_API_SQLGETDIAGFIELD,SQL_API_SQLBULKOPERATIONS,
+        SQL_API_SQLSETPOS};size_t i;
     if(!cs_valid_handle(connection,SQL_HANDLE_DBC))return SQL_INVALID_HANDLE;cs_diag_clear(&d->h);if(!supported)return cs_diag_add(&d->h,"HY009",0,"Supported-functions buffer is null");
     if(id==SQL_API_ODBC3_ALL_FUNCTIONS){memset(supported,0,SQL_API_ODBC3_ALL_FUNCTIONS_SIZE*sizeof(SQLUSMALLINT));for(i=0;i<sizeof(funcs)/sizeof(funcs[0]);i++)supported[funcs[i]>>4]|=(SQLUSMALLINT)(1U<<(funcs[i]&15));return SQL_SUCCESS;}
     if(id==SQL_API_ALL_FUNCTIONS){memset(supported,0,100*sizeof(SQLUSMALLINT));for(i=0;i<sizeof(funcs)/sizeof(funcs[0]);i++)if(funcs[i]<100)supported[funcs[i]]=SQL_TRUE;return SQL_SUCCESS;}
@@ -3126,11 +3409,14 @@ CSODBC_EXPORT SQLRETURN SQL_API SQLGetDiagFieldW(SQLSMALLINT type,SQLHANDLE hand
     return cs__rc;
 }
 
+/* Come SQLError: percorre i record uno per chiamata, non ripete il primo. */
 CSODBC_EXPORT SQLRETURN SQL_API SQLErrorW(SQLHENV env,SQLHDBC dbc,SQLHSTMT stmt,
     SQLWCHAR *state,SQLINTEGER *native,SQLWCHAR *message,SQLSMALLINT capacity,SQLSMALLINT *length){
-    if(stmt)return SQLGetDiagRecW(SQL_HANDLE_STMT,stmt,1,state,native,message,capacity,length);
-    if(dbc)return SQLGetDiagRecW(SQL_HANDLE_DBC,dbc,1,state,native,message,capacity,length);
-    if(env)return SQLGetDiagRecW(SQL_HANDLE_ENV,env,1,state,native,message,capacity,length);return SQL_INVALID_HANDLE;
+    SQLSMALLINT type=0;SQLHANDLE handle=NULL;
+    SQLSMALLINT record=cs_diag_take_next(env,dbc,stmt,&type,&handle);
+    if(record<0)return SQL_INVALID_HANDLE;
+    if(record==0)return SQL_NO_DATA;
+    return SQLGetDiagRecW(type,handle,record,state,native,message,capacity,length);
 }
 
 static SQLRETURN SQL_API cs_i_SQLBrowseConnectW(SQLHDBC connection,SQLWCHAR *input,
@@ -3192,7 +3478,7 @@ static SQLRETURN SQL_API cs_i_SQLColAttributeW(SQLHSTMT statement,SQLUSMALLINT c
 ){
     char temp[1024]={0};SQLSMALLINT n=0;SQLLEN wn=0;SQLRETURN rc;
     rc=SQLColAttribute(statement,column,field,temp,sizeof(temp),&n,numeric);if(!SQL_SUCCEEDED(rc))return rc;
-    if(field==SQL_DESC_NAME||field==SQL_DESC_LABEL||field==SQL_DESC_BASE_COLUMN_NAME||field==SQL_DESC_TABLE_NAME||field==SQL_DESC_BASE_TABLE_NAME||field==SQL_DESC_CATALOG_NAME||field==SQL_DESC_SCHEMA_NAME||field==SQL_DESC_TYPE_NAME||field==SQL_DESC_LOCAL_TYPE_NAME){rc=cs_copy_utf16((SQLWCHAR *)chars,capacity/sizeof(SQLWCHAR),&wn,temp,NULL);if(char_len)*char_len=(SQLSMALLINT)(wn*sizeof(SQLWCHAR));}
+    if(cs_colattr_is_string(field)){rc=cs_copy_utf16((SQLWCHAR *)chars,capacity/sizeof(SQLWCHAR),&wn,temp,NULL);if(char_len)*char_len=(SQLSMALLINT)(wn*sizeof(SQLWCHAR));}
     return rc;
 }
 

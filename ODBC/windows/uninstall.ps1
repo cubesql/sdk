@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Unregisters the CubeSQL ODBC driver, and optionally removes a data source.
 
@@ -82,9 +82,9 @@ function Get-InstallerError {
     $messages = @()
     for ($i = 1; $i -le 8; $i++) {
         $code = 0
-        $written = [ushort]0
+        $written = [uint16]0
         $text = New-Object System.Text.StringBuilder 512
-        $rc = [CubeSQL.OdbcinstRemove]::SQLInstallerErrorW([ushort]$i, [ref]$code, $text, [ushort]512, [ref]$written)
+        $rc = [CubeSQL.OdbcinstRemove]::SQLInstallerErrorW([uint16]$i, [ref]$code, $text, [uint16]512, [ref]$written)
         if ($rc -ne 0 -and $rc -ne 1) { break }
         $messages += ("({0}) {1}" -f $code, $text.ToString())
     }
@@ -94,7 +94,7 @@ function Get-InstallerError {
 
 if ($Dsn) {
     # 6 = ODBC_REMOVE_SYS_DSN, 3 = ODBC_REMOVE_DSN
-    $request = if ($Scope -eq "System") { [ushort]6 } else { [ushort]3 }
+    $request = if ($Scope -eq "System") { [uint16]6 } else { [uint16]3 }
     $attributes = ("DSN=$Dsn" + "`0`0").ToCharArray()
     if ([CubeSQL.OdbcinstRemove]::SQLConfigDataSourceW([IntPtr]::Zero, $request, $driverName, $attributes)) {
         Write-Host "Removed $($Scope.ToLower()) data source '$Dsn'."

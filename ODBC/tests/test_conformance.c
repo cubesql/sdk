@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Conformance suite for the behaviour ODBC consumers depend on but the first
  * driver release did not provide: block (rowset) fetch, parameter arrays,
  * tolerant attribute handling, correct disconnect semantics, a complete
@@ -8,7 +8,7 @@
  */
 #include "cubesql_odbc.h"
 
-#include <pthread.h>
+#include "thread_compat.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -399,7 +399,7 @@ int main(void) {
 
     /* ---- non-ASCII round trip ----------------------------------------- */
     {
-        /* "Grösse" and "Ærø" in UTF-8, written and read back through the
+        /* "GrÃ¶sse" and "Ã†rÃ¸" in UTF-8, written and read back through the
            SQL_C_CHAR path. On Windows this exercises the ANSI code page
            conversion; elsewhere SQL_C_CHAR is UTF-8 and the bytes pass
            through unchanged. Either way the value must survive intact. */
@@ -422,16 +422,49 @@ int main(void) {
         VERIFY(!strcmp(text, sample));
         CHECK(SQL_HANDLE_STMT, stmt, SQLFreeStmt(stmt, SQL_CLOSE));
 
-        /* The wide path always carries the full Unicode value. */
-        CHECK(SQL_HANDLE_STMT, stmt, SQLExecDirect(stmt,
-            (SQLCHAR *)"SELECT name FROM odbc_conformance WHERE id=9100;", SQL_NTS));
-        CHECK(SQL_HANDLE_STMT, stmt, SQLFetch(stmt));
-        CHECK(SQL_HANDLE_STMT, stmt, SQLGetData(stmt, 1, SQL_C_WCHAR, wide, sizeof(wide), &wgot));
-        /* G r o-umlaut sharp-s e space AE r o-slash = 9 characters. */
-        VERIFY(wgot == (SQLLEN)(9 * sizeof(SQLWCHAR)));
-        VERIFY(wide[2] == 0x00F6 && wide[3] == 0x00DF);
-        VERIFY(wide[6] == 0x00C6 && wide[8] == 0x00F8);
-        CHECK(SQL_HANDLE_STMT, stmt, SQLFreeStmt(stmt, SQL_CLOSE));
+        /*
+         * The wide path, written and read as Unicode.
+         *
+         * This deliberately does not read back what the SQL_C_CHAR insert above
+         * stored. On Windows SQL_C_CHAR means the ANSI code page, so those
+         * bytes are UTF-8 text reinterpreted through CP1252 before being sent:
+         * the round trip above is symmetric and holds, but the value on the
+         * server is not the nine characters the literal spells. Reading it as
+         * Unicode there yields thirteen units, one per UTF-8 byte, which is
+         * correct behaviour and not what this check is about. Writing through
+         * SQL_C_WCHAR removes the code page from the picture entirely, so the
+         * expectation holds on every platform and in both charset modes.
+         */
+        {
+            /* G r o-umlaut sharp-s e space AE r o-slash = 9 characters. */
+            static const SQLWCHAR wsample[] = {
+                0x0047, 0x0072, 0x00F6, 0x00DF, 0x0065, 0x0020, 0x00C6, 0x0072, 0x00F8, 0
+            };
+            SQLLEN wind = SQL_NTS;
+
+            CHECK(SQL_HANDLE_STMT, stmt, SQLExecDirect(stmt,
+                (SQLCHAR *)"DELETE FROM odbc_conformance WHERE id=9101;", SQL_NTS));
+            CHECK(SQL_HANDLE_STMT, stmt, SQLPrepare(stmt,
+                (SQLCHAR *)"INSERT INTO odbc_conformance VALUES(9101,?);", SQL_NTS));
+            CHECK(SQL_HANDLE_STMT, stmt, SQLBindParameter(stmt, 1, SQL_PARAM_INPUT,
+                SQL_C_WCHAR, SQL_WVARCHAR, 64, 0, (SQLPOINTER)wsample,
+                (SQLLEN)sizeof(wsample), &wind));
+            CHECK(SQL_HANDLE_STMT, stmt, SQLExecute(stmt));
+            CHECK(SQL_HANDLE_STMT, stmt, SQLFreeStmt(stmt, SQL_RESET_PARAMS));
+
+            CHECK(SQL_HANDLE_STMT, stmt, SQLExecDirect(stmt,
+                (SQLCHAR *)"SELECT name FROM odbc_conformance WHERE id=9101;", SQL_NTS));
+            CHECK(SQL_HANDLE_STMT, stmt, SQLFetch(stmt));
+            CHECK(SQL_HANDLE_STMT, stmt, SQLGetData(stmt, 1, SQL_C_WCHAR, wide, sizeof(wide), &wgot));
+            VERIFY(wgot == (SQLLEN)(9 * sizeof(SQLWCHAR)));
+            VERIFY(wide[0] == 0x0047 && wide[1] == 0x0072);
+            VERIFY(wide[2] == 0x00F6 && wide[3] == 0x00DF);
+            VERIFY(wide[6] == 0x00C6 && wide[8] == 0x00F8);
+            VERIFY(wide[9] == 0);
+            CHECK(SQL_HANDLE_STMT, stmt, SQLFreeStmt(stmt, SQL_CLOSE));
+            CHECK(SQL_HANDLE_STMT, stmt, SQLExecDirect(stmt,
+                (SQLCHAR *)"DELETE FROM odbc_conformance WHERE id=9101;", SQL_NTS));
+        }
 
         CHECK(SQL_HANDLE_STMT, stmt, SQLExecDirect(stmt,
             (SQLCHAR *)"DELETE FROM odbc_conformance WHERE id=9100;", SQL_NTS));
@@ -545,14 +578,14 @@ int main(void) {
 
     /* ---- concurrent use of one connection ---------------------------- */
     {
-        pthread_t threads[4];
+        cs_thread threads[4];
         struct worker_arg args[4];
         int t;
         for (t = 0; t < 4; t++) {
             args[t].dbc = dbc; args[t].iterations = 25; args[t].errors = 0;
-            VERIFY(pthread_create(&threads[t], NULL, worker, &args[t]) == 0);
+            VERIFY(cs_thread_create(&threads[t], worker, &args[t]) == 0);
         }
-        for (t = 0; t < 4; t++) pthread_join(threads[t], NULL);
+        for (t = 0; t < 4; t++) cs_thread_join(threads[t]);
         for (t = 0; t < 4; t++) {
             if (args[t].errors) fprintf(stderr, "FAIL: worker %d hit %d errors\n", t, args[t].errors);
             VERIFY(args[t].errors == 0);
