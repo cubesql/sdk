@@ -203,12 +203,15 @@ Give every connection a database, either with `DATABASE=` in the connection
 string, in the data source, or by running `USE DATABASE database_name;` as the
 first statement.
 
-This matters beyond convenience: on a connection with **no** current database an
-ordinary statement — even `SELECT 1;` — fails on the server, and the Windows
-Driver Manager does not return from the failing call. It keeps allocating until
-the client process runs out of memory, which on a machine with little RAM takes
-the whole system down with it. The driver itself returns `SQL_ERROR` promptly;
-the loop is inside `ODBC32.dll`.
+Without one, an ordinary statement — even `SELECT 1;` — fails on the server with
+*"no database has been selected"*. The driver reports that as `SQL_ERROR` with a
+readable diagnostic, and the application carries on normally.
+
+Up to and including 1.1.0 that same situation hung the application instead. The
+driver never told the Driver Manager it had finished listing its diagnostic
+records, so the Driver Manager looped inside the failing call, allocating as it
+went, until the process ran out of memory — on a machine with little RAM, taking
+the system down with it. If you are still on 1.1.0, upgrade.
 
 The commands that are meaningful without a current database — `SHOW DATABASES;`,
 `USE DATABASE`, `CREATE DATABASE` — are unaffected.

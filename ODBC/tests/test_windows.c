@@ -23,6 +23,78 @@ static void diag(SQLSMALLINT type, SQLHANDLE handle) {
     } \
 } while (0)
 
+/*
+ * One defect in this driver did not show up as a wrong return value: it showed
+ * up as no return at all, with memory climbing until the process died. A test
+ * that inspects a return code cannot catch that - it never gets one - so the
+ * call is put under a watchdog and a hang becomes an ordinary test failure
+ * instead of a wedged build machine.
+ */
+#define CS_WATCHDOG_SECONDS 20
+#define CS_WATCHDOG_MB      512
+
+static volatile LONG cs_guarded_call_returned = 0;
+
+/* Reads the working set without linking psapi, so the test's build stays as it
+   is. Returns 0 when the call is unavailable, which simply disables the memory
+   arm of the watchdog. */
+static SIZE_T cs_working_set(void) {
+    typedef struct { DWORD cb; DWORD faults; SIZE_T peak_ws; SIZE_T ws; SIZE_T a,b,c,d,e,f; } CS_PMC;
+    typedef BOOL (WINAPI *CS_GPMI)(HANDLE, CS_PMC *, DWORD);
+    static CS_GPMI fn = NULL;
+    static int looked_up = 0;
+    CS_PMC pmc;
+    if (!looked_up) {
+        HMODULE m = LoadLibraryA("psapi.dll");
+        if (m) fn = (CS_GPMI)GetProcAddress(m, "GetProcessMemoryInfo");
+        looked_up = 1;
+    }
+    if (!fn) return 0;
+    memset(&pmc, 0, sizeof(pmc));
+    pmc.cb = sizeof(pmc);
+    if (!fn(GetCurrentProcess(), &pmc, sizeof(pmc))) return 0;
+    return pmc.ws;
+}
+
+/*
+ * Fires on whichever comes first: the call taking too long, or the process
+ * growing past a size no honest failing statement needs. The memory arm is the
+ * one that matters - when this defect is present the growth is what hurts, and
+ * waiting out the full timeout on a small machine is exactly the harm being
+ * guarded against.
+ */
+static DWORD WINAPI cs_watchdog(LPVOID unused) {
+    int elapsed_ms = 0;
+    (void)unused;
+    while (InterlockedCompareExchange(&cs_guarded_call_returned, 0, 0) == 0) {
+        SIZE_T ws;
+        Sleep(250);
+        elapsed_ms += 250;
+        ws = cs_working_set();
+        if (ws > (SIZE_T)CS_WATCHDOG_MB * 1024 * 1024) {
+            fprintf(stderr,
+                "FAIL: the guarded call has not returned and the process has grown\n"
+                "      past %d MB. That is the SQLError enumeration defect: the\n"
+                "      Driver Manager is looping inside the call, appending the\n"
+                "      same diagnostic record for ever.\n", CS_WATCHDOG_MB);
+            break;
+        }
+        if (elapsed_ms >= CS_WATCHDOG_SECONDS * 1000) {
+            fprintf(stderr,
+                "FAIL: the guarded call did not return within %d seconds.\n"
+                "      A statement that fails on a connection with no current\n"
+                "      database must come back with SQL_ERROR immediately.\n",
+                CS_WATCHDOG_SECONDS);
+            break;
+        }
+    }
+    if (InterlockedCompareExchange(&cs_guarded_call_returned, 0, 0) == 0) {
+        fflush(stderr);
+        TerminateProcess(GetCurrentProcess(), 3);
+    }
+    return 0;
+}
+
 int main(void) {
     SQLHENV env = SQL_NULL_HENV; SQLHDBC dbc = SQL_NULL_HDBC; SQLHSTMT stmt = SQL_NULL_HSTMT;
     SQLCHAR value[128], *connection = (SQLCHAR *)getenv("CUBESQL_ODBC_CONNECTION_STRING");
@@ -44,6 +116,71 @@ int main(void) {
                        "'CSQL75ZZ-PPJHAG9L-27X2W3C4-8DX6BAXX-35XBX46W';",
             SQL_NTS), SQL_HANDLE_STMT, stmt);
     }
+    {
+        /*
+         * A statement that fails while no database has been selected. The
+         * driver returned SQL_ERROR correctly even before this was fixed; what
+         * it got wrong was the enumeration afterwards. SQLError handed back
+         * diagnostic record 1 on every call and never SQL_NO_DATA, and because
+         * the driver declares ODBC 2.0 the Driver Manager builds its own
+         * diagnostic queue by calling SQLError until it is exhausted. That
+         * loop never ended, so it spun inside SQLExecDirect appending a record
+         * per turn until the process ran out of memory - on a machine with
+         * little RAM, taking the whole system with it. "SELECT 1;" was enough.
+         *
+         * The native suites cannot see this: they call the driver directly and
+         * never cross the Driver Manager, where the loop actually runs. This
+         * check belongs here and nowhere else.
+         *
+         * It runs before CREATE DATABASE deliberately - that is the only
+         * moment the connection has no current database.
+         */
+        HANDLE guard;
+        SQLRETURN rc;
+        SQLCHAR state[6] = "", message[512] = "";
+        SQLINTEGER native = 0;
+        SQLSMALLINT len = 0;
+        int turns;
+
+        fprintf(stderr, "ODBC BEGIN: failing statement, no current database\n");
+        fflush(stderr);
+        guard = CreateThread(NULL, 0, cs_watchdog, NULL, 0, NULL);
+        rc = SQLExecDirectA(stmt, (SQLCHAR *)"SELECT 1;", SQL_NTS);
+        InterlockedExchange(&cs_guarded_call_returned, 1);
+        if (guard) CloseHandle(guard);
+        fprintf(stderr, "ODBC END: failing statement -> %d\n", rc);
+        fflush(stderr);
+
+        if (SQL_SUCCEEDED(rc)) {
+            /* The connection string named a database, so the statement was
+               legitimate and there is nothing to assert. */
+            fprintf(stderr, "  a database was already selected; check skipped\n");
+        } else {
+            rc = SQLGetDiagRecA(SQL_HANDLE_STMT, stmt, 1, state, &native,
+                                message, sizeof(message), &len);
+            if (rc != SQL_SUCCESS || message[0] == '\0') {
+                fprintf(stderr, "FAIL: the failure left no readable diagnostic\n");
+                goto fail;
+            }
+            fprintf(stderr, "  diagnostic: [%s] %s\n", state, message);
+            /* Bounded on purpose: an unbounded loop here would reproduce the
+               very hang this is meant to detect. */
+            for (turns = 0; turns < 64; turns++) {
+                rc = SQLError(SQL_NULL_HENV, SQL_NULL_HDBC, stmt, state, &native,
+                              message, sizeof(message), &len);
+                if (rc == SQL_NO_DATA) break;
+                if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) break;
+            }
+            if (turns >= 64) {
+                fprintf(stderr, "FAIL: SQLError never reported SQL_NO_DATA; the "
+                                "record cursor is not advancing\n");
+                goto fail;
+            }
+            fprintf(stderr, "  SQLError terminated after %d record(s)\n", turns);
+        }
+        ODBC(SQLFreeStmt(stmt, SQL_CLOSE), SQL_HANDLE_STMT, stmt);
+    }
+
     ODBC(SQLExecDirectA(stmt,
         (SQLCHAR *)"CREATE DATABASE odbc_smoke.db IF NOT EXISTS;", SQL_NTS),
         SQL_HANDLE_STMT, stmt);

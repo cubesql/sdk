@@ -219,12 +219,28 @@ declaration and no descriptor handles the Windows Driver Manager faults inside
 first. `SQLGetDescField` and friends are not exported and `SQLGetFunctions`
 reports them absent, which is the correct answer today.
 
-**A statement that fails with no current database hangs the client.** Not a
-driver bug: the driver returns `SQL_ERROR` promptly, but the Driver Manager does
-not return from the failing call and keeps allocating until the process runs out
-of memory. On a machine with little RAM it takes the whole system down. Always
-give test connections a database. The cause inside `ODBC32.dll` has not been
-found.
+**Never leave a diagnostic enumeration without an end.** Through 1.1.0, any
+statement that failed on a connection with no current database hung the calling
+application and grew until it ran out of memory — `SELECT 1;` was enough. It was
+tempting to blame `ODBC32.dll`, because the loop does run there and the driver
+returns `SQL_ERROR` promptly. The cause was in the driver: `SQLError` asked for
+diagnostic record 1 on every call and so never returned `SQL_NO_DATA`, and
+because the driver declares ODBC 2.0 the Driver Manager builds its own
+diagnostic queue by calling `SQLError` until it is exhausted. That harvest runs
+*inside* `SQLExecDirect`, which is why the application never saw the call
+return, and why it happened even when the application never asked for the error.
+
+Measured, one binary against the other, same probe: the 1.1.0 driver never came
+back and was killed at the memory cap; the current one returns `SQL_ERROR` in
+6 MB. Fixed in 1.2.0 by `cs_diag_take_next`, which `SQLError` and `SQLErrorW`
+share.
+
+Two lessons worth keeping. First, a defect whose symptom is *no return* cannot
+be caught by checking a return code — the guarded call in `tests/test_windows.c`
+watches time and process growth and kills itself, so a regression reports as a
+test failure instead of wedging the machine. Second, that check has to go
+through the Driver Manager: the native suites link the driver directly and never
+cross the path where the loop lives, so they cannot see it.
 
 **Column types come from the catalogue, not the value.** CubeSQL reports the
 runtime storage class, so a `REAL` column whose values are stored as text would
