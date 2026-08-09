@@ -21,11 +21,9 @@ Data Source Administrator, with its version and publisher shown on the
 file description, so the two are easy to tell apart.
 
 The MSI installs the driver as `csqlodbc.dll` under
-`%ProgramFiles%\SQLabs\CubeSQL ODBC Driver`. The name is deliberately within
-8.3: Windows Installer stores a longer name as a `short|long` pair and the
-`InstallODBC` action writes that pair into the registry unresolved, which
-leaves the `Driver` value pointing at something that is not a path. The ZIP and
-the build output keep the full `cubesqlodbc.dll` name.
+`%ProgramFiles%\SQLabs\CubeSQL ODBC Driver`. The ZIP and the build output keep
+the longer `cubesqlodbc.dll` name; it is the same driver either way, and the
+registry entry always points at whichever file was actually installed.
 
 ### Creating a data source
 
@@ -195,11 +193,9 @@ What this means for an application:
   Select the database with `DATABASE=` in the connection string, or run
   `USE DATABASE database_name;`.
 
-Moving to ODBC 3.x would remove those restrictions, but it requires implementing
-the implicit descriptors first: with a 3.x declaration and no descriptor handles
-the Windows Driver Manager faults inside `ODBC32.dll` on the first
-`SQLExecDirect`. `SQLGetDescField` and friends are not exported, and
-`SQLGetFunctions` reports them absent, which is the correct answer today.
+Declaring ODBC 3.x would remove those restrictions. It is not available in this
+release: the descriptor handles a 3.x driver has to provide are not implemented,
+and `SQLGetFunctions` correctly reports them absent.
 
 ## Always select a database
 
@@ -238,128 +234,8 @@ declared as, once per result set and only when it can help:
 Columns that are expressions rather than table columns have no declared type and
 are reported as the server describes them.
 
-## Build
+## Source and development
 
-### Visual Studio (the shipping build)
-
-From a Visual Studio Developer PowerShell in the `ODBC` directory:
-
-```powershell
-cmake -S . -B build-vs -A x64 -DCMAKE_BUILD_TYPE=Release
-cmake --build build-vs --config Release
-
-cmake -S . -B build-vs32 -A Win32 -DCMAKE_BUILD_TYPE=Release
-cmake --build build-vs32 --config Release
-```
-
-The CMake build links the SDK's architecture-specific `tls.lib` by default. Use
-`-DCUBESQL_ODBC_WITH_TLS=OFF` only for a deliberately TLS-free build.
-
-### MSI
-
-Requires **WiX 5** and the .NET SDK. Install the version explicitly:
-
-```powershell
-dotnet tool install --global wix --version "5.*"
-```
-
-Do not use the unpinned `dotnet tool install --global wix`: it now installs WiX
-7, which refuses to build with `error WIX7015: You must accept the Open Source
-Maintenance Fee (OSMF) EULA`.
-
-```powershell
-.\installer\build-msi.ps1 -DriverPath .\build-vs\Release\cubesqlodbc.dll -OutputDir .\dist
-```
-
-The package platform is derived from the driver's PE header, so an MSI can never
-carry a driver of the wrong architecture.
-
-### MinGW cross-build
-
-The repository `Makefile` cross-builds testable Win32 and Win64 DLLs with MinGW.
-Those artifacts support NONE and every AES mode, but omit TLS because the
-checked-in LibreSSL archives use the MSVC object ABI:
-
-```bash
-make -j2
-```
-
-Outputs are `build/win32/cubesqlodbc.dll` and `build/win64/cubesqlodbc.dll`.
-
-## Tests
-
-The suite is driven by CTest and runs on Windows for both architectures. It
-needs a live CubeSQL server on `127.0.0.1:4430` (configurable, see below).
-
-```powershell
-cmake -S . -B build-vs -A x64 -DBUILD_TESTING=ON
-cmake --build build-vs --config Release
-cd build-vs
-ctest -C Release --output-on-failure
-```
-
-| Suite | What it covers |
-|---|---|
-| `smoke` | the real Windows Driver Manager, end to end |
-| `core` | handles, environment attributes, `SQLGetFunctions` |
-| `integration` | connections, DDL, prepared parameters, BLOBs, binding, partial `SQLGetData`, scrolling, rollback, metadata |
-| `conformance` | parameter arrays, rowset fetch column-wise and row-wise, attribute tolerance, escape translation, non-ASCII round trips, several threads on one connection, disconnect semantics |
-| `types` | declared types, every C type including both date/time spellings, `NULL`, truncation with `01004`, chunked `SQLGetData` |
-| `unicode` | the Unicode entry points and the ODBC 2.x spellings against their 3.x equivalents |
-| `diagnostics` | `SQLError` record walking, diagnostic fields, catalog functions |
-| `setup` | `ConfigDSN`/`ConfigDSNW` with no user interface, add, configure, remove, error cases |
-| `aliases` | every ODBC 2.x alias, the A/W variants, and the optional functions |
-| `install_scripts` | `install.ps1`/`uninstall.ps1` against the registry |
-
-Every function the driver exports is called by at least one suite.
-
-`install_scripts` writes to `HKEY_LOCAL_MACHINE`, so it needs an elevated
-prompt. Without one it reports itself **skipped**, with an explanation, rather
-than failing. It saves and restores any pre-existing registration, and does not
-touch data sources belonging to anyone else.
-
-Point the suite at a different server when configuring:
-
-```powershell
-cmake -S . -B build-vs -A x64 -DBUILD_TESTING=ON `
-  -DCUBESQL_TEST_HOST=10.0.0.5 -DCUBESQL_TEST_PORT=4430 `
-  -DCUBESQL_TEST_USER=admin -DCUBESQL_TEST_PASSWORD=secret
-```
-
-`.github/workflows/odbc-windows.yml`, at the root of the SDK, runs all of this
-for x86 and x64 on every push: it installs a CubeSQL server, registers the
-driver, runs the smoke test through the real Driver Manager and then the rest of
-the suite under CTest. It also checks three things that are cheap and have each
-gone wrong before — that the architecture in the version resource matches the
-binary, that the registration scripts load under Windows PowerShell 5.1, and
-that the MSI, once installed, registers a path that exists.
-
-The POSIX `tests/Makefile` still cross-builds `core`, `integration` and
-`conformance` with AddressSanitizer for development on macOS and Linux.
-
-## Releases
-
-Update the version in `include/cubesql_odbc_version.h` and the CMake project
-version so they match, build both architectures, then build the MSIs:
-
-```powershell
-.\installer\build-msi.ps1 -DriverPath .\build-vs\Release\cubesqlodbc.dll   -OutputDir .\dist
-.\installer\build-msi.ps1 -DriverPath .\build-vs32\Release\cubesqlodbc.dll -OutputDir .\dist
-```
-
-The package platform is taken from the driver's PE header, so the x64 and x86
-packages are named from the binaries they actually carry.
-
-Publishing is driven by the tag, not by hand. Pushing a tag that starts with
-`odbc-v` runs the whole workflow and, only if it passes, creates the GitHub
-release from the binaries that were just tested:
-
-```bash
-git tag odbc-v1.2.0 && git push origin odbc-v1.2.0
-```
-
-The release carries four assets and a `SHA256SUMS.txt`: the two MSIs, for people
-who want an installer, and two zip archives holding the bare DLL with the
-registration scripts, for people who would rather register it themselves.
-Nothing built on a workstation is uploaded, so what ships is always what CI
-tested.
+The driver is part of the CubeSQL SDK repository. Building it from source,
+running the test suite, and the release process are documented in
+`ODBC/CLAUDE.md` there.

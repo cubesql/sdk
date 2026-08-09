@@ -77,8 +77,9 @@
                         Name="CubeSQL ODBC Driver"
                         File="DriverDll"
                         SetupFile="DriverDll">
-              <!-- The driver is registered in ODBC 2.0 compatibility mode; see
-                   the note in README.md about explicit descriptors. -->
+              <!-- The driver is registered in ODBC 2.0 compatibility mode. Read
+                   the note in CLAUDE.md about implicit descriptors before
+                   changing this to 03.00. -->
               <Property Id="APILevel" Value="2" />
               <Property Id="ConnectFunctions" Value="YYN" />
               <Property Id="DriverODBCVer" Value="02.00" />
