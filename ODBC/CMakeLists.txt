@@ -1,7 +1,7 @@
 ﻿cmake_minimum_required(VERSION 3.20)
 # Keep in step with include/cubesql_odbc_version.h, which the driver and the
 # Windows resource script both read.
-project(CubeSQLODBC VERSION 1.2.0 LANGUAGES C)
+project(CubeSQLODBC VERSION 1.2.1 LANGUAGES C)
 
 if(NOT WIN32)
     message(FATAL_ERROR "The first CubeSQL ODBC release targets Windows only")
