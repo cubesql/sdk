@@ -8,8 +8,9 @@ packaging material here, not there.
 
 ## Project Overview
 
-Windows ODBC driver for CubeSQL, version 1.2.0, built directly on `../C_SDK`.
-Windows only: `CMakeLists.txt` fails the configure step on any other platform.
+Windows ODBC driver for CubeSQL, built directly on `../C_SDK`. The version
+lives in `include/cubesql_odbc_version.h`. Windows only: `CMakeLists.txt` fails
+the configure step on any other platform.
 The driver is compiled twice, x64 and Win32, and both are shipped — the
 architecture has to match the application that loads the driver, not the OS.
 
@@ -247,6 +248,34 @@ runtime storage class, so a `REAL` column whose values are stored as text would
 arrive as `SQL_VARCHAR`. When the runtime type is text the driver asks
 `PRAGMA table_info` what the column was declared as, once per result set.
 Expressions have no declared type and are reported as the server describes them.
+
+**What SQLGetInfo claims, consumers do.** `SQL_CATALOG_USAGE` said
+`SQL_CU_DML_STATEMENTS`, meaning "a catalog may appear in a DML statement".
+CubeSQL has no such syntax — the database belongs to the connection and is
+chosen with `USE DATABASE` — but Excel believed the claim, combined it with
+`SQL_CATALOG_LOCATION` (start), the separator (".") and the `TABLE_CAT` that
+`SQLTables` reports, and issued
+
+    SELECT * FROM "Travel.sdb"."BELEGART"
+
+The server answered native 7009, "no such table", for every table of every
+database, so the driver was unusable from Excel while looking healthy: the
+databases and their tables all listed correctly, and only the data would not
+come. Note the catalog name normally ends in ".sdb", so it contains the
+separator and could never have been parsed as a qualifier anyway.
+
+It is now 0, and `tests/test_diagnostics.c` holds the invariant: if a catalog is
+reported, it must also be declared unusable in a statement. Reporting the
+catalog is deliberate and worth keeping — it is what lets a consumer show which
+database a table belongs to.
+
+**`USE DATABASE` has to be tracked, not just forwarded.** The driver's idea of
+the current database feeds `TABLE_CAT` and `SQL_DATABASE_NAME`. Connecting with
+`DATABASE=` set it, but a connection that selected its database by statement
+left the driver believing it had none, so catalog metadata came back with an
+empty `TABLE_CAT`. `cs_execute_now` now reads the name out of a successful
+`USE DATABASE` and records it. The test suite selects its database exactly that
+way, which is how the gap surfaced.
 
 ## Conventions
 

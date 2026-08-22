@@ -216,8 +216,57 @@ int main(void) {
         CHECKED(SQL_HANDLE_ENV, env2, SQLFreeEnv(env2));
     }
 
+
+    /* ---------------------------------------------------------------- *
+     * 6. Il catalogo si puo' mostrare ma non si puo' scrivere in una
+     *    istruzione.
+     *
+     *    SQLTables riporta come TABLE_CAT il database corrente, ed e'
+     *    giusto: e' cosi' che un consumer sa a quale database appartiene
+     *    una tabella e lo mostra. Ma SQL_CATALOG_USAGE dichiarava
+     *    SQL_CU_DML_STATEMENTS, cioe' "il catalogo si puo' usare in una
+     *    DML". In CubeSQL non e' vero: il database si sceglie con USE
+     *    DATABASE e non esiste una sintassi catalogo.tabella. Excel
+     *    prendeva quella dichiarazione alla lettera ed emetteva
+     *        SELECT * FROM "Travel.sdb"."BELEGART"
+     *    che il server rifiuta con 7009, e ogni tabella di ogni database
+     *    risultava illeggibile.
+     *
+     *    L'invariante da tenere e' questo: se riportiamo un catalogo,
+     *    dobbiamo anche dire che non e' utilizzabile in una istruzione.
+     * ---------------------------------------------------------------- */
+    {
+        SQLUINTEGER usage = 0xFFFFFFFFu;
+        SQLCHAR supported[8] = "";
+        SQLCHAR cat[256] = "";
+        SQLSMALLINT len = 0;
+        SQLLEN ind = 0;
+        int saw_catalog = 0;
+
+        CHECKED(SQL_HANDLE_DBC, dbc, SQLGetInfo(dbc, SQL_CATALOG_USAGE,
+                                                &usage, sizeof(usage), &len));
+        VERIFY(usage == 0);
+
+        /* Il catalogo resta dichiarato e resta riportato: la correzione non
+           deve essere stata ottenuta smettendo di esporlo. */
+        CHECKED(SQL_HANDLE_DBC, dbc, SQLGetInfo(dbc, SQL_CATALOG_NAME,
+                                                supported, sizeof(supported), &len));
+        VERIFY(supported[0] == 'Y');
+
+        CHECKED(SQL_HANDLE_STMT, stmt, SQLTables(stmt, NULL, 0, NULL, 0,
+                                                 (SQLCHAR *)"t_diag", SQL_NTS, NULL, 0));
+        if (SQLFetch(stmt) == SQL_SUCCESS) {
+            CHECKED(SQL_HANDLE_STMT, stmt, SQLGetData(stmt, 1, SQL_C_CHAR,
+                                                      cat, sizeof(cat), &ind));
+            if (ind != SQL_NULL_DATA && cat[0]) saw_catalog = 1;
+        }
+        CHECKED(SQL_HANDLE_STMT, stmt, SQLFreeStmt(stmt, SQL_CLOSE));
+        VERIFY(saw_catalog);
+    }
+
     CHECKED(SQL_HANDLE_STMT, stmt, SQLExecDirect(stmt,
         (SQLCHAR *)"DROP TABLE IF EXISTS t_diag;", SQL_NTS));
+
     cs_test_close(env, dbc, stmt);
     return cs_test_report("diagnostics");
 }

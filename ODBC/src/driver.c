@@ -1722,6 +1722,51 @@ static int cs_sql_should_commit(const char *sql){
     return cs_sql_is_write(sql);
 }
 
+/*
+ * Recognises "USE DATABASE <name>" and hands back the name.
+ *
+ * The driver has to know which database the connection is on: it is what
+ * SQLTables reports as TABLE_CAT, and what SQLGetInfo answers for
+ * SQL_DATABASE_NAME. Connecting with DATABASE= set it, but selecting the
+ * database by statement - which is the documented way to do it, and what the
+ * test suite itself does - left the driver believing it had none. Catalog
+ * metadata then came back with an empty TABLE_CAT, so a consumer could not tell
+ * which database a table belonged to.
+ *
+ * Returns 1 and fills name when the statement is a USE DATABASE, 0 otherwise.
+ */
+static int cs_sql_use_database(const char *sql, char *name, size_t cap) {
+    const char *p = cs_skip_sql_space(sql ? sql : "");
+    char word[32];
+    size_t n = 0;
+    while (*p && (isalpha((unsigned char)*p) || *p == '_')) {
+        if (n + 1 < sizeof(word)) word[n++] = (char)toupper((unsigned char)*p);
+        ++p;
+    }
+    word[n] = '\0';
+    if (strcmp(word, "USE")) return 0;
+    p = cs_skip_sql_space(p); n = 0;
+    while (*p && (isalpha((unsigned char)*p) || *p == '_')) {
+        if (n + 1 < sizeof(word)) word[n++] = (char)toupper((unsigned char)*p);
+        ++p;
+    }
+    word[n] = '\0';
+    if (strcmp(word, "DATABASE")) return 0;
+    p = cs_skip_sql_space(p); n = 0;
+    if (*p == '\'' || *p == '"' || *p == '[') {
+        char closing = (*p == '[') ? ']' : *p;
+        ++p;
+        while (*p && *p != closing) { if (n + 1 < cap) name[n++] = *p; ++p; }
+    } else {
+        while (*p && !isspace((unsigned char)*p) && *p != ';') {
+            if (n + 1 < cap) name[n++] = *p;
+            ++p;
+        }
+    }
+    if (cap) name[n] = '\0';
+    return n > 0;
+}
+
 
 /*
  * ODBC escape sequence translation.
@@ -2124,6 +2169,12 @@ static SQLRETURN cs_execute_now(cs_stmt *s){
         }else{
             rc=cubesql_execute(s->dbc->db,s->sql);
             if(rc!=CUBESQL_NOERR){cs_map_sdk_error(&s->h,s->dbc->db,rc,"execute");return SQL_ERROR;}
+            {   /* la connessione ha appena cambiato database: aggiornalo, o il
+                   catalogo riportato resta quello di prima */
+                char picked[sizeof(s->dbc->database)];
+                if(cs_sql_use_database(s->sql,picked,sizeof(picked)))
+                    cs_option_set(s->dbc->database,sizeof(s->dbc->database),picked);
+            }
             s->row_count=(SQLLEN)cubesql_affected_rows(s->dbc->db);
             if(s->dbc->autocommit==SQL_AUTOCOMMIT_ON&&cs_sql_should_commit(s->sql)){rc=cubesql_commit(s->dbc->db);if(rc!=CUBESQL_NOERR){cs_map_sdk_error(&s->h,s->dbc->db,rc,"autocommit");return SQL_ERROR;}}
         }
@@ -3148,7 +3199,26 @@ static SQLRETURN SQL_API cs_i_SQLGetInfo(SQLHDBC connection,SQLUSMALLINT type,
         case SQL_ALTER_DOMAIN:return cs_info_u32(out,length,0);
         case SQL_BATCH_ROW_COUNT:return cs_info_u32(out,length,0);
         case SQL_BOOKMARK_PERSISTENCE:return cs_info_u32(out,length,0);
-        case SQL_CATALOG_USAGE:return cs_info_u32(out,length,SQL_CU_DML_STATEMENTS);
+        /*
+         * Zero, and it needs to stay zero: a CubeSQL table cannot be qualified
+         * with the database it lives in. The database is chosen per connection
+         * with USE DATABASE, and there is no catalog.table syntax to fall back
+         * on - a catalog name here normally ends in ".sdb", so it carries the
+         * separator itself and could not be parsed as a qualifier anyway.
+         *
+         * Claiming SQL_CU_DML_STATEMENTS told consumers the opposite. Excel
+         * took that, SQL_CATALOG_LOCATION (start), the separator (".") and the
+         * TABLE_CAT that SQLTables reports, and issued
+         *     SELECT * FROM "Travel.sdb"."BELEGART"
+         * which the server rejects with native error 7009, "no such table".
+         * Every table of every database failed that way, so the driver was
+         * unusable from Excel while looking perfectly healthy.
+         *
+         * The catalog is still reported: SQLTables lists the databases and
+         * names the one each table belongs to, which is what lets a consumer
+         * show them. It simply cannot be written into a statement.
+         */
+        case SQL_CATALOG_USAGE:return cs_info_u32(out,length,0);
         case SQL_SCHEMA_USAGE:return cs_info_u32(out,length,0);
         case SQL_COLLATION_SEQ:return cs_info_string(d,out,capacity,length,"");
         case SQL_COLUMN_ALIAS:return cs_info_string(d,out,capacity,length,"Y");

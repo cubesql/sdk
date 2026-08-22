@@ -130,8 +130,18 @@ To fix it:
    design. A single-connection licence cannot serve them reliably no matter how
    pooling is configured; three to five is a realistic minimum.
 
-An abandoned socket (a client that crashed without closing cleanly) is reclaimed
-by the server's ping timeout, 300 seconds by default.
+Only a clean disconnect frees the licence straight away. Measured against a
+local server: an application that calls `SQLDisconnect` releases the connection
+immediately, while one whose process is killed while still connected is still
+holding it a minute later — the server does not notice the peer is gone and
+waits for its own ping timeout, 300 seconds by default. The driver cannot help
+here; it is no longer running.
+
+This is worth knowing with Excel in particular. Power Query does its work in a
+separate `Microsoft.Mashup.Container` process that outlives the workbook, so
+closing Excel does not necessarily close the connection. If licences appear to
+stay claimed after you have finished, check for those processes before
+concluding that connections have leaked.
 
 ## Character sets
 
@@ -215,6 +225,13 @@ the system down with it. If you are still on 1.1.0, upgrade.
 
 The commands that are meaningful without a current database — `SHOW DATABASES;`,
 `USE DATABASE`, `CREATE DATABASE` — are unaffected.
+
+A table cannot be qualified with the database it lives in. The database belongs
+to the connection, so `SELECT * FROM BELEGART` is right and
+`SELECT * FROM "Travel.sdb"."BELEGART"` is not — the server answers *no such
+table*. The driver reports `SQL_CATALOG_USAGE` as 0 so that applications build
+unqualified names; the database is still reported for each table, which is what
+lets a tool show you which one a table came from.
 
 ## Data types
 
