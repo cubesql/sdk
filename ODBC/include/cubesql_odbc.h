@@ -34,33 +34,40 @@
 #include "cubesql_odbc_version.h"
 
 /*
- * The driver still registers as ODBC 2.0, but now handles the 2.x spellings the
- * Driver Manager sends in that mode.
+ * The driver registers as ODBC 3.0.
  *
- * Reporting "02.00" was assumed to make the Driver Manager supply the ODBC 3.x
- * descriptor mappings. It does the opposite: in 2.0 mode the Driver Manager
- * rewrites 3.x calls into their 2.x forms before the driver sees them, and the
- * driver used to reject those forms:
+ * It declared 2.0 for a long time, and that was not free. In 2.0 mode the
+ * Driver Manager refuses, on the driver's behalf, everything that arrived with
+ * ODBC 3.0 - it never forwards the call. Fourteen InfoTypes came back HY096,
+ * SQL_ATTR_METADATA_ID came back HY092, and, the one that made the driver
+ * unusable from Excel, SQL_C_SBIGINT came back HYC00, "Driver does not support
+ * this parameter". The driver implements that C type and the native tests
+ * exercised it, because they call the driver directly; through the Driver
+ * Manager it never arrived, so a column reported as SQL_BIGINT - which is what
+ * an INTEGER column is - could not be read at all.
  *
- *   - SQLColAttribute(SQL_DESC_NAME) arrives as SQL_COLUMN_NAME (1), which was
- *     answered with HY091, so no consumer could read column metadata and
- *     OdbcDataAdapter.Fill failed outright;
- *   - SQLSetStmtAttr(SQL_ATTR_ROW_ARRAY_SIZE) arrives as SQL_ROWSET_SIZE (9),
- *     answered with HYC00, which disabled block fetch.
+ * Two things had to be in place first.
  *
- * Both spellings are now accepted; see cs_i_SQLColAttribute and
- * cs_i_SQLSetStmtAttr.
+ * The implicit descriptors: a 3.x driver owns four per statement, and they are
+ * implemented in driver.c as views onto the binding state cs_stmt already
+ * holds, not as a second copy of it.
  *
- * Moving to "03.80" would additionally unblock SQL_ATTR_METADATA_ID and the
- * fourteen ODBC 3.x InfoTypes that the Driver Manager currently refuses on the
- * driver's behalf with HY092/HY096. It cannot be done yet: with a 3.x
- * declaration the Driver Manager faults inside ODBC32.dll on the first
- * SQLExecDirect, because this driver implements no descriptor handles
- * (SQLGetDescField and friends are not exported at all). Implementing the
- * implicit descriptors is the prerequisite for that change.
+ * And the Unicode entry points the Driver Manager only looks up in 3.x mode.
+ * That second one was the real blocker, and it was mistaken for the first: in
+ * 2.0 mode statement attributes are reached through SQLSetStmtOption and
+ * SQLGetStmtOption, which this driver exports, so the absence of
+ * SQLSetStmtAttrW and SQLGetStmtAttrW was invisible. From 3.0 the Driver
+ * Manager looks those up instead, finds nothing, and calls through a null
+ * pointer - the "fault inside ODBC32.dll on the first SQLExecDirect" that was
+ * blamed on the missing descriptors. Measured: with the descriptors in place
+ * and the five missing W entry points still absent, the fault was unchanged.
+ *
+ * Both spellings of everything are still accepted. A 3.x declaration does not
+ * stop consumers sending the 2.x forms, and this driver answers both; see
+ * cs_i_SQLColAttribute and cs_i_SQLSetStmtAttr.
  */
 #define CSODBC_ODBC_VERSION "03.80"
-#define CSODBC_DRIVER_ODBC_VERSION "02.00"
+#define CSODBC_DRIVER_ODBC_VERSION "03.00"
 #define CSODBC_MAX_DIAG 8
 #define CSODBC_MAX_COLS 1024
 #define CSODBC_MAX_PARAMS 1024
@@ -179,6 +186,33 @@ struct cs_dbc {
     cs_mutex lock;
 };
 
+/*
+ * The four descriptors that every ODBC 3.x statement owns.
+ *
+ * This driver keeps its binding state directly in cs_stmt, so a descriptor here
+ * is not a container of its own: it is a view onto that state, tagged with
+ * which of the four roles it plays. There is then one copy of the truth, and
+ * SQLBindCol and SQLSetDescField are two ways of writing the same fields -
+ * which is precisely what ODBC says they are. The alternative, a parallel set
+ * of records kept in step with the bindings, is the classic way descriptors go
+ * wrong.
+ *
+ * They are allocated with the statement and freed with it: SQL_DESC_ALLOC_TYPE
+ * is always SQL_DESC_ALLOC_AUTO.
+ */
+enum {
+    CS_DESC_ARD = 1,  /* application row: what SQLBindCol writes */
+    CS_DESC_APD,      /* application parameter: what SQLBindParameter writes */
+    CS_DESC_IRD,      /* implementation row: result set metadata, read-only */
+    CS_DESC_IPD       /* implementation parameter: the SQL side of parameters */
+};
+
+typedef struct cs_desc {
+    cs_handle h;
+    struct cs_stmt *stmt;
+    SQLSMALLINT role;
+} cs_desc;
+
 struct cs_stmt {
     cs_handle h;
     cs_dbc *dbc;
@@ -238,6 +272,9 @@ struct cs_stmt {
      */
     SQLSMALLINT decl_type[CSODBC_MAX_COLS];
     int types_resolved;
+
+    /* Le quattro viste descrittore su questo stesso stato. */
+    cs_desc ard, apd, ird, ipd;
 };
 
 void cs_diag_clear(cs_handle *h);

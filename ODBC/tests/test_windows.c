@@ -367,6 +367,66 @@ int main(void) {
         ODBC(SQLFreeHandle(SQL_HANDLE_DBC, second), SQL_HANDLE_DBC, second);
     }
 
+    {
+        /*
+         * SQL_C_SBIGINT attraverso il Driver Manager, e i descrittori visti da
+         * fuori. Sono le due cose che la dichiarazione ODBC 3.0 sblocca, e
+         * nessuna delle due e' verificabile dalle suite native: quelle chiamano
+         * il driver direttamente, dove SQL_C_SBIGINT ha sempre funzionato.
+         *
+         * Con la dichiarazione 2.0 il Driver Manager rifiutava quel tipo C con
+         * HYC00, "Driver does not support this parameter", senza nemmeno
+         * inoltrarlo. Il driver riporta una colonna INTEGER come SQL_BIGINT, il
+         * cui tipo C naturale e' proprio quello, quindi Excel non riusciva a
+         * leggere nessuna colonna intera di nessuna tabella.
+         */
+        SQLBIGINT grande = 0;
+        SQLINTEGER stretto = 0;
+        SQLLEN ind = 0;
+        SQLHDESC ird = SQL_NULL_HDESC;
+        SQLSMALLINT colonne = 0;
+        SQLRETURN rc;
+
+        ODBC(SQLExecDirectA(stmt, (SQLCHAR *)"SELECT 4294967296;", SQL_NTS),
+             SQL_HANDLE_STMT, stmt);
+        ODBC(SQLFetch(stmt), SQL_HANDLE_STMT, stmt);
+        ODBC(SQLGetData(stmt, 1, SQL_C_SBIGINT, &grande, sizeof(grande), &ind),
+             SQL_HANDLE_STMT, stmt);
+        if (grande != (SQLBIGINT)4294967296LL) {
+            fprintf(stderr, "FAIL: SQL_C_SBIGINT ha restituito %lld\n", (long long)grande);
+            goto fail;
+        }
+        fprintf(stderr, "  SQL_C_SBIGINT: %lld\n", (long long)grande);
+        ODBC(SQLFreeStmt(stmt, SQL_CLOSE), SQL_HANDLE_STMT, stmt);
+
+        /* E lo stesso valore in 32 bit deve essere rifiutato, non troncato:
+           e' la ragione per cui il tipo a 64 bit serve davvero. */
+        ODBC(SQLExecDirectA(stmt, (SQLCHAR *)"SELECT 4294967296;", SQL_NTS),
+             SQL_HANDLE_STMT, stmt);
+        ODBC(SQLFetch(stmt), SQL_HANDLE_STMT, stmt);
+        rc = SQLGetData(stmt, 1, SQL_C_SLONG, &stretto, sizeof(stretto), &ind);
+        if (SQL_SUCCEEDED(rc)) {
+            fprintf(stderr, "FAIL: 2^32 letto in 32 bit senza errore, valore %ld\n",
+                    (long)stretto);
+            goto fail;
+        }
+        fprintf(stderr, "  in 32 bit viene rifiutato, come deve\n");
+        ODBC(SQLFreeStmt(stmt, SQL_CLOSE), SQL_HANDLE_STMT, stmt);
+
+        /* I descrittori impliciti devono essere raggiungibili dall'applicazione
+           passando dal Driver Manager, non solo chiamando il driver. */
+        ODBC(SQLExecDirectA(stmt, (SQLCHAR *)"SELECT 1, 2;", SQL_NTS), SQL_HANDLE_STMT, stmt);
+        ODBC(SQLGetStmtAttr(stmt, SQL_ATTR_IMP_ROW_DESC, &ird, 0, NULL), SQL_HANDLE_STMT, stmt);
+        if (!ird) { fprintf(stderr, "FAIL: nessun descrittore di riga\n"); goto fail; }
+        ODBC(SQLGetDescField(ird, 0, SQL_DESC_COUNT, &colonne, 0, NULL), SQL_HANDLE_STMT, stmt);
+        if (colonne != 2) {
+            fprintf(stderr, "FAIL: il descrittore dichiara %d colonne invece di 2\n", (int)colonne);
+            goto fail;
+        }
+        fprintf(stderr, "  descrittore di riga raggiungibile: %d colonne\n", (int)colonne);
+        ODBC(SQLFreeStmt(stmt, SQL_CLOSE), SQL_HANDLE_STMT, stmt);
+    }
+
     printf("%s: PASS\n", value);
     SQLFreeHandle(SQL_HANDLE_STMT, stmt); SQLDisconnect(dbc);
     SQLFreeHandle(SQL_HANDLE_DBC, dbc); SQLFreeHandle(SQL_HANDLE_ENV, env); return 0;

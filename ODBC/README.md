@@ -182,31 +182,31 @@ silently behaving incorrectly.
 
 ## ODBC conformance
 
-The driver registers as **ODBC 2.0** (`DriverODBCVer=02.00`) and reports
-`SQL_OAC_LEVEL1` for `SQL_ODBC_API_CONFORMANCE`. In practice it implements the
-whole ODBC 2.0 API — all 23 Core functions, all 15 Level 1, and all 16 Level 2 —
-so the declared level is deliberately more modest than what is provided.
+The driver registers as **ODBC 3.0** (`DriverODBCVer=03.00`) and implements the
+whole ODBC 2.0 API as well — all 23 Core functions, all 15 Level 1, and all 16
+Level 2 — so consumers written against either generation work.
 
 What this means for an application:
 
-- Everything an ODBC 2.x consumer asks for works, in both the ANSI and the
-  Unicode entry points, and in both the 2.x and the 3.x spellings of the same
-  request (`SQL_COLUMN_NAME` as well as `SQL_DESC_NAME`, `SQL_ROWSET_SIZE` as
-  well as `SQL_ATTR_ROW_ARRAY_SIZE`, `SQL_C_TIMESTAMP` as well as
-  `SQL_C_TYPE_TIMESTAMP`).
-- Fourteen ODBC **3.0-only** InfoTypes, and `SQL_ATTR_METADATA_ID`, are refused
-  by the *Driver Manager* before they reach the driver, with `HY096` and
-  `HY092`. The driver implements them; the Driver Manager does not forward
-  3.0-only requests to a driver that declares 2.0. This is expected and harmless
-  for 2.x consumers.
+- Both spellings of the same request are accepted: `SQL_DESC_NAME` and
+  `SQL_COLUMN_NAME`, `SQL_ATTR_ROW_ARRAY_SIZE` and `SQL_ROWSET_SIZE`,
+  `SQL_C_TYPE_TIMESTAMP` and `SQL_C_TIMESTAMP`. A 3.x declaration does not stop
+  older consumers sending the 2.x forms, and this driver answers both.
+- The ODBC 3.x C types work, including `SQL_C_SBIGINT`. This matters more than
+  it sounds: an `INTEGER` column is reported as `SQL_BIGINT`, whose natural C
+  type is that one. Up to 1.2.2 the driver declared 2.0, and the Driver Manager
+  refused `SQL_C_SBIGINT` on its behalf with `HYC00`, "Driver does not support
+  this parameter" — so Excel and Power BI could list the tables and then read
+  nothing out of them.
+- The ODBC 3.x InfoTypes and `SQL_ATTR_METADATA_ID` are answered rather than
+  refused by the Driver Manager.
+- Each statement owns the four implicit descriptors, reachable through
+  `SQL_ATTR_APP_ROW_DESC` and its three siblings. Explicit descriptors —
+  `SQLAllocHandle(SQL_HANDLE_DESC, ...)` and `SQLCopyDesc` — are not
+  implemented and say so with `HYC00`.
 - `SQL_ATTR_CURRENT_CATALOG` cannot be used to switch database after connecting.
   Select the database with `DATABASE=` in the connection string, or run
   `USE DATABASE database_name;`.
-
-Declaring ODBC 3.x would remove those restrictions. It is not available in this
-release: the descriptor handles a 3.x driver has to provide are not implemented,
-and `SQLGetFunctions` correctly reports them absent.
-
 ## Always select a database
 
 Give every connection a database, either with `DATABASE=` in the connection

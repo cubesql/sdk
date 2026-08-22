@@ -72,6 +72,8 @@ static cs_mutex *cs_handle_lock(SQLSMALLINT type, SQLHANDLE handle) {
     if (type == SQL_HANDLE_ENV) return &((cs_env *)handle)->lock;
     if (type == SQL_HANDLE_DBC) return &((cs_dbc *)handle)->lock;
     if (type == SQL_HANDLE_STMT) return &((cs_stmt *)handle)->dbc->lock;
+    /* Un descrittore condivide il lock della connessione che lo possiede. */
+    if (type == SQL_HANDLE_DESC) return &((cs_desc *)handle)->stmt->dbc->lock;
     return NULL;
 }
 
@@ -399,6 +401,27 @@ static void cs_stmt_defaults(cs_stmt *stmt) {
  * the parent's lock, and freeing a connection or environment destroys the very
  * mutex a generated wrapper would still be holding.
  */
+/*
+ * The four descriptors are part of the statement rather than separate
+ * allocations: the application receives them as handles, but they come into
+ * being with the statement and die with it. That is what SQL_DESC_ALLOC_AUTO
+ * means, and it is why SQLFreeHandle must refuse them.
+ */
+static void cs_desc_init(cs_stmt *stmt) {
+    cs_desc *d[4]; SQLSMALLINT roles[4]; int i;
+    d[0] = &stmt->ard; roles[0] = CS_DESC_ARD;
+    d[1] = &stmt->apd; roles[1] = CS_DESC_APD;
+    d[2] = &stmt->ird; roles[2] = CS_DESC_IRD;
+    d[3] = &stmt->ipd; roles[3] = CS_DESC_IPD;
+    for (i = 0; i < 4; ++i) {
+        memset(d[i], 0, sizeof(*d[i]));
+        d[i]->h.magic = CSODBC_MAGIC;
+        d[i]->h.type = SQL_HANDLE_DESC;
+        d[i]->stmt = stmt;
+        d[i]->role = roles[i];
+    }
+}
+
 CSODBC_EXPORT SQLRETURN SQL_API SQLAllocHandle(SQLSMALLINT type, SQLHANDLE input,
                                                SQLHANDLE *output) {
     if (!output) return SQL_ERROR;
@@ -451,6 +474,7 @@ CSODBC_EXPORT SQLRETURN SQL_API SQLAllocHandle(SQLSMALLINT type, SQLHANDLE input
             return cs_diag_add(&dbc->h, "HY001", 0, "Memory allocation error");
         }
         stmt->h.magic = CSODBC_MAGIC; stmt->h.type = type; stmt->dbc = dbc;
+        cs_desc_init(stmt);
         cs_stmt_defaults(stmt);
         stmt->next = dbc->statements; dbc->statements = stmt;
         cs_mutex_unlock(&dbc->lock);
@@ -463,6 +487,13 @@ CSODBC_EXPORT SQLRETURN SQL_API SQLAllocHandle(SQLSMALLINT type, SQLHANDLE input
 }
 
 CSODBC_EXPORT SQLRETURN SQL_API SQLFreeHandle(SQLSMALLINT type, SQLHANDLE handle) {
+    /* I quattro descrittori nascono e muoiono con lo statement:
+       liberarli separatamente e' un errore, non un no-op. */
+    if (type == SQL_HANDLE_DESC) {
+        cs_desc *d = cs_valid_handle(handle, SQL_HANDLE_DESC) ? (cs_desc *)handle : NULL;
+        if (!d) return SQL_INVALID_HANDLE;
+        return cs_diag_add(&d->h, "HY017", 0, "An automatically allocated descriptor cannot be freed");
+    }
     cs_handle *h = cs_get_handle(type, handle);
     if (!h) return SQL_INVALID_HANDLE;
     if (type == SQL_HANDLE_STMT) {
@@ -1551,9 +1582,18 @@ static SQLRETURN SQL_API cs_i_SQLSetStmtAttr(SQLHSTMT statement,SQLINTEGER attri
         case SQL_ATTR_ENABLE_AUTO_IPD:
             if(v==SQL_FALSE)return SQL_SUCCESS;
             return cs_diag_warn(&s->h,"01S02","Automatic parameter description is not available");
-        case SQL_ATTR_APP_ROW_DESC:case SQL_ATTR_APP_PARAM_DESC:
-        case SQL_ATTR_IMP_ROW_DESC:case SQL_ATTR_IMP_PARAM_DESC:
+        case SQL_ATTR_APP_ROW_DESC:case SQL_ATTR_APP_PARAM_DESC:{
+            /*
+             * A statement can only be given back its own descriptor, or
+             * SQL_NULL_HDESC to mean the same thing: this driver allocates no
+             * explicit descriptors, so there is nothing else to install.
+             */
+            cs_desc *own=(attribute==SQL_ATTR_APP_ROW_DESC)?&s->ard:&s->apd;
+            if(!value||(cs_desc *)value==own)return SQL_SUCCESS;
             return cs_diag_add(&s->h,"HYC00",0,"Explicit descriptors are not implemented");
+        }
+        case SQL_ATTR_IMP_ROW_DESC:case SQL_ATTR_IMP_PARAM_DESC:
+            return cs_diag_add(&s->h,"HY017",0,"An implementation descriptor cannot be replaced");
         case SQL_ATTR_FETCH_BOOKMARK_PTR:
             return cs_diag_add(&s->h,"HYC00",0,"Bookmarks are not supported");
         case SQL_ATTR_ROW_NUMBER:
@@ -1601,8 +1641,17 @@ static SQLRETURN SQL_API cs_i_SQLGetStmtAttr(SQLHSTMT statement,SQLINTEGER attri
         case SQL_ATTR_ENABLE_AUTO_IPD:v=SQL_FALSE;break;
         case SQL_ATTR_ROW_NUMBER:v=(SQLULEN)(s->current_row>0?s->current_row:0);break;
         case SQL_ATTR_APP_ROW_DESC:case SQL_ATTR_APP_PARAM_DESC:
-        case SQL_ATTR_IMP_ROW_DESC:case SQL_ATTR_IMP_PARAM_DESC:
-            return cs_diag_add(&s->h,"HYC00",0,"Explicit descriptors are not implemented");
+        case SQL_ATTR_IMP_ROW_DESC:case SQL_ATTR_IMP_PARAM_DESC:{
+            /* The four are part of the statement; hand back the right one. */
+            cs_desc *d;
+            if(attribute==SQL_ATTR_APP_ROW_DESC)d=&s->ard;
+            else if(attribute==SQL_ATTR_APP_PARAM_DESC)d=&s->apd;
+            else if(attribute==SQL_ATTR_IMP_ROW_DESC)d=&s->ird;
+            else d=&s->ipd;
+            if(value)*(SQLHDESC *)value=(SQLHDESC)d;
+            if(length)*length=(SQLINTEGER)sizeof(SQLHDESC);
+            return SQL_SUCCESS;
+        }
         default:return cs_diag_add(&s->h,"HY092",0,"Invalid statement attribute %ld",(long)attribute);
     }
     if(value)*(SQLULEN *)value=v;if(length)*length=sizeof(SQLULEN);return SQL_SUCCESS;
@@ -2951,8 +3000,17 @@ static SQLRETURN SQL_API cs_i_SQLTables(SQLHSTMT statement,SQLCHAR *catalog,SQLS
     cs_arg_text(sch,sizeof(sch),schema,schema_len);
     cs_arg_text(tab,sizeof(tab),table,table_len);
     cs_arg_text(type_text,sizeof(type_text),types,types_len);
-    /* The three ODBC discovery special cases. */
-    if(!strcmp(cat,"%")&&!sch[0]&&!tab[0])return cs_tables_catalog_list(s);
+    /*
+     * The three ODBC discovery special cases.
+     *
+     * The catalog list needs the table type to be empty as well. Power Query
+     * asks for SQLTables(catalog "%", no schema, no table, types "TABLE,VIEW")
+     * meaning "every table in every catalogue, and I will group them myself".
+     * Answering that with the list of databases - rows whose TABLE_NAME is
+     * NULL - left every database in the navigator expanding to nothing: the
+     * catalogues appeared, and not one table under them.
+     */
+    if(!strcmp(cat,"%")&&!sch[0]&&!tab[0]&&!type_text[0])return cs_tables_catalog_list(s);
     if(!cat[0]&&!strcmp(sch,"%")&&!tab[0])
         return cs_empty_metadata(statement,"NULL TABLE_CAT,NULL TABLE_SCHEM,NULL TABLE_NAME,NULL TABLE_TYPE,NULL REMARKS");
     if(!cat[0]&&!sch[0]&&!tab[0]&&!strcmp(type_text,"%")){
@@ -3363,18 +3421,504 @@ static SQLRETURN SQL_API cs_i_SQLGetFunctions(SQLHDBC connection,SQLUSMALLINT id
          * inside ODBC32.dll on the first SQLExecDirect.
          *
          * SQLColAttribute shares identifier 6 with SQLColAttributes, already
-         * listed above. The descriptor functions are deliberately absent: they
+         * listed above. The descriptor functions are listed now that they are
+         * implemented; SQLCopyDesc is not, and is left out.
          * genuinely are not implemented, and reporting them missing is correct.
          */
         SQL_API_SQLALLOCHANDLE,SQL_API_SQLFREEHANDLE,SQL_API_SQLCLOSECURSOR,SQL_API_SQLENDTRAN,
         SQL_API_SQLFETCHSCROLL,SQL_API_SQLGETCONNECTATTR,SQL_API_SQLSETCONNECTATTR,
         SQL_API_SQLGETENVATTR,SQL_API_SQLSETENVATTR,SQL_API_SQLGETSTMTATTR,SQL_API_SQLSETSTMTATTR,
         SQL_API_SQLGETDIAGREC,SQL_API_SQLGETDIAGFIELD,SQL_API_SQLBULKOPERATIONS,
-        SQL_API_SQLSETPOS};size_t i;
+        SQL_API_SQLSETPOS,
+        SQL_API_SQLGETDESCFIELD,SQL_API_SQLSETDESCFIELD,
+        SQL_API_SQLGETDESCREC,SQL_API_SQLSETDESCREC};size_t i;
     if(!cs_valid_handle(connection,SQL_HANDLE_DBC))return SQL_INVALID_HANDLE;cs_diag_clear(&d->h);if(!supported)return cs_diag_add(&d->h,"HY009",0,"Supported-functions buffer is null");
     if(id==SQL_API_ODBC3_ALL_FUNCTIONS){memset(supported,0,SQL_API_ODBC3_ALL_FUNCTIONS_SIZE*sizeof(SQLUSMALLINT));for(i=0;i<sizeof(funcs)/sizeof(funcs[0]);i++)supported[funcs[i]>>4]|=(SQLUSMALLINT)(1U<<(funcs[i]&15));return SQL_SUCCESS;}
     if(id==SQL_API_ALL_FUNCTIONS){memset(supported,0,100*sizeof(SQLUSMALLINT));for(i=0;i<sizeof(funcs)/sizeof(funcs[0]);i++)if(funcs[i]<100)supported[funcs[i]]=SQL_TRUE;return SQL_SUCCESS;}
     *supported=SQL_FALSE;for(i=0;i<sizeof(funcs)/sizeof(funcs[0]);i++)if(funcs[i]==id){*supported=SQL_TRUE;break;}return SQL_SUCCESS;
+}
+
+/* ------------------------------------------------------------------ *
+ * Descriptors
+ *
+ * These exist so the driver can declare ODBC 3.x. Without them the Windows
+ * Driver Manager faults inside ODBC32.dll on the first SQLExecDirect against a
+ * 3.x driver, which is why the driver declared 2.0 for so long. Declaring 2.0
+ * has a price the customer pays, though: the Driver Manager refuses, on the
+ * driver's behalf, everything that arrived with ODBC 3.0. Fourteen InfoTypes,
+ * SQL_ATTR_METADATA_ID, and - the one that made the driver useless from Excel -
+ * SQL_C_SBIGINT, which this driver implements and which the Driver Manager
+ * would not forward, so a BIGINT column could not be read at all.
+ *
+ * The bindings are not moved in here. A descriptor is a view onto the state
+ * cs_stmt already holds, so SQLBindCol and SQLSetDescField write the same
+ * fields, which is what ODBC says they are. Keeping a parallel set of records
+ * in step with the bindings is the classic way descriptor support rots.
+ * ------------------------------------------------------------------ */
+
+static cs_desc *cs_desc_of(SQLHANDLE handle) {
+    return cs_valid_handle(handle, SQL_HANDLE_DESC) ? (cs_desc *)handle : NULL;
+}
+
+/*
+ * Records in use: the result set width for the IRD, the highest column the
+ * application has bound for the ARD, the parameter count for the other two.
+ */
+static SQLSMALLINT cs_desc_count(cs_desc *d) {
+    cs_stmt *s = d->stmt;
+    SQLSMALLINT i, n = 0, cols = 0;
+    switch (d->role) {
+        case CS_DESC_IRD:
+            if (!SQL_SUCCEEDED(SQLNumResultCols((SQLHSTMT)s, &cols))) return 0;
+            return cols;
+        case CS_DESC_ARD:
+            for (i = 0; i < (SQLSMALLINT)CSODBC_MAX_COLS; ++i)
+                if (s->columns[i].value || s->columns[i].indicator) n = (SQLSMALLINT)(i + 1);
+            return n;
+        default:
+            return (SQLSMALLINT)s->num_params;
+    }
+}
+
+/*
+ * Numeric descriptor fields are not all the same width, and writing the wrong
+ * one corrupts the caller's memory.
+ */
+static int cs_desc_field_width(SQLSMALLINT field) {
+    switch (field) {
+        case SQL_DESC_ALLOC_TYPE: case SQL_DESC_COUNT: case SQL_DESC_TYPE:
+        case SQL_DESC_CONCISE_TYPE: case SQL_DESC_PARAMETER_TYPE:
+        case SQL_DESC_PRECISION: case SQL_DESC_SCALE: case SQL_DESC_NULLABLE:
+        case SQL_DESC_UNNAMED: case SQL_DESC_FIXED_PREC_SCALE:
+        case SQL_DESC_DATETIME_INTERVAL_CODE: case SQL_DESC_UNSIGNED:
+        case SQL_DESC_SEARCHABLE: case SQL_DESC_UPDATABLE: case SQL_DESC_CASE_SENSITIVE:
+            return (int)sizeof(SQLSMALLINT);
+        case SQL_DESC_BIND_TYPE: case SQL_DESC_DATETIME_INTERVAL_PRECISION:
+            return (int)sizeof(SQLINTEGER);
+        default:
+            return (int)sizeof(SQLLEN);
+    }
+}
+
+static void cs_desc_put_num(SQLPOINTER out, SQLSMALLINT field, SQLLEN v) {
+    int w = cs_desc_field_width(field);
+    if (!out) return;
+    if (w == (int)sizeof(SQLSMALLINT)) *(SQLSMALLINT *)out = (SQLSMALLINT)v;
+    else if (w == (int)sizeof(SQLINTEGER)) *(SQLINTEGER *)out = (SQLINTEGER)v;
+    else *(SQLLEN *)out = v;
+}
+
+static SQLRETURN cs_desc_header_get(cs_desc *d, SQLSMALLINT field, SQLPOINTER value,
+                                    SQLINTEGER *length) {
+    cs_stmt *s = d->stmt;
+    switch (field) {
+        case SQL_DESC_ALLOC_TYPE: cs_desc_put_num(value, field, SQL_DESC_ALLOC_AUTO); break;
+        case SQL_DESC_COUNT:      cs_desc_put_num(value, field, cs_desc_count(d)); break;
+        case SQL_DESC_ARRAY_SIZE:
+            if (d->role == CS_DESC_ARD) cs_desc_put_num(value, field, (SQLLEN)s->row_array_size);
+            else if (d->role == CS_DESC_APD) cs_desc_put_num(value, field, (SQLLEN)s->paramset_size);
+            else return cs_diag_add(&d->h, "HY091", 0, "SQL_DESC_ARRAY_SIZE is an application descriptor field");
+            break;
+        case SQL_DESC_BIND_TYPE:
+            if (d->role == CS_DESC_ARD) cs_desc_put_num(value, field, (SQLLEN)s->row_bind_type);
+            else if (d->role == CS_DESC_APD) cs_desc_put_num(value, field, (SQLLEN)s->param_bind_type);
+            else return cs_diag_add(&d->h, "HY091", 0, "SQL_DESC_BIND_TYPE is an application descriptor field");
+            break;
+        case SQL_DESC_BIND_OFFSET_PTR:
+            if (value) *(SQLULEN **)value = (d->role == CS_DESC_ARD) ? s->row_bind_offset : s->param_bind_offset;
+            break;
+        case SQL_DESC_ARRAY_STATUS_PTR:
+            if (value) {
+                SQLUSMALLINT *p;
+                if (d->role == CS_DESC_ARD) p = s->row_operation;
+                else if (d->role == CS_DESC_APD) p = s->param_operation;
+                else if (d->role == CS_DESC_IRD) p = s->row_status;
+                else p = s->param_status;
+                *(SQLUSMALLINT **)value = p;
+            }
+            break;
+        case SQL_DESC_ROWS_PROCESSED_PTR:
+            if (d->role != CS_DESC_IRD && d->role != CS_DESC_IPD)
+                return cs_diag_add(&d->h, "HY091", 0, "SQL_DESC_ROWS_PROCESSED_PTR is an implementation descriptor field");
+            if (value) *(SQLULEN **)value = (d->role == CS_DESC_IRD) ? s->rows_fetched : s->params_processed;
+            break;
+        default:
+            return cs_diag_add(&d->h, "HY091", 0, "Descriptor field %d is not a header field", (int)field);
+    }
+    if (length) *length = (SQLINTEGER)cs_desc_field_width(field);
+    return SQL_SUCCESS;
+}
+
+static SQLRETURN cs_desc_header_set(cs_desc *d, SQLSMALLINT field, SQLPOINTER value) {
+    cs_stmt *s = d->stmt;
+    if (d->role == CS_DESC_IRD && field != SQL_DESC_ARRAY_STATUS_PTR)
+        return cs_diag_add(&d->h, "HY091", 0, "The implementation row descriptor is read-only");
+    switch (field) {
+        case SQL_DESC_ARRAY_SIZE: {
+            SQLULEN n = (SQLULEN)(uintptr_t)value;
+            if (n == 0) return cs_diag_add(&d->h, "HY092", 0, "SQL_DESC_ARRAY_SIZE must be at least 1");
+            if (d->role == CS_DESC_ARD) s->row_array_size = n;
+            else if (d->role == CS_DESC_APD) s->paramset_size = n;
+            else return cs_diag_add(&d->h, "HY091", 0, "SQL_DESC_ARRAY_SIZE is an application descriptor field");
+            break;
+        }
+        case SQL_DESC_BIND_TYPE:
+            if (d->role == CS_DESC_ARD) s->row_bind_type = (SQLULEN)(uintptr_t)value;
+            else if (d->role == CS_DESC_APD) s->param_bind_type = (SQLULEN)(uintptr_t)value;
+            else return cs_diag_add(&d->h, "HY091", 0, "SQL_DESC_BIND_TYPE is an application descriptor field");
+            break;
+        case SQL_DESC_BIND_OFFSET_PTR:
+            if (d->role == CS_DESC_ARD) s->row_bind_offset = (SQLULEN *)value;
+            else if (d->role == CS_DESC_APD) s->param_bind_offset = (SQLULEN *)value;
+            else return cs_diag_add(&d->h, "HY091", 0, "SQL_DESC_BIND_OFFSET_PTR is an application descriptor field");
+            break;
+        case SQL_DESC_ARRAY_STATUS_PTR:
+            if (d->role == CS_DESC_ARD) s->row_operation = (SQLUSMALLINT *)value;
+            else if (d->role == CS_DESC_APD) s->param_operation = (SQLUSMALLINT *)value;
+            else if (d->role == CS_DESC_IRD) s->row_status = (SQLUSMALLINT *)value;
+            else s->param_status = (SQLUSMALLINT *)value;
+            break;
+        case SQL_DESC_ROWS_PROCESSED_PTR:
+            if (d->role == CS_DESC_IRD) s->rows_fetched = (SQLULEN *)value;
+            else if (d->role == CS_DESC_IPD) s->params_processed = (SQLULEN *)value;
+            else return cs_diag_add(&d->h, "HY091", 0, "SQL_DESC_ROWS_PROCESSED_PTR is an implementation descriptor field");
+            break;
+        case SQL_DESC_COUNT: case SQL_DESC_ALLOC_TYPE:
+            return cs_diag_add(&d->h, "HY091", 0, "Descriptor field %d is read-only", (int)field);
+        default:
+            return cs_diag_add(&d->h, "HY091", 0, "Descriptor field %d is not a header field", (int)field);
+    }
+    return SQL_SUCCESS;
+}
+
+/*
+ * The implementation row descriptor describes the result set, which is exactly
+ * what SQLColAttribute already answers - and that path is covered by tests. The
+ * field identifiers are the same SQL_DESC_* values, so this forwards rather
+ * than growing a second, divergent copy of the same knowledge.
+ */
+static SQLRETURN cs_desc_ird_get(cs_desc *d, SQLSMALLINT rec, SQLSMALLINT field,
+                                 SQLPOINTER value, SQLINTEGER buflen, SQLINTEGER *length) {
+    SQLSMALLINT slen = 0;
+    SQLLEN num = 0;
+    SQLRETURN rc;
+    if (cs_colattr_is_string((SQLUSMALLINT)field)) {
+        rc = SQLColAttribute((SQLHSTMT)d->stmt, (SQLUSMALLINT)rec, (SQLUSMALLINT)field,
+                             value, (SQLSMALLINT)buflen, &slen, &num);
+        if (length) *length = slen;
+        return rc;
+    }
+    rc = SQLColAttribute((SQLHSTMT)d->stmt, (SQLUSMALLINT)rec, (SQLUSMALLINT)field,
+                         NULL, 0, &slen, &num);
+    if (!SQL_SUCCEEDED(rc)) return rc;
+    cs_desc_put_num(value, field, num);
+    if (length) *length = (SQLINTEGER)cs_desc_field_width(field);
+    return SQL_SUCCESS;
+}
+
+static SQLRETURN cs_desc_record_get(cs_desc *d, SQLSMALLINT rec, SQLSMALLINT field,
+                                    SQLPOINTER value, SQLINTEGER buflen, SQLINTEGER *length) {
+    cs_stmt *s = d->stmt;
+    if (rec < 1) return cs_diag_add(&d->h, "07009", 0, "Descriptor record %d is out of range", (int)rec);
+    if (d->role == CS_DESC_IRD) return cs_desc_ird_get(d, rec, field, value, buflen, length);
+    if (d->role == CS_DESC_ARD) {
+        cs_col_binding *c;
+        if (rec > (SQLSMALLINT)CSODBC_MAX_COLS)
+            return cs_diag_add(&d->h, "07009", 0, "Descriptor record %d is out of range", (int)rec);
+        c = &s->columns[rec - 1];
+        switch (field) {
+            case SQL_DESC_TYPE: case SQL_DESC_CONCISE_TYPE:
+                cs_desc_put_num(value, field, c->c_type); break;
+            case SQL_DESC_DATA_PTR: if (value) *(SQLPOINTER *)value = c->value; break;
+            case SQL_DESC_INDICATOR_PTR: case SQL_DESC_OCTET_LENGTH_PTR:
+                if (value) *(SQLLEN **)value = c->indicator; break;
+            case SQL_DESC_OCTET_LENGTH: case SQL_DESC_LENGTH:
+                cs_desc_put_num(value, field, c->buffer_length); break;
+            default:
+                return cs_diag_add(&d->h, "HY091", 0, "Descriptor field %d is not readable on an application row descriptor", (int)field);
+        }
+        if (length) *length = (SQLINTEGER)cs_desc_field_width(field);
+        return SQL_SUCCESS;
+    }
+    /* APD and IPD both describe parameters, from the two sides. */
+    if (rec > (SQLSMALLINT)CSODBC_MAX_PARAMS)
+        return cs_diag_add(&d->h, "07009", 0, "Descriptor record %d is out of range", (int)rec);
+    {
+        cs_param_binding *p = &s->params[rec - 1];
+        if (d->role == CS_DESC_APD) {
+            switch (field) {
+                case SQL_DESC_TYPE: case SQL_DESC_CONCISE_TYPE:
+                    cs_desc_put_num(value, field, p->c_type); break;
+                case SQL_DESC_DATA_PTR: if (value) *(SQLPOINTER *)value = p->value; break;
+                case SQL_DESC_INDICATOR_PTR: case SQL_DESC_OCTET_LENGTH_PTR:
+                    if (value) *(SQLLEN **)value = p->indicator; break;
+                case SQL_DESC_OCTET_LENGTH: case SQL_DESC_LENGTH:
+                    cs_desc_put_num(value, field, p->buffer_length); break;
+                default:
+                    return cs_diag_add(&d->h, "HY091", 0, "Descriptor field %d is not readable on an application parameter descriptor", (int)field);
+            }
+        } else {
+            switch (field) {
+                case SQL_DESC_TYPE: case SQL_DESC_CONCISE_TYPE:
+                    cs_desc_put_num(value, field, p->sql_type); break;
+                case SQL_DESC_PARAMETER_TYPE:
+                    cs_desc_put_num(value, field, p->io_type); break;
+                case SQL_DESC_LENGTH: case SQL_DESC_PRECISION:
+                    cs_desc_put_num(value, field, (SQLLEN)p->column_size); break;
+                case SQL_DESC_SCALE:
+                    cs_desc_put_num(value, field, p->scale); break;
+                case SQL_DESC_NULLABLE:
+                    cs_desc_put_num(value, field, SQL_NULLABLE); break;
+                default:
+                    return cs_diag_add(&d->h, "HY091", 0, "Descriptor field %d is not readable on an implementation parameter descriptor", (int)field);
+            }
+        }
+    }
+    if (length) *length = (SQLINTEGER)cs_desc_field_width(field);
+    return SQL_SUCCESS;
+}
+
+static SQLRETURN cs_desc_record_set(cs_desc *d, SQLSMALLINT rec, SQLSMALLINT field,
+                                    SQLPOINTER value) {
+    cs_stmt *s = d->stmt;
+    if (d->role == CS_DESC_IRD)
+        return cs_diag_add(&d->h, "HY091", 0, "The implementation row descriptor is read-only");
+    if (rec < 1) return cs_diag_add(&d->h, "07009", 0, "Descriptor record %d is out of range", (int)rec);
+    if (d->role == CS_DESC_ARD) {
+        cs_col_binding *c;
+        if (rec > (SQLSMALLINT)CSODBC_MAX_COLS)
+            return cs_diag_add(&d->h, "07009", 0, "Descriptor record %d is out of range", (int)rec);
+        c = &s->columns[rec - 1];
+        switch (field) {
+            case SQL_DESC_TYPE: case SQL_DESC_CONCISE_TYPE:
+                c->c_type = (SQLSMALLINT)(SQLLEN)(uintptr_t)value; break;
+            case SQL_DESC_DATA_PTR: c->value = value; break;
+            case SQL_DESC_INDICATOR_PTR: case SQL_DESC_OCTET_LENGTH_PTR:
+                c->indicator = (SQLLEN *)value; break;
+            case SQL_DESC_OCTET_LENGTH: case SQL_DESC_LENGTH:
+                c->buffer_length = (SQLLEN)(uintptr_t)value; break;
+            default:
+                return cs_diag_add(&d->h, "HY091", 0, "Descriptor field %d cannot be set on an application row descriptor", (int)field);
+        }
+        return SQL_SUCCESS;
+    }
+    if (rec > (SQLSMALLINT)CSODBC_MAX_PARAMS)
+        return cs_diag_add(&d->h, "07009", 0, "Descriptor record %d is out of range", (int)rec);
+    {
+        cs_param_binding *p = &s->params[rec - 1];
+        if (d->role == CS_DESC_APD) {
+            switch (field) {
+                case SQL_DESC_TYPE: case SQL_DESC_CONCISE_TYPE:
+                    p->c_type = (SQLSMALLINT)(SQLLEN)(uintptr_t)value; break;
+                case SQL_DESC_DATA_PTR: p->value = value; break;
+                case SQL_DESC_INDICATOR_PTR: case SQL_DESC_OCTET_LENGTH_PTR:
+                    p->indicator = (SQLLEN *)value; break;
+                case SQL_DESC_OCTET_LENGTH: case SQL_DESC_LENGTH:
+                    p->buffer_length = (SQLLEN)(uintptr_t)value; break;
+                default:
+                    return cs_diag_add(&d->h, "HY091", 0, "Descriptor field %d cannot be set on an application parameter descriptor", (int)field);
+            }
+        } else {
+            switch (field) {
+                case SQL_DESC_TYPE: case SQL_DESC_CONCISE_TYPE:
+                    p->sql_type = (SQLSMALLINT)(SQLLEN)(uintptr_t)value; break;
+                case SQL_DESC_PARAMETER_TYPE:
+                    p->io_type = (SQLSMALLINT)(SQLLEN)(uintptr_t)value; break;
+                case SQL_DESC_LENGTH: case SQL_DESC_PRECISION:
+                    p->column_size = (SQLULEN)(uintptr_t)value; break;
+                case SQL_DESC_SCALE:
+                    p->scale = (SQLSMALLINT)(SQLLEN)(uintptr_t)value; break;
+                default:
+                    return cs_diag_add(&d->h, "HY091", 0, "Descriptor field %d cannot be set on an implementation parameter descriptor", (int)field);
+            }
+            if (rec > (SQLSMALLINT)s->num_params) s->num_params = (SQLUSMALLINT)rec;
+        }
+    }
+    return SQL_SUCCESS;
+}
+
+static SQLRETURN SQL_API cs_i_SQLGetDescField(SQLHDESC handle, SQLSMALLINT rec, SQLSMALLINT field,
+                                              SQLPOINTER value, SQLINTEGER buflen, SQLINTEGER *length) {
+    cs_desc *d = cs_desc_of(handle);
+    if (!d) return SQL_INVALID_HANDLE;
+    cs_diag_clear(&d->h);
+    if (rec == 0) return cs_desc_header_get(d, field, value, length);
+    return cs_desc_record_get(d, rec, field, value, buflen, length);
+}
+
+CSODBC_EXPORT SQLRETURN SQL_API SQLGetDescField(SQLHDESC handle, SQLSMALLINT rec, SQLSMALLINT field,
+                                                SQLPOINTER value, SQLINTEGER buflen, SQLINTEGER *length) {
+    cs_mutex *cs__m = cs_handle_lock(SQL_HANDLE_DESC, handle);
+    SQLRETURN cs__rc;
+    if (cs__m) cs_mutex_lock(cs__m);
+    cs__rc = cs_i_SQLGetDescField(handle, rec, field, value, buflen, length);
+    if (cs__m) cs_mutex_unlock(cs__m);
+    return cs__rc;
+}
+
+CSODBC_EXPORT SQLRETURN SQL_API SQLSetDescField(SQLHDESC handle, SQLSMALLINT rec, SQLSMALLINT field,
+                                                SQLPOINTER value, SQLINTEGER buflen) {
+    cs_desc *d = cs_desc_of(handle);
+    cs_mutex *cs__m;
+    SQLRETURN rc;
+    (void)buflen;
+    if (!d) return SQL_INVALID_HANDLE;
+    cs__m = cs_handle_lock(SQL_HANDLE_DESC, handle);
+    if (cs__m) cs_mutex_lock(cs__m);
+    cs_diag_clear(&d->h);
+    rc = (rec == 0) ? cs_desc_header_set(d, field, value) : cs_desc_record_set(d, rec, field, value);
+    if (cs__m) cs_mutex_unlock(cs__m);
+    return rc;
+}
+
+/*
+ * The Unicode entry points differ only in the string fields, and on a
+ * descriptor the only string worth returning is the column name of an IRD
+ * record. Everything else is numeric and shared.
+ */
+CSODBC_EXPORT SQLRETURN SQL_API SQLGetDescFieldW(SQLHDESC handle, SQLSMALLINT rec, SQLSMALLINT field,
+                                                 SQLPOINTER value, SQLINTEGER buflen, SQLINTEGER *length) {
+    cs_desc *d = cs_desc_of(handle);
+    if (!d) return SQL_INVALID_HANDLE;
+    if (rec > 0 && d->role == CS_DESC_IRD && cs_colattr_is_string((SQLUSMALLINT)field)) {
+        SQLSMALLINT slen = 0;
+        SQLLEN num = 0;
+        SQLRETURN rc = SQLColAttributeW((SQLHSTMT)d->stmt, (SQLUSMALLINT)rec, (SQLUSMALLINT)field,
+                                        value, (SQLSMALLINT)buflen, &slen, &num);
+        if (length) *length = slen;
+        return rc;
+    }
+    return SQLGetDescField(handle, rec, field, value, buflen, length);
+}
+
+CSODBC_EXPORT SQLRETURN SQL_API SQLSetDescFieldW(SQLHDESC handle, SQLSMALLINT rec, SQLSMALLINT field,
+                                                 SQLPOINTER value, SQLINTEGER buflen) {
+    return SQLSetDescField(handle, rec, field, value, buflen);
+}
+
+CSODBC_EXPORT SQLRETURN SQL_API SQLGetDescRec(SQLHDESC handle, SQLSMALLINT rec, SQLCHAR *name,
+                                              SQLSMALLINT name_cap, SQLSMALLINT *name_len,
+                                              SQLSMALLINT *type, SQLSMALLINT *subtype,
+                                              SQLLEN *length, SQLSMALLINT *precision,
+                                              SQLSMALLINT *scale, SQLSMALLINT *nullable) {
+    cs_desc *d = cs_desc_of(handle);
+    SQLINTEGER n = 0;
+    SQLSMALLINT v = 0;
+    SQLLEN len = 0;
+    if (!d) return SQL_INVALID_HANDLE;
+    if (rec < 1) return cs_diag_add(&d->h, "07009", 0, "Descriptor record %d is out of range", (int)rec);
+    if (rec > cs_desc_count(d)) return SQL_NO_DATA;
+    if (subtype) *subtype = 0;
+    if (name && name_cap > 0) name[0] = '\0';
+    if (name_len) *name_len = 0;
+    if (d->role == CS_DESC_IRD && name)
+        SQLGetDescField(handle, rec, SQL_DESC_NAME, name, name_cap, &n);
+    if (name_len) *name_len = (SQLSMALLINT)n;
+    if (type && SQL_SUCCEEDED(SQLGetDescField(handle, rec, SQL_DESC_TYPE, &v, 0, NULL))) *type = v;
+    if (length && SQL_SUCCEEDED(SQLGetDescField(handle, rec, SQL_DESC_LENGTH, &len, 0, NULL))) *length = len;
+    if (precision && SQL_SUCCEEDED(SQLGetDescField(handle, rec, SQL_DESC_PRECISION, &v, 0, NULL))) *precision = v;
+    if (scale && SQL_SUCCEEDED(SQLGetDescField(handle, rec, SQL_DESC_SCALE, &v, 0, NULL))) *scale = v;
+    if (nullable && SQL_SUCCEEDED(SQLGetDescField(handle, rec, SQL_DESC_NULLABLE, &v, 0, NULL))) *nullable = v;
+    return SQL_SUCCESS;
+}
+
+CSODBC_EXPORT SQLRETURN SQL_API SQLGetDescRecW(SQLHDESC handle, SQLSMALLINT rec,
+                                               SQLWCHAR *name, SQLSMALLINT name_cap,
+                                               SQLSMALLINT *name_len, SQLSMALLINT *type,
+                                               SQLSMALLINT *subtype, SQLLEN *length,
+                                               SQLSMALLINT *precision, SQLSMALLINT *scale,
+                                               SQLSMALLINT *nullable) {
+    char narrow[256];
+    SQLSMALLINT n = 0;
+    SQLLEN wn = 0;
+    SQLRETURN rc = SQLGetDescRec(handle, rec, (SQLCHAR *)narrow, (SQLSMALLINT)sizeof(narrow), &n,
+                                 type, subtype, length, precision, scale, nullable);
+    if (!SQL_SUCCEEDED(rc)) return rc;
+    if (name) {
+        narrow[sizeof(narrow) - 1] = '\0';
+        cs_copy_utf16(name, name_cap, &wn, narrow, NULL);
+    }
+    if (name_len) *name_len = (SQLSMALLINT)wn;
+    return rc;
+}
+
+CSODBC_EXPORT SQLRETURN SQL_API SQLSetDescRec(SQLHDESC handle, SQLSMALLINT rec, SQLSMALLINT type,
+                                              SQLSMALLINT subtype, SQLLEN length,
+                                              SQLSMALLINT precision, SQLSMALLINT scale,
+                                              SQLPOINTER data, SQLLEN *string_length,
+                                              SQLLEN *indicator) {
+    cs_desc *d = cs_desc_of(handle);
+    SQLRETURN rc;
+    (void)subtype;
+    if (!d) return SQL_INVALID_HANDLE;
+    rc = SQLSetDescField(handle, rec, SQL_DESC_TYPE, (SQLPOINTER)(SQLLEN)type, 0);
+    if (!SQL_SUCCEEDED(rc)) return rc;
+    SQLSetDescField(handle, rec, SQL_DESC_LENGTH, (SQLPOINTER)length, 0);
+    SQLSetDescField(handle, rec, SQL_DESC_PRECISION, (SQLPOINTER)(SQLLEN)precision, 0);
+    SQLSetDescField(handle, rec, SQL_DESC_SCALE, (SQLPOINTER)(SQLLEN)scale, 0);
+    SQLSetDescField(handle, rec, SQL_DESC_DATA_PTR, data, 0);
+    SQLSetDescField(handle, rec, SQL_DESC_OCTET_LENGTH_PTR, string_length, 0);
+    SQLSetDescField(handle, rec, SQL_DESC_INDICATOR_PTR, indicator, 0);
+    return SQL_SUCCESS;
+}
+
+/*
+ * Copying between two views of the same statement would be a no-op, and this
+ * driver has no explicit descriptors to copy between, so the honest answer is
+ * that the feature is not implemented rather than a silent success.
+ */
+CSODBC_EXPORT SQLRETURN SQL_API SQLCopyDesc(SQLHDESC source, SQLHDESC target) {
+    cs_desc *s = cs_desc_of(source), *t = cs_desc_of(target);
+    if (!s || !t) return SQL_INVALID_HANDLE;
+    return cs_diag_add(&t->h, "HYC00", 0, "Copying descriptors is not implemented");
+}
+
+/*
+ * The Unicode entry points the Driver Manager only asks for once the driver
+ * declares ODBC 3.x.
+ *
+ * In 2.0 mode it reaches statement attributes through SQLSetStmtOption and
+ * SQLGetStmtOption, which this driver does export, so the gap was invisible.
+ * From 3.0 it looks up SQLSetStmtAttrW and SQLGetStmtAttrW instead, finds
+ * nothing, and calls through a null pointer. That - not the missing
+ * descriptors - is the "Driver Manager faults inside ODBC32.dll on the first
+ * SQLExecDirect" that kept this driver on 2.0 for so long. Measured: with the
+ * descriptors in place but these five absent, the fault was unchanged, and the
+ * driver never received the call at all.
+ *
+ * No statement attribute carries a string, so those two forward unchanged. The
+ * connection options do, so they go through the attribute versions, which
+ * already convert.
+ */
+CSODBC_EXPORT SQLRETURN SQL_API SQLSetStmtAttrW(SQLHSTMT statement, SQLINTEGER attribute,
+                                                SQLPOINTER value, SQLINTEGER length) {
+    return SQLSetStmtAttr(statement, attribute, value, length);
+}
+
+CSODBC_EXPORT SQLRETURN SQL_API SQLGetStmtAttrW(SQLHSTMT statement, SQLINTEGER attribute,
+                                                SQLPOINTER value, SQLINTEGER capacity,
+                                                SQLINTEGER *length) {
+    return SQLGetStmtAttr(statement, attribute, value, capacity, length);
+}
+
+CSODBC_EXPORT SQLRETURN SQL_API SQLSetConnectOptionW(SQLHDBC connection, SQLUSMALLINT option,
+                                                     SQLULEN value) {
+    /* The 2.x option numbers are the 3.x attribute numbers, and the
+       string-valued ones arrive as a pointer that SQLSetConnectAttrW reads. */
+    return SQLSetConnectAttrW(connection, (SQLINTEGER)option, (SQLPOINTER)(uintptr_t)value, SQL_NTS);
+}
+
+CSODBC_EXPORT SQLRETURN SQL_API SQLGetConnectOptionW(SQLHDBC connection, SQLUSMALLINT option,
+                                                     SQLPOINTER value) {
+    SQLINTEGER capacity = (option == SQL_ATTR_CURRENT_CATALOG) ? SQL_MAX_OPTION_STRING_LENGTH : 0;
+    return SQLGetConnectAttrW(connection, (SQLINTEGER)option, value, capacity, NULL);
+}
+
+CSODBC_EXPORT SQLRETURN SQL_API SQLColAttributesW(SQLHSTMT statement, SQLUSMALLINT column,
+                                                  SQLUSMALLINT field, SQLPOINTER chars,
+                                                  SQLSMALLINT capacity, SQLSMALLINT *char_len,
+                                                  SQLLEN *numeric) {
+    return SQLColAttributeW(statement, column, field, chars, capacity, char_len, numeric);
 }
 
 CSODBC_EXPORT SQLRETURN SQL_API SQLGetFunctions(SQLHDBC connection,SQLUSMALLINT id,SQLUSMALLINT *supported) {

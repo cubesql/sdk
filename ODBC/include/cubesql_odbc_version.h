@@ -9,15 +9,15 @@
 #define CUBESQL_ODBC_VERSION_H
 
 #define CSODBC_VERSION_MAJOR 1
-#define CSODBC_VERSION_MINOR 2
-#define CSODBC_VERSION_PATCH 2
+#define CSODBC_VERSION_MINOR 3
+#define CSODBC_VERSION_PATCH 0
 #define CSODBC_VERSION_BUILD 0
 
 /* Dotted form used by VERSIONINFO and by the installers. */
-#define CSODBC_VERSION_STRING "1.2.2.0"
+#define CSODBC_VERSION_STRING "1.3.0.0"
 
 /* ODBC reports SQL_DRIVER_VER as "##.##.####". */
-#define CSODBC_VERSION "01.02.0002"
+#define CSODBC_VERSION "01.03.0000"
 
 #define CSODBC_COMPANY "SQLabs"
 #define CSODBC_PRODUCT "CubeSQL ODBC Driver"

@@ -21,14 +21,14 @@ architecture has to match the application that loads the driver, not the OS.
 | `include/cubesql_odbc.h` | Handle structs (`cs_handle`, `cs_stmt`), driver-wide constants |
 | `include/cubesql_odbc_version.h` | Version and architecture label; the `.rc` reads it too |
 | `include/odbc_compat*.h` | Fills in what the toolchain's ODBC headers lack |
-| `src/driver.c` | The driver: all 109 exported entry points (~3700 lines) |
+| `src/driver.c` | The driver: all 122 exported entry points (~4000 lines) |
 | `src/setup.c` | `ConfigDSN`/`ConfigDSNW` and the setup dialog |
-| `windows/cubesqlodbc.def` | The export list — 109 names; the linker enforces it |
+| `windows/cubesqlodbc.def` | The export list — 122 names; the linker enforces it |
 | `windows/cubesqlodbc.rc` | Version resource |
 | `windows/install.ps1`, `uninstall.ps1` | Registration through the ODBC installer API |
 | `installer/cubesqlodbc.wxs` | WiX source for the MSI |
 | `installer/build-msi.ps1` | Builds one MSI; takes the architecture from the DLL's PE header |
-| `tests/` | Ten suites, driven by CTest |
+| `tests/` | Eleven suites, driven by CTest |
 | `Makefile` | MinGW cross-build, for development on macOS and Linux |
 
 ## Build Commands
@@ -82,6 +82,7 @@ ctest -C Release --output-on-failure
 | `diagnostics` | `SQLError` record walking, diagnostic fields, catalog functions |
 | `setup` | `ConfigDSN`/`ConfigDSNW` with no user interface, add, configure, remove, error cases |
 | `aliases` | every ODBC 2.x alias, the A/W variants, and the optional functions |
+| `descriptors` | the four implicit descriptors: header and record fields, ARD against `SQLBindCol`, IRD against `SQLDescribeCol`, APD and IPD against `SQLBindParameter`, read-only enforcement, error cases |
 | `install_scripts` | `install.ps1`/`uninstall.ps1` against the registry |
 
 Every function the driver exports is called by at least one suite. `smoke` goes
@@ -211,14 +212,42 @@ Windows, throwing before it wrote anything. Use `[uint16]`/`[uint64]`.
 without touching the registry. The scripts must pass `ODBC_INSTALL_COMPLETE`
 (2).
 
-**The driver declares ODBC 2.0, deliberately.** `DriverODBCVer=02.00` in the
-`.wxs` and `CSODBC_DRIVER_ODBC_VERSION` in the header. The whole ODBC 2.0 API is
-implemented — 23 Core, 15 Level 1, 16 Level 2 — so the declaration is more
-modest than what is provided. Declaring 3.x is not a one-line change: with a 3.x
-declaration and no descriptor handles the Windows Driver Manager faults inside
-`ODBC32.dll` on the first `SQLExecDirect`. Implement the implicit descriptors
-first. `SQLGetDescField` and friends are not exported and `SQLGetFunctions`
-reports them absent, which is the correct answer today.
+**The driver declares ODBC 3.0, and getting there needed two things, not one.**
+`DriverODBCVer=03.00` lives in three places that must agree: the `.wxs`,
+`windows/install.ps1`, and `CSODBC_DRIVER_ODBC_VERSION` in the header. The
+Driver Manager reads the registry value, so changing only the header changes
+nothing.
+
+The first prerequisite was the implicit descriptors, which is what everyone
+expects. They are in `driver.c` as views onto the binding state `cs_stmt`
+already holds, never as a second copy: `SQLBindCol` and `SQLSetDescField` write
+the same fields, and `tests/test_descriptors.c` asserts exactly that, because a
+parallel set of records drifting out of step is how descriptor support rots.
+
+The second was five Unicode entry points that had never been written:
+`SQLSetStmtAttrW`, `SQLGetStmtAttrW`, `SQLSetConnectOptionW`,
+`SQLGetConnectOptionW`, `SQLColAttributesW`. In 2.0 mode the Driver Manager
+reaches statement attributes through `SQLSetStmtOption` and `SQLGetStmtOption`,
+which this driver does export, so their absence was invisible. From 3.0 it looks
+up the W forms instead, finds nothing, and calls through a null pointer.
+
+That second one is worth remembering, because it was mistaken for the first for
+a long time. The symptom - "the Driver Manager faults inside ODBC32.dll on the
+first SQLExecDirect" - was blamed on the missing descriptors and written down
+as such. It was measured properly only when the descriptors existed and the
+fault was unchanged: the driver was never reached at all, which no amount of
+descriptor work could have explained.
+
+What 3.0 bought: `SQL_C_SBIGINT` now arrives, so `SQL_BIGINT` columns can be
+read - an `INTEGER` column is one, so this was every integer column in every
+table, and it is what made the driver useless from Excel. The fourteen ODBC 3.x
+InfoTypes and `SQL_ATTR_METADATA_ID` are answered rather than refused on the
+driver's behalf.
+
+Explicit descriptors and `SQLCopyDesc` are still unimplemented and say so with
+`HYC00`. `SQLGetFunctions` must keep reporting `SQL_API_SQLCOPYDESC` absent:
+claiming a function that is not exported is precisely what makes the Driver
+Manager call into nothing.
 
 **Never leave a diagnostic enumeration without an end.** Through 1.1.0, any
 statement that failed on a connection with no current database hung the calling
@@ -226,7 +255,7 @@ application and grew until it ran out of memory — `SELECT 1;` was enough. It w
 tempting to blame `ODBC32.dll`, because the loop does run there and the driver
 returns `SQL_ERROR` promptly. The cause was in the driver: `SQLError` asked for
 diagnostic record 1 on every call and so never returned `SQL_NO_DATA`, and
-because the driver declares ODBC 2.0 the Driver Manager builds its own
+because the driver declared ODBC 2.0 at the time, the Driver Manager built its own
 diagnostic queue by calling `SQLError` until it is exhausted. That harvest runs
 *inside* `SQLExecDirect`, which is why the application never saw the call
 return, and why it happened even when the application never asked for the error.

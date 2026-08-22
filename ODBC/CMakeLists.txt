@@ -1,7 +1,7 @@
 ﻿cmake_minimum_required(VERSION 3.20)
 # Keep in step with include/cubesql_odbc_version.h, which the driver and the
 # Windows resource script both read.
-project(CubeSQLODBC VERSION 1.2.2 LANGUAGES C)
+project(CubeSQLODBC VERSION 1.3.0 LANGUAGES C)
 
 if(NOT WIN32)
     message(FATAL_ERROR "The first CubeSQL ODBC release targets Windows only")
@@ -132,7 +132,7 @@ if(BUILD_TESTING)
         ${CSDK}/zlib/zlib.c)
 
     # core e types non hanno bisogno di un server; gli altri si'.
-    set(CS_DIRECT_TESTS core conformance integration types unicode diagnostics setup aliases)
+    set(CS_DIRECT_TESTS core conformance integration types unicode diagnostics setup aliases descriptors)
 
     foreach(cs_t IN LISTS CS_DIRECT_TESTS)
         set(cs_target cubesql_odbc_${cs_t})

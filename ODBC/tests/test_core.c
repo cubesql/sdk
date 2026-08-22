@@ -43,12 +43,18 @@ int main(void) {
     REQUIRE(SQLGetInfoW(dbc, SQL_DRIVER_ODBC_VER, wide_driver_odbc_version,
         sizeof(wide_driver_odbc_version), &len) == SQL_SUCCESS);
     REQUIRE(len == 5 * (SQLSMALLINT)sizeof(SQLWCHAR));
-    REQUIRE(wide_driver_odbc_version[0] == '0' &&
-        wide_driver_odbc_version[1] == '2' &&
-        wide_driver_odbc_version[2] == '.' &&
-        wide_driver_odbc_version[3] == '0' &&
-        wide_driver_odbc_version[4] == '0' &&
-        wide_driver_odbc_version[5] == 0);
+    {
+        /*
+         * Confrontata con la costante, non con "02.00" scritto a mano: la
+         * versione dichiarata e' cambiata, e questo era l'unico punto del
+         * sorgente che non la seguiva.
+         */
+        const char *expected = CSODBC_DRIVER_ODBC_VERSION;
+        int i;
+        for (i = 0; expected[i]; ++i)
+            REQUIRE(wide_driver_odbc_version[i] == (SQLWCHAR)expected[i]);
+        REQUIRE(wide_driver_odbc_version[i] == 0);
+    }
     REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLALLOCCONNECT, &supported) == SQL_SUCCESS);
     REQUIRE(supported == SQL_TRUE);
     REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLALLOCENV, &supported) == SQL_SUCCESS);
@@ -69,8 +75,22 @@ int main(void) {
     REQUIRE(supported == SQL_TRUE);
     REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLSETSTMTATTR, &supported) == SQL_SUCCESS);
     REQUIRE(supported == SQL_TRUE);
-    /* I descrittori non sono implementati: vanno dichiarati assenti. */
+    /*
+     * I descrittori impliciti ora ci sono, e sono il prerequisito per
+     * dichiarare ODBC 3.x: vanno dichiarati presenti, o il Driver Manager non
+     * li userebbe. SQLCopyDesc no, e resta dichiarata assente: dire il falso
+     * qui e' esattamente cio' che fa chiamare al Driver Manager un puntatore
+     * che non esiste.
+     */
     REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLGETDESCFIELD, &supported) == SQL_SUCCESS);
+    REQUIRE(supported == SQL_TRUE);
+    REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLSETDESCFIELD, &supported) == SQL_SUCCESS);
+    REQUIRE(supported == SQL_TRUE);
+    REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLGETDESCREC, &supported) == SQL_SUCCESS);
+    REQUIRE(supported == SQL_TRUE);
+    REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLSETDESCREC, &supported) == SQL_SUCCESS);
+    REQUIRE(supported == SQL_TRUE);
+    REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLCOPYDESC, &supported) == SQL_SUCCESS);
     REQUIRE(supported == SQL_FALSE);
     REQUIRE(SQLGetFunctions(dbc, SQL_API_SQLALLOCSTMT, &supported) == SQL_SUCCESS);
     REQUIRE(supported == SQL_TRUE);

@@ -163,7 +163,7 @@ $driverEntries = @(
     "Setup=$resolved",
     "APILevel=2",
     "ConnectFunctions=YYN",
-    "DriverODBCVer=02.00",
+    "DriverODBCVer=03.00",
     "SQLLevel=0",
     "FileUsage=0"
 )
